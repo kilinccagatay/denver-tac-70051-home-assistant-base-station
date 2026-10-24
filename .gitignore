@@ -8,4 +8,5 @@
 hoarydash.yaml
 *_preferences.xml
 node_modules/
+media/
 .DS_Store
