@@ -1,0 +1,11 @@
+.env
+*.key
+*.pem
+*backup*
+*.img
+*.bin
+*.fex
+hoarydash.yaml
+*_preferences.xml
+node_modules/
+.DS_Store
