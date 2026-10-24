@@ -14,4 +14,4 @@ For the 800 × 480 screen, aim for a clock around one third of the display heigh
 
 The idle return to Home was implemented with ES5-compatible JavaScript and a 125-second fallback timer. Treat it as a UI convenience, not an authentication control.
 
-The panel runs locally. Never publish your Home Assistant address, entity inventory, tokens, or HoaryDash proxy on the public internet.
+The published example uses placeholders. Replace them with your own local Home Assistant entities and dashboard address.

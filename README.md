@@ -2,6 +2,16 @@
 
 I turned a 2010s Denver TAC-70051 tablet into a 7-inch Home Assistant control panel. This repository documents the working approach, measured limits, and an example setup. The printable enclosure, assembly photos, and 3D files are on [MakerWorld](https://makerworld.com/en/models/3487173-denver-tac-70051-tablet-homeassistant-base-station#profileId-3982293).
 
+The full build story is on [my blog](https://cagataykilinc.com.tr/2026/10/25/denver-tac-70051-home-assistant-base-station/).
+
+![Finished base station from the side](photos/base-station-side.webp)
+
+| Dashboard | Enclosure during assembly |
+| --- | --- |
+| ![Tablet running the dashboard](photos/dashboard.webp) | ![Tablet and printed enclosure](photos/enclosure.webp) |
+
+More angles, the print profile, and model files are available on [MakerWorld](https://makerworld.com/en/models/3487173-denver-tac-70051-tablet-homeassistant-base-station#profileId-3982293).
+
 ## The tablet
 
 | Item | Observed on my unit |
@@ -41,9 +51,7 @@ The linked MakerWorld page contains the print files, photos, measurements, print
 - WallPanel and the camera were observed using roughly 67–70% CPU. For a genuinely low-power battery setup, a separate PIR/mmWave sensor that wakes a sleeping tablet through the power-button circuit is a more promising architecture; it is not implemented here.
 - My six 1750 mAh 18650 cells are connected in parallel (nominal 10,500 mAh for a 1S6P pack). I changed the firmware's design-capacity field from 2,600 to 10,000 mAh and capped wake brightness at 191/255 (75%). The capacity edit changes reported battery design capacity; it does **not** increase actual energy or prove the percentage gauge is accurate. No battery runtime measurement is published.
 
-## Security and safety
-
-HoaryDash 0.13.0 in this setup has no separate authentication. Keep its port on a trusted, isolated LAN and do not forward it to the internet. Android 4.1.1 lacks modern security updates; do not leave root ADB over Wi-Fi enabled.
+## Hardware notes
 
 The camera/CPU workload and an always-powered old lithium battery need temperature and battery-condition monitoring. Use matched, protected cells and an appropriate 1S protection and charging arrangement. Never connect USB 5 V directly to a single-cell lithium battery. The MakerWorld assembly guide gives more hardware details.
 
