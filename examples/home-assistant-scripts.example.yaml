@@ -1,0 +1,25 @@
+# Example entries for Home Assistant's scripts.yaml.
+# Replace vacuum.example_robot with your own vacuum entity.
+# These keys create the script.example_vacuum_* entities used by
+# hoarydash.example.yaml. Supported actions vary by vacuum integration.
+
+example_vacuum_start:
+  alias: Example - Start vacuum
+  sequence:
+    - action: vacuum.start
+      target:
+        entity_id: vacuum.example_robot
+
+example_vacuum_pause:
+  alias: Example - Pause vacuum
+  sequence:
+    - action: vacuum.pause
+      target:
+        entity_id: vacuum.example_robot
+
+example_vacuum_dock:
+  alias: Example - Return vacuum to dock
+  sequence:
+    - action: vacuum.return_to_base
+      target:
+        entity_id: vacuum.example_robot

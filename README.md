@@ -33,7 +33,7 @@ The current Home Assistant Android app does not support this Android release. Th
 
 My dashboard has a large clock, centered two-line Turkish date, Turkish weather labels, lights grouped by room, robot vacuum actions, and printer controls. After inactivity or screen dimming it returns to the Home tab. An ES5-compatible script was needed for the old browser.
 
-An example planning template is in [docs/dashboard-example.md](docs/dashboard-example.md). Replace every placeholder with your own Home Assistant entities; this repository does not contain my live dashboard configuration or credentials.
+A [shareable HoaryDash YAML layout](examples/hoarydash.example.yaml), [example Home Assistant scripts](examples/home-assistant-scripts.example.yaml), and [setup notes](docs/dashboard-example.md) model the five tabs and robot controls. Replace every example entity with your own Home Assistant entities. The encrypted backup on this computer does not expose the live HoaryDash YAML, so this is a rebuilt example rather than the exact running configuration.
 
 ## Enclosure and wiring
 

@@ -1,0 +1,137 @@
+# Example layout for the Denver TAC-70051's 800x480 display.
+# Replace EVERY entity_id ending in example_* with entities from your own HA.
+# This is a shareable example, not an export of the live installation.
+#
+# HoaryDash add-on users do not need home_assistant.url or a token here.
+# Set WallPanel Legacy's start page to http://<your-ha-host>:4567/dash/
+
+dashboards:
+  dash:
+    animations: false
+    swipe: true
+    show_hints: false
+    screenonlock: false
+    navbar:
+      enabled: true
+      position: bottom
+      style: rectangle
+    theme:
+      background:
+        color: "linear-gradient(135deg, #0b2469, #155ed2)"
+      colors:
+        surface: "rgba(255,255,255,0.10)"
+        on_surface: "#ffffff"
+        on_background: "#ffffff"
+        accent: "#73dcff"
+        interactive: "#ffffff"
+      shapes:
+        borders: false
+        medium_border_radius: "0.8em"
+      typography:
+        font_family: "Arial, sans-serif"
+    screens:
+      - name: ANA
+        icon: home
+        layout: centered
+        dateclock:
+          enabled: true
+          show_seconds: false
+          show_date: true
+          align: center
+          font_size: 1.2
+          time_size: 2.4
+          date_size: 0.58
+        order:
+          widgets: 1
+          entities: 2
+          sensors: 3
+        widgets:
+          style:
+            borders: false
+            background: transparent
+          cards:
+            - entity_id: weather.example_home
+              label: Hava Durumu
+              options:
+                forecast_interval: hourly
+                forecast_times: 2
+                internal_borders: false
+        entities:
+          cards:
+            - entity_id: light.example_living_room
+              label: Salon
+              icon: sofa
+            - entity_id: light.example_kitchen_counter
+              label: Tezgah
+              icon: lightbulb
+            - entity_id: light.example_entrance
+              label: Antre
+              icon: door
+
+      - name: MUTFAK
+        icon: silverware-fork-knife
+        layout: tiled
+        groups:
+          - name: Mutfak ışıkları
+            icon: lightbulb
+            cards:
+              - entity_id: light.example_kitchen_counter
+                label: Tezgah
+              - entity_id: light.example_kitchen_sink
+                label: Lavabo
+              - entity_id: light.example_dining_table
+                label: Yemek Masası
+
+      - name: GİRİŞ
+        icon: door
+        layout: tiled
+        groups:
+          - name: Giriş ve koridor
+            icon: lightbulb
+            cards:
+              - entity_id: light.example_entrance
+                label: Antre
+              - entity_id: light.example_front_corridor
+                label: Koridor Ön
+              - entity_id: light.example_rear_corridor
+                label: Koridor Arka
+
+      - name: ROBOT
+        icon: robot-vacuum
+        layout: tiled
+        groups:
+          - name: Robot süpürge
+            icon: robot-vacuum
+            cards:
+              - entity_id: script.example_vacuum_start
+                label: Temizliğe Başla
+                icon: play
+              - entity_id: script.example_vacuum_pause
+                label: Durdur
+                icon: pause
+              - entity_id: script.example_vacuum_dock
+                label: İstasyona Dön
+                icon: home
+
+      - name: YAZICI
+        icon: printer-3d
+        layout: tiled
+        groups:
+          - name: Yazıcı
+            icon: printer-3d
+            cards:
+              - entity_id: sensor.example_printer_status
+                label: Durum
+              - entity_id: switch.example_printer_power
+                label: Yazıcı Gücü
+              - entity_id: light.example_printer_light
+                label: İç Aydınlatma
+
+localization:
+  # en-US was the reliable fallback for this old browser in my testing.
+  # Turkish labels above work independently of this locale setting.
+  locale: "en-US"
+  timezone: "Europe/Istanbul" # Replace if your Home Assistant uses another zone.
+  hour12: false
+
+wallpanel: true
