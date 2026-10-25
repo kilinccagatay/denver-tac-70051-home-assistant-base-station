@@ -1,137 +1,585 @@
-# Example layout for the Denver TAC-70051's 800x480 display.
-# Replace EVERY entity_id ending in example_* with entities from your own HA.
-# This is a shareable example, not an export of the live installation.
-#
-# HoaryDash add-on users do not need home_assistant.url or a token here.
-# Set WallPanel Legacy's start page to http://<your-ha-host>:4567/dash/
+# Sanitized HoaryDash 0.13.0 configuration for an 800x480 panel.
+# Replace every example_* entity with one from your Home Assistant instance.
+# No Home Assistant token or address belongs in this file when using the add-on.
 
 dashboards:
   dash:
     animations: false
+    screenonlock: false
+    nightlight:
+      enabled: false
     swipe: true
     show_hints: false
-    screenonlock: false
     navbar:
       enabled: true
       position: bottom
       style: rectangle
+    tile_options:
+      show_icon: true
+      show_pill: false
     theme:
-      background:
-        color: "linear-gradient(135deg, #0b2469, #155ed2)"
+      base: nord
+      size: 0.9
       colors:
-        surface: "rgba(255,255,255,0.10)"
-        on_surface: "#ffffff"
-        on_background: "#ffffff"
-        accent: "#73dcff"
-        interactive: "#ffffff"
+        accent: "#88c0d0"
+        interactive: "#81a1c1"
+        state_on: "#ebcb8b"
+        surface: "rgba(46,52,64,0.82)"
+        surface_alt: "rgba(36,41,51,0.96)"
       shapes:
         borders: false
-        medium_border_radius: "0.8em"
+        medium_border_radius: "0.75em"
+        gap_outer: "0.65em"
+        padding_inner: "0.7em"
       typography:
-        font_family: "Arial, sans-serif"
+        font_family: "sans-serif"
+      entities:
+        borders: false
+        background: "rgba(255,255,255,0.08)"
+      widgets:
+        borders: false
+        background: "rgba(255,255,255,0.07)"
+      sensors:
+        borders: false
+        background: "rgba(255,255,255,0.07)"
+      custom: |
+        /* Let long Turkish labels wrap instead of being ellipsized. */
+        $this .entity-label {
+          white-space: normal !important;
+          overflow: visible !important;
+          text-overflow: clip !important;
+          line-height: 1.15 !important;
+          max-width: calc(100% - 1.8em) !important;
+        }
+
+        /* Home: clock/date/weather on the left, 3x3 light grid on the right. */
+        $this #screen-Ana .main-container {
+          -webkit-box-orient: horizontal !important;
+          -webkit-flex-direction: row !important;
+          flex-direction: row !important;
+          -webkit-align-items: stretch !important;
+          align-items: stretch !important;
+          -webkit-justify-content: space-between !important;
+          justify-content: space-between !important;
+          overflow: hidden !important;
+          padding: 0.45em 0.5em 0.55em !important;
+        }
+        $this #screen-Ana .center-container {
+          -webkit-box-orient: vertical !important;
+          -webkit-flex-direction: column !important;
+          flex-direction: column !important;
+          -webkit-justify-content: center !important;
+          justify-content: center !important;
+          width: 48% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0.35em 0.5em !important;
+        }
+        $this #screen-Ana .centered-dateclock-wrapper {
+          width: 100% !important;
+          min-height: 13.5em !important;
+          -webkit-justify-content: flex-start !important;
+          justify-content: flex-start !important;
+        }
+        $this #screen-Ana .centered-dateclock {
+          width: 100% !important;
+        }
+        $this #screen-Ana .date,
+        $this #screen-Ana .centered-spacer {
+          display: none !important;
+        }
+        $this #screen-Ana .center-container > .card-wrapper {
+          width: 100% !important;
+          margin: 0.45em 0 0 0 !important;
+        }
+        $this #screen-Ana .entities-container {
+          width: 52% !important;
+          max-width: none !important;
+          height: 100% !important;
+          padding: 0.35em 0.25em !important;
+          overflow-y: auto !important;
+          -webkit-align-content: flex-start !important;
+          align-content: flex-start !important;
+        }
+        $this #screen-Ana .entities-container > .card-wrapper {
+          width: calc(33.333% - 0.55em) !important;
+          min-width: 0 !important;
+          -webkit-flex: 0 0 calc(33.333% - 0.55em) !important;
+          flex: 0 0 calc(33.333% - 0.55em) !important;
+        }
+        $this #screen-Ana .entity-label {
+          font-size: 0.64em !important;
+          line-height: 1.05 !important;
+          max-width: calc(100% - 1.7em) !important;
+        }
+        $this #screen-Ana .widgets-container {
+          width: 72% !important;
+          max-width: 17em !important;
+        }
+        $this #screen-Ana .centered-widget-wrapper,
+        $this #screen-Ana .weather-container {
+          width: 100% !important;
+        }
+        $this #screen-Ana .weather-container,
+        $this #screen-Ana .weather-main {
+          overflow: visible !important;
+        }
+        $this #screen-Ana .weather-main {
+          padding-left: 0.65em !important;
+          padding-right: 0.65em !important;
+        }
+        $this #screen-Ana .weather-icon {
+          font-size: 0 !important;
+          -webkit-filter: none !important;
+          filter: none !important;
+        }
+        $this #screen-Ana .weather-icon::before {
+          content: "☁" !important;
+          color: #e6f7ff !important;
+          font-size: 30px !important;
+          line-height: 1 !important;
+          text-shadow: 0 0 0.35em rgba(136,192,208,0.95) !important;
+        }
+
+        /* The date is a template sensor so Turkish weekday names are reliable. */
+        $this #screen-Ana .sensors-container {
+          position: absolute !important;
+          left: 0.5em !important;
+          top: 43% !important;
+          width: calc(48% - 1em) !important;
+          z-index: 30 !important;
+          display: block !important;
+        }
+        $this #screen-Ana [id^="sensor-wall_panel_date-"] {
+          width: 100% !important;
+        }
+        $this #screen-Ana [id^="sensor-wall_panel_date-"] .sensor {
+          padding: 0 !important;
+          background: transparent !important;
+          border: none !important;
+          -webkit-align-items: flex-start !important;
+          align-items: flex-start !important;
+        }
+        $this #screen-Ana [id^="sensor-wall_panel_date-"] .sensor-label-wrapper {
+          display: none !important;
+        }
+        $this #screen-Ana [id^="sensor-wall_panel_date-"] .sensor-value-wrapper {
+          width: 100% !important;
+          text-align: center !important;
+        }
+        $this #screen-Ana [id^="sensor-wall_panel_date-"] .sensor-value {
+          display: block !important;
+          white-space: pre-line !important;
+          text-align: center !important;
+          font-size: 1.15em !important;
+          line-height: 1.18 !important;
+          font-weight: 600 !important;
+        }
+
+        /* Reserve a real row for group headers so they cannot cross cards. */
+        $this #screen-Mutfak .tiled-container,
+        $this #screen-Giriş .tiled-container,
+        $this #screen-Yazıcı .tiled-container {
+          box-sizing: border-box !important;
+          padding: 0.65em 0.9em 5.4em !important;
+          overflow: hidden !important;
+          gap: 0.55em !important;
+        }
+        $this #screen-Mutfak .tiled-group,
+        $this #screen-Giriş .tiled-group,
+        $this #screen-Yazıcı .tiled-group {
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 0 !important;
+        }
+        $this #screen-Mutfak .tiled-group,
+        $this #screen-Giriş .tiled-group {
+          flex: 1 1 0 !important;
+        }
+        $this #screen-Mutfak .tiled-group-header,
+        $this #screen-Giriş .tiled-group-header,
+        $this #screen-Yazıcı .tiled-group-header {
+          box-sizing: border-box !important;
+          width: auto !important;
+          max-width: 100% !important;
+          min-height: 1.9em !important;
+          flex: 0 0 auto !important;
+          align-self: flex-start !important;
+          padding: 0.28em 0.65em !important;
+          border-left: 0.22em solid #88c0d0 !important;
+          border-radius: 0.35em !important;
+          background: rgba(136,192,208,0.10) !important;
+          font-size: 0.82em !important;
+          line-height: 1.15 !important;
+          white-space: nowrap !important;
+          opacity: 0.95 !important;
+          margin-bottom: 0.5em !important;
+        }
+        $this #screen-Mutfak .tiled-group-header-line,
+        $this #screen-Giriş .tiled-group-header-line,
+        $this #screen-Yazıcı .tiled-group-header-line {
+          display: none !important;
+        }
+        $this #screen-Mutfak .tiled-cards,
+        $this #screen-Giriş .tiled-cards,
+        $this #screen-Yazıcı .tiled-cards {
+          flex: 1 1 auto !important;
+          min-height: 0 !important;
+          align-items: stretch !important;
+        }
+        $this #screen-Mutfak .tiled-card-wrapper,
+        $this #screen-Giriş .tiled-card-wrapper,
+        $this #screen-Yazıcı .tiled-card-wrapper {
+          min-width: 0 !important;
+          height: 100% !important;
+        }
+        $this #screen-Mutfak .entity-label,
+        $this #screen-Giriş .entity-label,
+        $this #screen-Yazıcı .entity-label {
+          font-size: 0.82em !important;
+          text-align: left !important;
+        }
+
+        /* Robot: three large, equally sized actions. */
+        $this #screen-Robot .main-container {
+          box-sizing: border-box !important;
+          padding: 1.2em 1.2em 6em !important;
+          overflow: hidden !important;
+          justify-content: center !important;
+        }
+        $this #screen-Robot .entities-container {
+          width: 94% !important;
+          max-width: none !important;
+          height: 70% !important;
+          align-items: stretch !important;
+          flex-wrap: nowrap !important;
+        }
+        $this #screen-Robot .entities-container > .card-wrapper {
+          flex: 1 1 0 !important;
+          min-width: 0 !important;
+        }
+        $this #screen-Robot .ha-button,
+        $this #screen-Robot .ha-button-content {
+          height: 100% !important;
+          justify-content: center !important;
+        }
+        $this #screen-Robot .ha-button-content {
+          flex-direction: column !important;
+          text-align: center !important;
+        }
+        $this #screen-Robot .ha-button-icon {
+          font-size: 2.2em !important;
+          margin: 0 0 0.25em 0 !important;
+        }
+        $this #screen-Robot .entity-label {
+          font-size: 0.95em !important;
+          text-align: center !important;
+          max-width: 100% !important;
+        }
+
+        /* Printer: controls above a compact 3x2 status grid. */
+        $this #screen-Yazıcı .tiled-group:first-child {
+          flex: 0 0 34% !important;
+        }
+        $this #screen-Yazıcı .tiled-group:last-child {
+          flex: 1 1 0 !important;
+        }
+        $this #screen-Yazıcı .tiled-group:last-child .tiled-card-wrapper {
+          flex: 1 1 calc(33.333% - 0.55em) !important;
+          width: calc(33.333% - 0.55em) !important;
+          height: calc(50% - 0.3em) !important;
+        }
+        $this #screen-Yazıcı .sensor.card {
+          padding: 0.45em !important;
+        }
+        $this #screen-Yazıcı .sensor-label-wrapper {
+          font-size: 0.72em !important;
+          line-height: 1.05 !important;
+          text-align: center !important;
+          margin-bottom: 0.2em !important;
+        }
+        $this #screen-Yazıcı .sensor-value {
+          font-size: 1.05em !important;
+        }
+
+        </style>
+        <script>
+        window.addEventListener("DOMContentLoaded", function() {
+          if (window.wallPanelHomeResetInstalled) { return; }
+          window.wallPanelHomeResetInstalled = true;
+
+          var idleLimit = 125000;
+          var lastActivity = new Date().getTime();
+
+          function rememberActivity() {
+            lastActivity = new Date().getTime();
+          }
+
+          function returnToHome() {
+            if (window.navigateTo && window.location.hash !== "#screen-Ana") {
+              window.navigateTo(0);
+            }
+          }
+
+          var weatherTranslations = {
+            "Loading...": "Yükleniyor...",
+            "Clear night": "Açık gece",
+            "Cloudy": "Bulutlu",
+            "Exceptional": "Olağan dışı",
+            "Foggy": "Sisli",
+            "Hail": "Dolu",
+            "Lightning": "Gök gürültülü",
+            "Lightning, rainy": "Gök gürültülü ve yağmurlu",
+            "Partly cloudy": "Parçalı bulutlu",
+            "Pouring": "Şiddetli yağmurlu",
+            "Rainy": "Yağmurlu",
+            "Snowy": "Karlı",
+            "Snowy, rainy": "Karla karışık yağmurlu",
+            "Sunny": "Güneşli",
+            "Windy": "Rüzgârlı",
+            "Windy, cloudy": "Rüzgârlı ve bulutlu"
+          };
+
+          function translateWeather() {
+            var conditions = document.querySelectorAll(".weather-condition");
+            var feels = document.querySelectorAll(".weather-feels");
+            var i;
+            var original;
+
+            for (i = 0; i < conditions.length; i++) {
+              original = conditions[i].textContent.replace(/^\\s+|\\s+$/g, "");
+              if (weatherTranslations[original]) {
+                conditions[i].textContent = weatherTranslations[original];
+              }
+            }
+            for (i = 0; i < feels.length; i++) {
+              feels[i].textContent = feels[i].textContent.replace(/^Feels\\s+/, "Hissedilen ");
+            }
+          }
+
+          translateWeather();
+          if (window.MutationObserver) {
+            var weatherObserver = new MutationObserver(translateWeather);
+            weatherObserver.observe(document.body, {
+              childList: true,
+              characterData: true,
+              subtree: true
+            });
+          } else {
+            window.setInterval(translateWeather, 5000);
+          }
+
+          document.addEventListener("touchstart", rememberActivity, false);
+          document.addEventListener("mousedown", rememberActivity, false);
+          document.addEventListener("keydown", rememberActivity, false);
+          document.addEventListener("visibilitychange", function() {
+            if (document.hidden) { returnToHome(); }
+          }, false);
+          window.addEventListener("pagehide", returnToHome, false);
+          window.addEventListener("blur", returnToHome, false);
+
+          window.setInterval(function() {
+            if (new Date().getTime() - lastActivity >= idleLimit) {
+              returnToHome();
+              rememberActivity();
+            }
+          }, 5000);
+        });
+        </script>
+        <style>
+
     screens:
-      - name: ANA
+      - name: Ana
         icon: home
         layout: centered
-        dateclock:
-          enabled: true
-          show_seconds: false
-          show_date: true
-          align: center
-          font_size: 1.2
-          time_size: 2.4
-          date_size: 0.58
         order:
           widgets: 1
           entities: 2
           sensors: 3
+        dateclock:
+          enabled: true
+          show_time: true
+          show_date: false
+          show_seconds: false
+          capitalise_day: true
+          hour12: false
+          align: left
+          font_size: 3.2
+          time_size: 2.65
+          time_weight: 700
+          date_size: 0.44
+          date_weight: 500
         widgets:
-          style:
-            borders: false
-            background: transparent
           cards:
             - entity_id: weather.example_home
-              label: Hava Durumu
               options:
-                forecast_interval: hourly
-                forecast_times: 2
                 internal_borders: false
+                show_forecast: false
+        sensors:
+          cards:
+            - entity_id: sensor.wall_panel_date
+              label: ""
+              icon: calendar
         entities:
           cards:
             - entity_id: light.example_living_room
               label: Salon
-              icon: sofa
+              icon: ceiling-light
             - entity_id: light.example_kitchen_counter
               label: Tezgah
               icon: lightbulb
+            - entity_id: light.example_kitchen_sink
+              label: Lavabo
+              icon: lightbulb
+            - entity_id: light.example_dining_table
+              label: Yemek Masası
+              icon: ceiling-light
             - entity_id: light.example_entrance
               label: Antre
-              icon: door
+              icon: lightbulb
+            - entity_id: light.example_front_corridor
+              label: Koridor Ön
+              icon: lightbulb
+            - entity_id: light.example_rear_corridor
+              label: Koridor Arka
+              icon: lightbulb
+            - entity_id: light.example_bedroom
+              label: Yatak Odası
+              icon: lamp
+            - entity_id: light.example_office
+              label: Çalışma Odası
+              icon: desk-lamp
 
-      - name: MUTFAK
+      - name: Mutfak
         icon: silverware-fork-knife
         layout: tiled
+        stretch: true
+        dateclock:
+          enabled: false
         groups:
-          - name: Mutfak ışıkları
-            icon: lightbulb
+          - name: Mutfak Lambaları
+            icon: lightbulb-group
+            stretch: true
             cards:
               - entity_id: light.example_kitchen_counter
                 label: Tezgah
+                icon: lightbulb
               - entity_id: light.example_kitchen_sink
                 label: Lavabo
+                icon: lightbulb
               - entity_id: light.example_dining_table
                 label: Yemek Masası
+                icon: ceiling-light
+          - name: Yakın Odalar
+            icon: home-lightbulb
+            stretch: true
+            cards:
+              - entity_id: light.example_living_room
+                label: Salon
+                icon: ceiling-light
+              - entity_id: light.example_entrance
+                label: Antre
+                icon: lightbulb
 
-      - name: GİRİŞ
-        icon: door
+      - name: Giriş
+        icon: door-open
         layout: tiled
+        stretch: true
+        dateclock:
+          enabled: false
         groups:
-          - name: Giriş ve koridor
-            icon: lightbulb
+          - name: Giriş ve Koridor
+            icon: door-open
+            stretch: true
             cards:
               - entity_id: light.example_entrance
                 label: Antre
+                icon: lightbulb
               - entity_id: light.example_front_corridor
                 label: Koridor Ön
+                icon: lightbulb
               - entity_id: light.example_rear_corridor
                 label: Koridor Arka
-
-      - name: ROBOT
-        icon: robot-vacuum
-        layout: tiled
-        groups:
-          - name: Robot süpürge
-            icon: robot-vacuum
+                icon: lightbulb
+          - name: Odalar
+            icon: floor-plan
+            stretch: true
             cards:
-              - entity_id: script.example_vacuum_start
-                label: Temizliğe Başla
-                icon: play
-              - entity_id: script.example_vacuum_pause
-                label: Durdur
-                icon: pause
-              - entity_id: script.example_vacuum_dock
-                label: İstasyona Dön
-                icon: home
+              - entity_id: light.example_bedroom
+                label: Yatak Odası
+                icon: lamp
+              - entity_id: light.example_office
+                label: Çalışma Odası
+                icon: desk-lamp
+              - entity_id: light.example_floor_lamp
+                label: Lambader
+                icon: floor-lamp
 
-      - name: YAZICI
-        icon: printer-3d
+      - name: Robot
+        icon: robot-vacuum
+        layout: centered
+        dateclock:
+          enabled: false
+        entities:
+          style:
+            borders: false
+            background: "rgba(255,255,255,0.09)"
+          cards:
+            - entity_id: script.example_vacuum_start
+              label: Temizliğe Başla
+              icon: play-circle
+            - entity_id: script.example_vacuum_stop
+              label: Durdur
+              icon: stop-circle
+            - entity_id: script.example_vacuum_dock
+              label: İstasyona Dön
+              icon: home-map-marker
+
+      - name: Yazıcı
+        icon: printer
         layout: tiled
+        stretch: true
+        dateclock:
+          enabled: false
         groups:
-          - name: Yazıcı
-            icon: printer-3d
+          - name: Yazıcı Kontrolleri
+            icon: printer
+            stretch: true
+            cards:
+              - entity_id: switch.example_printer_power
+                label: Yazıcı Gücü
+                icon: power-socket-eu
+              - entity_id: light.example_printer_chamber
+                label: İç Aydınlatma
+                icon: lightbulb
+          - name: Baskı Durumu
+            icon: information-outline
+            stretch: true
             cards:
               - entity_id: sensor.example_printer_status
                 label: Durum
-              - entity_id: switch.example_printer_power
-                label: Yazıcı Gücü
-              - entity_id: light.example_printer_light
-                label: İç Aydınlatma
+              - entity_id: sensor.example_printer_stage
+                label: Aşama
+              - entity_id: sensor.example_printer_progress
+                label: İlerleme
+                options:
+                  unit: "%"
+              - entity_id: sensor.example_printer_remaining_time
+                label: Kalan Süre
+              - entity_id: sensor.example_printer_bed_temperature
+                label: Tabla
+                options:
+                  unit: "°C"
+              - entity_id: sensor.example_printer_nozzle_temperature
+                label: Nozul
+                options:
+                  unit: "°C"
 
 localization:
-  # en-US was the reliable fallback for this old browser in my testing.
-  # Turkish labels above work independently of this locale setting.
-  locale: "en-US"
-  timezone: "Europe/Istanbul" # Replace if your Home Assistant uses another zone.
+  # en-GB was the reliable fallback on Chromium 44. Visible strings are
+  # translated separately above.
+  locale: "en-GB"
+  timezone: "Etc/UTC" # Replace with your Home Assistant timezone.
   hour12: false
 
 wallpanel: true

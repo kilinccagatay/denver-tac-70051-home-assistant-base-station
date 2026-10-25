@@ -1,0 +1,11 @@
+# Add this block below `template:` in configuration.yaml, or place it in a
+# package/template include according to your Home Assistant configuration.
+# It produces the two-line value used by hoarydash.example.yaml.
+
+- sensor:
+    - name: Wall Panel Date
+      unique_id: wall_panel_date
+      icon: mdi:calendar
+      state: |-
+        {{ now().strftime("%d.%m.%Y") }}
+        {{ ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"][now().weekday()] }}

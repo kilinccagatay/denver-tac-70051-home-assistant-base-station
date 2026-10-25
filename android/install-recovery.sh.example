@@ -1,0 +1,33 @@
+#!/system/bin/sh
+
+# This firmware executes /system/etc/install-recovery.sh during boot.
+# Confirm that behavior on your own image before using this file.
+
+WAIT_COUNT=0
+while [ "$WAIT_COUNT" -lt 60 ]; do
+    if service check activity 2>/dev/null | busybox grep -q found; then
+        break
+    fi
+    sleep 1
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+done
+
+sleep 12
+
+# Dismiss only the insecure swipe keyguard used by this Android 4.1 image.
+if dumpsys window | busybox grep -q 'mCurrentFocus=.*Keyguard'; then
+    input keyevent 82
+    sleep 2
+fi
+
+am start -n com.thanksmister.iot.wallpanellegacy/.ui.activities.WelcomeActivity
+
+if [ -x /system/xbin/wallpanel-backlight ]; then
+    busybox nohup /system/xbin/wallpanel-backlight \
+        >/data/local/tmp/wallpanel-backlight-boot.log 2>&1 &
+fi
+
+if [ -x /system/xbin/wallpanel-watchdog ]; then
+    busybox nohup /system/xbin/wallpanel-watchdog \
+        >/data/local/tmp/wallpanel-watchdog-boot.log 2>&1 &
+fi

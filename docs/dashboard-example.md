@@ -1,21 +1,64 @@
-# Dashboard planning template
+# Dashboard installation and entity mapping
 
-The [shareable HoaryDash YAML example](../examples/hoarydash.example.yaml) models the five-tab layout. It is **not** the exported configuration from my Home Assistant host. The backup available on this computer stores the HoaryDash add-on data in an encrypted archive, so I rebuilt this example from [HoaryDash's configuration reference](https://github.com/Skrubbadubba/HoaryDash/blob/main/docs/CONFIG.md) and the verified project notes.
+[`../examples/hoarydash.example.yaml`](../examples/hoarydash.example.yaml) is a sanitized version of the layout running on the Denver tablet. The entity IDs are descriptive placeholders, but the screen structure, CSS fixes, Turkish weather translation, and ES5 idle-return logic are based on the working configuration.
 
-Copy the example into your HoaryDash add-on configuration as `hoarydash.yaml`, replace every `example_*` entity ID with one from your Home Assistant installation, and set WallPanel's start URL to `http://<your-ha-host>:4567/dash/`. Add-on installations use their Home Assistant connection; the example does not include a server address or token. Confirm the YAML keys against your installed HoaryDash version before replacing an existing configuration.
+## Install
 
-The Robot tab calls three example Home Assistant scripts. [These script definitions](../examples/home-assistant-scripts.example.yaml) show how to connect the buttons to a vacuum entity. Replace `vacuum.example_robot` and check which vacuum actions your integration supports. Home Assistant documents [vacuum actions](https://www.home-assistant.io/integrations/vacuum/) and [script YAML](https://www.home-assistant.io/docs/automation/building-blocks/).
+1. Install HoaryDash 0.13.0 or check the example against your installed version's configuration reference.
+2. Back up the add-on's current `hoarydash.yaml`.
+3. Copy the example to the HoaryDash add-on configuration directory as `hoarydash.yaml`.
+4. Replace every `example_*` entity ID using the table below.
+5. Add the Turkish date template from [`../examples/home-assistant-template.example.yaml`](../examples/home-assistant-template.example.yaml) to Home Assistant.
+6. Add the vacuum scripts from [`../examples/home-assistant-scripts.example.yaml`](../examples/home-assistant-scripts.example.yaml).
+7. Check Home Assistant's configuration, restart Home Assistant if required, then restart HoaryDash.
+8. Open `http://HOME_ASSISTANT_HOST:4567/dash/` in a current browser before testing it in WallPanel.
 
-| Tab | Display and controls | Replace with your own entities |
-| --- | --- | --- |
-| Home | Large clock; centered date and weekday; weather; most used lights | Weather entity and favorite light entities |
-| Kitchen | Three large lighting controls | Counter, sink, dining table lights |
-| Entrance | Large entrance and corridor controls | Entrance, front corridor, rear corridor lights |
-| Robot | Start, stop/pause, return to dock | Vacuum entity and supported actions |
-| Printer | Printer status, power, and internal light | Printer integration and smart plug entities |
+No Home Assistant URL or token is stored in this YAML. The add-on connects through Home Assistant. Keep port 4567 restricted to a trusted LAN.
 
-For the 800 × 480 screen, aim for a clock around one third of the display height, two short lines for the date, and large touch areas. Avoid long headers over controls, ellipsized labels, dark icons on dark backgrounds, dense graphs, and animation. This unit used Turkish weather translations and a two-line Turkish date; test localization in the tablet's actual browser because an unsupported locale broke the weather card during this build.
+## Entity mapping
 
-The original panel also used an ES5-compatible idle return to Home with a 125-second fallback timer. That custom script is not included because the working source is not available in this backup. The sample YAML illustrates the visible five-tab layout.
+| Example entity | Purpose |
+| --- | --- |
+| `weather.example_home` | Current weather on Home |
+| `sensor.wall_panel_date` | Two-line Turkish date and weekday |
+| `light.example_living_room` | Living-room light |
+| `light.example_kitchen_counter` | Kitchen counter light |
+| `light.example_kitchen_sink` | Kitchen sink light |
+| `light.example_dining_table` | Dining-table light |
+| `light.example_entrance` | Entrance light |
+| `light.example_front_corridor` | Front corridor light |
+| `light.example_rear_corridor` | Rear corridor light |
+| `light.example_bedroom` | Bedroom light |
+| `light.example_office` | Office light |
+| `light.example_floor_lamp` | Optional floor lamp |
+| `script.example_vacuum_start` | Start the robot vacuum |
+| `script.example_vacuum_stop` | Stop the robot vacuum |
+| `script.example_vacuum_dock` | Return it to the dock |
+| `switch.example_printer_power` | Separate smart plug powering the printer |
+| `light.example_printer_chamber` | Bambu Lab chamber light |
+| `sensor.example_printer_*` | Printer status, stage, progress, time, and temperatures |
 
-The published example uses placeholders. Replace them with your own local Home Assistant entities and dashboard address.
+The printer power entity is intentionally separate from the Bambu Lab printer integration. In this build it represents an external smart plug.
+
+## Why the custom CSS exists
+
+HoaryDash's defaults target more capable displays. On 800 × 480, longer Turkish labels were ellipsized, group headers could overlap cards, the weather icon had poor contrast, and the printer status grid was too dense. The custom CSS:
+
+- gives the clock roughly one third of the landscape height;
+- centers the date under the clock on two lines;
+- constrains Home to a 48/52 split;
+- allows labels such as “Çalışma Odası” and “Yemek Masası” to wrap;
+- gives group headers their own fixed-height row and hides the crossing divider;
+- forces three large robot controls in one row;
+- lays printer sensors out as six readable cells;
+- raises weather icon contrast and prevents edge clipping.
+
+## Old-browser JavaScript
+
+The injected script deliberately uses ES5 syntax. It translates HoaryDash's English weather condition strings to Turkish and returns to the Home screen after 125 seconds without touch, mouse, or keyboard activity. It also returns Home when the page becomes hidden or loses focus, which makes the next motion wake predictable.
+
+Avoid arrow functions, `let`, `const`, optional chaining, and other modern syntax in code executed by Chromium 44.
+
+## Localization
+
+The running panel uses `en-GB` as the reliable browser locale while displaying Turkish labels through the template sensor and translation script. This avoids an old-browser locale failure that previously broke the weather card. Change the example timezone to your own Home Assistant timezone.
