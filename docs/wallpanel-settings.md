@@ -28,7 +28,7 @@ Keep 3 FPS / 333 ms while tuning sensitivity. A later 4 FPS / 250 ms experiment 
 
 ## Power and controls
 
-On the tested Denver firmware, real Android screen-off interrupts camera frames. The continuously powered reference now uses `backlight-only`: the OS, LCD image, and camera stay active while only the backlight is set to zero. The earlier `lcd-off` profile remains available without losing application settings. See [display profiles](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/device-root/display-profiles.md). A driver command is not proof of deep sleep or measured reduction on every display rail.
+On the tested Denver firmware, real Android screen-off interrupts camera frames. The continuously powered reference now uses `backlight-only`: the OS, LCD image, and camera stay active while the separate backlight-enable gate on verified AXP20 GPIO1 is closed. Brightness zero alone left low-light shimmer, which the enable-gate test eliminated. LCD power on GPIO0 is left unchanged. This wiring is specific to the reference unit. The earlier `lcd-off` profile remains available without losing application settings. See [display profiles](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/device-root/display-profiles.md). A driver command is not proof of deep sleep or measured reduction on every display rail.
 
 The Denver power key is remapped for camera-safe short-press toggles of the configured dark mode; long press uses a root helper to show Android's power menu. Motion can wake after manual off, with a two-second grace period. Other devices require their own driver/key-layout verification.
 

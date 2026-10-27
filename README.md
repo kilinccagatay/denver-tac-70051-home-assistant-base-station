@@ -17,7 +17,7 @@ The enclosure, print profile, and assembly guide are on [MakerWorld](https://mak
 - Automatic return to the Home page after inactivity.
 - Optional Mac Teams call badge on Home, with a larger red dot above a centered label and no navigation overlap.
 - Front-camera motion detection that restores the backlight to a capped 75% level.
-- Charger-powered backlight-only profile: the LCD image, Android, and camera stay active while the hardware backlight is set to zero. The earlier LCD-off profile is retained for rollback.
+- Charger-powered backlight-only profile: the LCD image, Android, and camera stay active while the separate backlight-enable gate is closed. Brightness zero alone was insufficient on this unit; the earlier LCD-off profile is retained for rollback.
 - Boot launcher and watchdog that recover WallPanel after a low-memory kill or gradual Crosswalk memory growth.
 - Camera profile: 3 FPS / 333 ms, 30-second inactivity dimming, 75% wake brightness, and a locally tuned motion difference threshold of 5.
 
@@ -84,7 +84,7 @@ The YAML contains the actual layout strategy and old-browser fixes used by the r
 
 The basic dashboard does not require root. Current low-level display, power-button, kiosk, and recovery sources live in the [fork's `device-root/` directory](https://github.com/kilinccagatay/wallpanel-android-legacy/tree/lite-motion-core/device-root). This repository's [`android/`](android/README.md) files are an earlier backlight-only snapshot; do not combine them with the current APK.
 
-On the tested Denver kernel, real Android screen-off interrupted camera frames. The current continuously powered profile keeps Android, WallPanel, the LCD image, and the front camera active while setting only the backlight to zero. An image visible under external light is expected. The previous LCD-off behavior remains selectable; see [display profiles](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/device-root/display-profiles.md). Neither mode proves system sleep. Camera and browser processing still consume power.
+On the tested Denver kernel, real Android screen-off interrupted camera frames. The current continuously powered profile keeps Android, WallPanel, the LCD image, and the front camera active while closing only the backlight-enable gate on verified AXP20 GPIO1. Brightness/PWM zero alone left a low-light shimmer; the separate enable gate produced a user-confirmed stable dark state. An image visible under external light is expected. The previous LCD-off behavior remains selectable; see [display profiles](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/device-root/display-profiles.md). Neither mode proves system sleep. Camera and browser processing still consume power.
 
 The watchdog addresses a second limitation: Crosswalk was observed growing beyond roughly 200 MB on a tablet with only about 354 MB usable RAM. Android can kill the activity and leave the launcher visible while WallPanel's service restarts. The watchdog brings the activity back and can recycle it while the panel is dark.
 
