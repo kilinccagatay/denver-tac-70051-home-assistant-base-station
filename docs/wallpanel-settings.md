@@ -28,9 +28,9 @@ Keep 3 FPS / 333 ms while tuning sensitivity. A later 4 FPS / 250 ms experiment 
 
 ## Power and controls
 
-On the tested Denver firmware, real Android screen-off interrupts camera frames. The root profile keeps the OS and camera logically awake and requests Allwinner LCD off. A driver command is not proof of deep sleep or measured reduction on every display rail.
+On the tested Denver firmware, real Android screen-off interrupts camera frames. The continuously powered reference now uses `backlight-only`: the OS, LCD image, and camera stay active while only the backlight is set to zero. The earlier `lcd-off` profile remains available without losing application settings. See [display profiles](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/device-root/display-profiles.md). A driver command is not proof of deep sleep or measured reduction on every display rail.
 
-The Denver power key is remapped for camera-safe short-press LCD toggles; long press uses a root helper to show Android's power menu. Motion can wake after manual off, with a two-second grace period. Other devices require their own driver/key-layout verification.
+The Denver power key is remapped for camera-safe short-press toggles of the configured dark mode; long press uses a root helper to show Android's power menu. Motion can wake after manual off, with a two-second grace period. Other devices require their own driver/key-layout verification.
 
 Long-pressing the native battery badge exposes Android controls for 12 seconds with a single loading dialog. The root SystemUI intervention is specific to the tested ROM. Wi-Fi ADB uses a reserved IP and a trusted LAN; do not expose this legacy service to the internet.
 
