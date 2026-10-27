@@ -21,6 +21,7 @@ No Home Assistant URL or token is stored in this YAML. The add-on connects throu
 | --- | --- |
 | `weather.example_home` | Current weather on Home |
 | `sensor.wall_panel_date` | Two-line Turkish date and weekday |
+| `binary_sensor.mac_call_active` | Optional Mac Teams call badge; hidden without fresh reports |
 | `light.example_living_room` | Living-room light |
 | `light.example_kitchen_counter` | Kitchen counter light |
 | `light.example_kitchen_sink` | Kitchen sink light |
@@ -39,6 +40,15 @@ No Home Assistant URL or token is stored in this YAML. The add-on connects throu
 | `sensor.example_printer_*` | Printer status, stage, progress, time, and temperatures |
 
 The printer power entity is intentionally separate from the Bambu Lab printer integration. In this build it represents an external smart plug.
+
+## Optional call status
+
+The Home screen includes a small red dot above a centered **Toplantı** label,
+clear of the navigation bar. It stays hidden until a fresh call report arrives.
+Follow [Mac Call Indicator setup](mac-call-indicator.md) for the separate Mac
+helper and Home Assistant receiver. No APK or tablet firmware update is needed.
+The example's hidden sensor card is intentional: HoaryDash needs it to subscribe
+to the entity, while the custom script draws the compact badge.
 
 ## Why the custom CSS exists
 

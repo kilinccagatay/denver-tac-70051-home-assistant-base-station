@@ -1,5 +1,11 @@
 # Rooted-tablet helpers
 
+> Historical snapshot: these scripts describe the earlier backlight-only implementation.
+> Current display, power-button, SystemUI, and watchdog helpers live in the
+> [WallPanel Lite fork](https://github.com/kilinccagatay/wallpanel-android-legacy/tree/lite-motion-core/device-root).
+> Follow its [older-hardware guide](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/legacy-hardware-guide.md).
+> Do not mix this snapshot with the current APK.
+
 These files reproduce the optional root changes used on one Denver TAC-70051 firmware build. The dashboard itself does not require root.
 
 ## Requirements

@@ -1,6 +1,8 @@
-# Denver TAC-70051 Home Assistant Base Station
+# Home Assistant panels on older Android hardware — Denver-tested build
 
-This project gives a Denver TAC-70051 tablet a second life as a 7-inch Home Assistant control panel. It documents the working software stack, the custom 800 × 480 dashboard, the root-only backlight and reliability helpers, battery-gauge calibration, and the printable enclosure.
+This project documents a Home Assistant panel for older Android hardware with limited CPU power, RAM, and browser support. The reference build is a Denver TAC-70051 with Android 4.1.1 and an 800 × 480 screen. Dashboard layout and application tuning can inform other tablets; the printable enclosure and Allwinner root modifications remain specific to this device. Other hardware has not been verified.
+
+Start with the [older-hardware setup and tuning guide](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/legacy-hardware-guide.md). This repository supplies the dashboard, screenshots, and physical-build examples; the [WallPanel Lite fork](https://github.com/kilinccagatay/wallpanel-android-legacy/tree/lite-motion-core) is the maintained source for the current APK and root helpers.
 
 The enclosure, print profile, and assembly guide are on [MakerWorld](https://makerworld.com/en/models/3487173-denver-tac-70051-tablet-homeassistant-base-station#profileId-3982293). The complete build story is on [my blog](https://cagataykilinc.com.tr/2026/10/25/denver-tac-70051-home-assistant-base-station/).
 
@@ -8,15 +10,16 @@ The enclosure, print profile, and assembly guide are on [MakerWorld](https://mak
 
 ## What works
 
-- Stock Android 4.1.1 with [WallPanel Legacy](https://github.com/thanksmister/wallpanel-android-legacy) 0.8.4 build 7.
+- Stock Android 4.1.1 with the custom WallPanel Legacy Lite fork from `lite-motion-core`. Upstream 0.8.4 build 7 was the initial installation.
 - [HoaryDash](https://github.com/Skrubbadubba/HoaryDash) 0.13.0 as a Chromium 44-compatible Home Assistant frontend.
 - Large clock, centered two-line Turkish date, translated weather conditions, and room lighting controls.
 - Separate Kitchen, Entrance, Robot Vacuum, and Bambu Lab printer pages.
 - Automatic return to the Home page after inactivity.
+- Optional Mac Teams call badge on Home, with a larger red dot above a centered label and no navigation overlap.
 - Front-camera motion detection that restores the backlight to a capped 75% level.
-- Root helper that turns the hardware backlight fully off while Android and the camera remain awake.
+- Root helper using the tested Allwinner LCD-off command while Android and the camera remain logically awake; this does not establish deep sleep or measured display-rail power savings.
 - Boot launcher and watchdog that recover WallPanel after a low-memory kill or gradual Crosswalk memory growth.
-- Optional Allwinner firmware capacity calibration for a properly protected 1S parallel battery pack.
+- Camera profile: 3 FPS / 333 ms, 30-second inactivity dimming, 75% wake brightness, and a locally tuned motion difference threshold of 5.
 
 ## The tablet
 
@@ -44,6 +47,27 @@ These are direct 800 × 480 screenshots captured from the tablet, not desktop mo
 
 ![Bambu Lab printer status and controls](photos/screenshots/printer.png)
 
+## Mac call indicator
+
+[Mac Call Indicator](https://github.com/kilinccagatay/mac-call-indicator) is a
+separate macOS menu-bar companion. It reads Teams call controls locally through
+Accessibility and sends only `in_call: true/false` to Home Assistant. General
+Busy status alone does not trigger it. No meeting title, participant, phone
+number, Graph permission, or Entra registration is needed.
+
+The small **Toplantı** badge appears only on Ana (Home). Its red dot sits above
+the centered label, clear of the bottom navigation. Missing heartbeats expire
+the state after 40 seconds, and the browser also hides stale/disconnected data.
+The Mac menu provides **Start at Login**; no tablet APK or firmware change is
+needed for this integration.
+
+![Call indicator on the real tablet](photos/screenshots/home-call-indicator.png)
+
+Follow the [integration guide](docs/mac-call-indicator.md). The full dashboard
+example includes the optional badge; without the companion entity it stays
+hidden. The helper is experimental and has been validated with Teams test calls;
+it is not a universal macOS or phone-call detector.
+
 ## Quick start
 
 1. Keep the stock device-specific firmware unless you have a verified TAC-70051 image. Generic Allwinner A13 images can break touch, Wi-Fi, camera, or boot.
@@ -58,15 +82,15 @@ The YAML contains the actual layout strategy and old-browser fixes used by the r
 
 ## Root enhancements
 
-The basic dashboard does not require root. Root is only needed for the low-level backlight helper, boot script, and watchdog in [`android/`](android/README.md).
+The basic dashboard does not require root. Current low-level display, power-button, kiosk, and recovery sources live in the [fork's `device-root/` directory](https://github.com/kilinccagatay/wallpanel-android-legacy/tree/lite-motion-core/device-root). This repository's [`android/`](android/README.md) files are an earlier backlight-only snapshot; do not combine them with the current APK.
 
-The camera cannot detect motion while Android is in real suspend. The practical compromise is to keep Android, WallPanel, and the front camera awake while setting the Allwinner hardware backlight to zero. On this kernel the LCD image layer may remain faintly visible under strong ambient light even though the backlight is off. This is not deep sleep and the camera/Crosswalk workload still consumes power.
+On the tested Denver kernel, real Android screen-off interrupted camera frames. The current compromise keeps Android, WallPanel, and the front camera awake while the helper requests LCD off. Earlier backlight-only tests left a faint image visible under strong light. These are different experiments; neither proves system sleep. Camera and browser processing still consume power.
 
 The watchdog addresses a second limitation: Crosswalk was observed growing beyond roughly 200 MB on a tablet with only about 354 MB usable RAM. Android can kill the activity and leave the launcher visible while WallPanel's service restarts. The watchdog brings the activity back and can recycle it while the panel is dark.
 
 ## Battery notes
 
-This build uses six similar 1750 mAh 18650 cells in a protected **1S6P** pack: 10,500 mAh nominal. The firmware design-capacity value was changed from 2,600 to 10,000 mAh so Android's reporting model is closer to the installed pack. This does not create energy, increase charge current, validate the cells, or guarantee an accurate percentage.
+The tablet now uses its original battery and is intended for continuous charger power. An earlier experiment used six 1750 mAh cells in parallel and a 10,000 mAh firmware design-capacity value. That experiment is historical, not the current build or a recommendation for other tablets. The current firmware capacity value must be checked independently; reconnecting the original battery does not automatically restore that field.
 
 Read [`docs/battery-capacity.md`](docs/battery-capacity.md) before changing `script.bin`. Never connect USB 5 V directly to a single-cell lithium battery. Use an appropriate 1S BMS/protection arrangement, matched cells, correct fusing, and the tablet's original charging input. With the observed 600 mA charge setting, a pack of this size can take many hours to charge while the tablet is operating.
 
@@ -93,12 +117,13 @@ The USB-C module feeds the tablet's **original Micro-USB 5 V input**, not the ba
 
 ## Measured limitations
 
-- WallPanel plus camera motion detection was observed using roughly 67–70% CPU.
-- Backlight-off saves display power but is not full LCD power-down or Android suspend.
+- The original build showed roughly 67–70% CPU. After the Lite runtime and sampled detector, short 3 FPS snapshots showed WallPanel around 5%. These are different sessions, not a controlled benchmark or battery-life claim.
+- LCD-off driver commands do not establish Android suspend or measure every display power rail.
 - Camera motion wake depends on WallPanel staying in the foreground; opening settings can pause its camera service until the dashboard is shown again.
 - Browser auto-refresh caused a persistent loading spinner in this setup and is intentionally disabled.
 - The root helpers and Allwinner display ioctl values are specific to this firmware family. Do not install them blindly on another tablet.
-- A separate PIR/mmWave sensor wired to the power-button circuit would allow real system sleep and should be more efficient, but it is not implemented in this repository.
+- Camera sensitivity depends on light and noise. Threshold 6 improved a user dim-room test; 5 is the latest local setting and needs further false-wake testing.
+- A 4 FPS / 250 ms experiment with direct display triggers was reverted after wake failures. Use the stable 3 FPS / 333 ms APK and matching helpers.
 
 ## Privacy and scope
 

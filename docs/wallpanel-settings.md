@@ -1,67 +1,55 @@
-# WallPanel Legacy settings
+# WallPanel Lite settings for older hardware
 
-These settings were tested with WallPanel Legacy 0.8.4 build 7 on Android 4.1.1. Names can differ slightly between builds.
+The current reference uses the [WallPanel Legacy Lite fork](https://github.com/kilinccagatay/wallpanel-android-legacy/tree/lite-motion-core), tested on Denver TAC-70051 / Android 4.1.1. Upstream 0.8.4 build 7 was the initial installation, not the current customized APK.
 
-## Browser
+See the [complete older-hardware guide](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/legacy-hardware-guide.md) for build/signing requirements, hardware boundaries, diagnosis, and acceptance tests.
 
-| Setting | Value |
+## Current profile
+
+| Setting | Tested device value |
 | --- | --- |
 | Start URL | `http://HOME_ASSISTANT_HOST:4567/dash/` |
-| Browser type | Auto / bundled Crosswalk |
-| Prevent screen sleep | On |
-| Start on boot | On |
-| Browser refresh | Off |
-| Full screen | On |
+| Browser | Bundled Crosswalk |
+| Start on boot / prevent sleep | Enabled |
+| Browser Refresh | Off |
+| Camera / motion | Enabled, front camera |
+| Requested preview | 640 × 480 |
+| Requested FPS | 3 |
+| Image processing interval | 333 ms |
+| Wake / brighten on motion | Enabled |
+| Inactivity dim delay | 30 seconds |
+| Wake brightness | 191/255, about 75% |
+| Minimum luma | 1000 |
+| Motion difference threshold / leniency | 5, local tuning |
 
-Browser refresh was disabled because it could leave this old Crosswalk build on a permanent loading spinner. Use HoaryDash's live Home Assistant updates instead.
+The source default leniency is 20. The reference device used 10, then 6 after a dim-room test improved, and finally 5 at the user's request. A smaller threshold is more sensitive; watch for noise-driven false wakes. Five is not a universally tested preset. The minimum-luma value is a whole-frame sum check, not a lux or average-brightness setting.
 
-## Camera and motion
+Keep 3 FPS / 333 ms while tuning sensitivity. A later 4 FPS / 250 ms experiment also introduced display triggers and was reverted after wake/toggle failures. Its cause was not isolated by a controlled test. Install an APK and root helpers from the same stable source revision.
 
-| Setting | Value used here |
-| --- | --- |
-| Camera | Enabled |
-| Camera selection | Front |
-| Resolution | 640 × 480 |
-| Motion detection | Enabled |
-| Wake screen on motion | Enabled |
-| Brightness on motion | Enabled |
-| Motion reset time | 30 seconds |
-| Maximum leniency | 10 |
-| Camera FPS | 2 |
+## Power and controls
 
-Start conservatively. A high camera frame rate raises CPU use significantly on the Allwinner A13. If false triggers occur, change leniency before increasing FPS.
+On the tested Denver firmware, real Android screen-off interrupts camera frames. The root profile keeps the OS and camera logically awake and requests Allwinner LCD off. A driver command is not proof of deep sleep or measured reduction on every display rail.
 
-Opening WallPanel settings can remove its browser activity and camera service from the foreground. Always return to the dashboard before testing motion. Test this sequence:
+The Denver power key is remapped for camera-safe short-press LCD toggles; long press uses a root helper to show Android's power menu. Motion can wake after manual off, with a two-second grace period. Other devices require their own driver/key-layout verification.
 
-1. Leave the dashboard untouched until WallPanel changes Android brightness to its minimum value.
-2. Verify that the root backlight helper reports hardware level `0` if it is installed.
-3. Move into the front camera's view.
-4. Confirm that the dashboard returns at no more than 191/255 brightness.
-5. Leave it again and verify the same cycle several times.
+Long-pressing the native battery badge exposes Android controls for 12 seconds with a single loading dialog. The root SystemUI intervention is specific to the tested ROM. Wi-Fi ADB uses a reserved IP and a trusted LAN; do not expose this legacy service to the internet.
 
-## Important power limitation
+## Verify after changing settings
 
-Real Android suspend stops camera processing, so the front camera cannot wake the tablet from deep sleep. This project keeps Android awake and turns off only the Allwinner hardware backlight. That preserves motion detection but still consumes power for the CPU, camera, Wi-Fi, and LCD electronics.
+1. Return to the dashboard, and confirm the camera client is open.
+2. Confirm only one instance of each root helper runs.
+3. Test short power press off, short press on, and long press separately.
+4. Leave the view still and confirm brightness zero/LCD off after 30 seconds.
+5. Move in front of the camera without touching the panel; check `motionDetected`, brightness 191, and LCD on.
+6. Repeat in dim light, then check a still scene for false wakes.
+7. Reboot and repeat before assuming boot persistence works.
 
-If maximum battery life matters, use an external PIR or mmWave sensor to simulate the tablet's power button and allow Android to sleep. That hardware path is not part of this project.
+The stable baseline passed key-path toggles, a 30-second timeout, and a user-confirmed camera wake on 27 October 2026. Leniency tuning happened afterward; its longer-term dim-room behavior remains to be evaluated.
 
-## Troubleshooting
+## Reliability and troubleshooting
 
-### Motion worked once and then stopped
+The current watchdog recovers missing/non-foreground dashboards and only performs a high-memory maintenance restart after five continuously dark minutes. Boot helpers use `setsid` so they can survive the one-shot init script's exit. Check process command lines, not just PID files; wait for an old service to exit before replacing it.
 
-- Confirm the dashboard, not WallPanel settings, is in the foreground.
-- Confirm the front camera opens in the stock Camera app.
-- Re-enter the dashboard after changing camera settings.
-- Keep the screen logically awake; deep sleep stops the camera.
-- Check whether Android killed WallPanel because of memory pressure. The optional watchdog in [`../android/`](../android/README.md) addresses this case.
+Use SettingsProvider (`content query` / `content update`) for deliberate brightness diagnostics. Direct database writes can leave caches inconsistent, and external brightness changes do not reset the app's inactivity timer. Normal testing should use WallPanel's touch or power-key paths.
 
-### The panel returns to the Android launcher overnight
-
-Crosswalk can grow until Android kills the activity. WallPanel's service may restart without reopening the dashboard. Install the watchdog, or reduce dashboard complexity and restart WallPanel periodically while the panel is dark.
-
-### The page shows only a spinner
-
-- Disable Browser Refresh.
-- Use the HoaryDash URL, not the normal Home Assistant frontend.
-- Verify HoaryDash is running and its port is reachable from the tablet.
-- Keep animations off and avoid modern JavaScript in custom code.
+For a spinner, disable Browser Refresh, check the HoaryDash address and service, and keep custom JavaScript compatible with the old browser. For missing motion, distinguish camera frame delivery from detection sensitivity before changing FPS or display scripts.

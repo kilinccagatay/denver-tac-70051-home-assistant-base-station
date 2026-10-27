@@ -1,0 +1,46 @@
+<!-- Append to HoaryDash theme.custom (which is emitted inside a style tag).
+Also add binary_sensor.mac_call_active to Ana sensors.cards so it is subscribed.
+No credentials belong in this file. ES5 syntax supports older WebViews. -->
+</style>
+<style>
+#screen-Ana [id^="binary_sensor-mac_call_active-"] { display:none !important; }
+#mac-call-badge {
+  position:absolute; right:12px; bottom:14px; z-index:25;
+  display:none; width:62px; padding:7px 0; border-radius:10px;
+  background:#40262b; color:#ffb4b4; font:600 12px Arial,sans-serif;
+  pointer-events:none; white-space:nowrap; text-align:center;
+}
+#mac-call-badge .call-dot {
+  display:block; width:14px; height:14px; margin:0 auto 5px;
+  border-radius:50%; background:#ff4545;
+}
+#mac-call-badge .call-label { display:block; line-height:16px; }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var home = document.getElementById('screen-Ana');
+  var listeners = window.entityListeners && window.entityListeners['binary_sensor.mac_call_active'];
+  if (!home || !listeners || document.getElementById('mac-call-badge')) { return; }
+  var badge = document.createElement('div');
+  badge.id = 'mac-call-badge';
+  badge.setAttribute('role', 'status');
+  badge.innerHTML = '<span class="call-dot"></span><span class="call-label">Toplantı</span>';
+  home.appendChild(badge);
+  var active = false;
+  var reportedAt = 0;
+  function render() {
+    var age = new Date().getTime() / 1000 - reportedAt;
+    badge.style.display = active && window.haSocketReady && age >= -5 && age < 40 ? 'block' : 'none';
+  }
+  listeners.push(function (state, attrs) {
+    if (typeof state !== 'undefined') { active = state === 'on'; }
+    if (attrs && typeof attrs.last_report_epoch !== 'undefined') {
+      reportedAt = Number(attrs.last_report_epoch) || 0;
+    }
+    render();
+  });
+  window.addEventListener('offline', function () { active = false; render(); }, false);
+  window.setInterval(render, 1000);
+}, false);
+</script>
+<style>
