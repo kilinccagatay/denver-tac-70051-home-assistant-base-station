@@ -22,6 +22,13 @@ repository.
    off without stopping the current app. No microphone, camera, screen recording,
    Apple Events, Graph, or Entra access is required by the helper.
 
+The Mac menu also supports **Meeting until…**, **30 min meeting**, and
+**1 hour meeting** for an intentional manual meeting. The Mac computes remaining
+minutes from its local clock and shows the countdown in its menu bar. End times
+and durations remain local; Home Assistant still receives only a boolean. A
+Teams call starting or ending does not alter that manual deadline. The tablet
+badge stays on while either the manual timer or an actual detected call is active.
+
 Keep the receiver on a trusted private network. Prefer HTTPS where available;
 HTTP traffic is not encrypted. Do not expose the webhook or HoaryDash publicly.
 
