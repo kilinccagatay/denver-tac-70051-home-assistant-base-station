@@ -72,3 +72,20 @@ Avoid arrow functions, `let`, `const`, optional chaining, and other modern synta
 ## Localization
 
 The running panel uses `en-GB` as the reliable browser locale while displaying Turkish labels through the template sensor and translation script. This avoids an old-browser locale failure that previously broke the weather card. Change the example timezone to your own Home Assistant timezone.
+
+### Weather temperature becomes zero or stops updating
+
+Some HoaryDash versions pass Home Assistant's compact WebSocket changes directly
+to the weather widget. A change may omit the unchanged temperature, and a
+temperature-only change may omit the unchanged condition. The stock widget can
+then replace the temperature with zero or ignore the update.
+
+The example includes [`hoarydash-weather-state.js`](../examples/hoarydash-weather-state.js)
+in the injected HTML. It merges weather attributes before calling the existing
+widget, handles attribute-only updates, preserves a genuine 0 °C, and shows `--`
+for missing/invalid/unavailable temperature. It uses ES5 syntax and adds no polling.
+For an existing dashboard, paste the script inside its injected HTML in a
+`<script>` tag, then reload. Do not add it twice.
+
+Run `node tests/weather-state.test.cjs` from the repository to check full state,
+partial updates, zero, negative, missing, and unavailable temperatures.
