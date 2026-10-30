@@ -1,3 +1,5 @@
+.pv2-loading .screen,.pv2-loading .navbar-container { visibility:hidden !important; }
+.pv2-loading body:after { content:'Panel hazırlanıyor…'; position:fixed; top:0; right:0; bottom:0; left:0; z-index:999; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center; background:#171d27; color:#bac7d9; font:18px Arial,sans-serif; }
 /* Scoped, fixed-budget 800x480 touch UI. No blur, animation, framework, or webfont. */
 body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif; }
 .panel-v2 .screen { position:relative; transition:none !important; -webkit-transition:none !important; }
@@ -8,7 +10,7 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 .pv2-brand { font-size:12px; font-weight:bold; letter-spacing:3px; color:#adb8c9; }
 .pv2-connection { font-size:12px; color:#9fd8c2; }
 .pv2-body { height:calc(100% - 25px); display:-webkit-flex; display:flex; }
-.pv2-overview { width:40%; padding-right:20px; text-align:center; display:-webkit-flex; display:flex; -webkit-flex-direction:column; flex-direction:column; -webkit-justify-content:center; justify-content:center; }
+.pv2-overview { position:relative; left:-10px; width:40%; padding-right:28px; text-align:center; display:-webkit-flex; display:flex; -webkit-flex-direction:column; flex-direction:column; -webkit-justify-content:center; justify-content:center; }
 .pv2-clock { font-size:128px; line-height:148px; font-weight:bold; letter-spacing:-7px; color:#f3f5fa; white-space:nowrap; }
 .pv2-date { font-size:22px; line-height:27px; color:#d8e0eb; }
 .pv2-weather { margin-top:13px; min-height:87px; }
@@ -39,7 +41,6 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 .panel-v2 .navbar-item.active { background:#304052 !important; }
 .panel-v2 .navbar-label { font-size:12px !important; line-height:14px !important; margin-top:3px !important; letter-spacing:1px !important; color:#d9e2ef !important; }
 .panel-v2 .navbar-icon { font-size:22px !important; color:#9fc7dc !important; }
-#pv2-countdown { position:fixed; z-index:60; left:0; right:0; bottom:60px; height:28px; display:none; border:0; background:#49362c; color:#ffe1af; font:14px Arial,sans-serif; text-align:center; cursor:pointer; }
 #pv2-notice { position:fixed; z-index:110; left:15px; right:15px; bottom:92px; padding:10px 16px; background:#492e34; color:#ffdce0; border:1px solid #9a5966; border-radius:10px; font:16px Arial,sans-serif; display:none; text-align:center; pointer-events:none; }
 .panel-v2 .pv2-legacy-light { width:100%; height:100%; min-height:70px; margin:0; }
 .panel-v2 .pv2-legacy-host > *:not(.pv2-card) { display:none !important; }
@@ -52,18 +53,26 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 .pv2-close { min-width:90px; min-height:46px; padding:8px 14px; border:1px solid #64758b; border-radius:10px; background:#34465c; color:white; font:18px Arial,sans-serif; }
 .pv2-light-settings { border-top:1px solid #3e4d61; margin-top:9px; padding-top:10px; }
 .pv2-light-settings h3 { margin:0 0 6px; font-size:17px; color:#cbd7e5; }
-.pv2-setting-row { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; margin:5px 0; }
-.pv2-setting-row label { min-width:85px; font-size:16px; }
-.pv2-setting-row output { width:52px; text-align:right; font-size:18px; }
-.pv2-setting-row input[type=range] { -webkit-appearance:none; appearance:none; height:44px; background:transparent; -webkit-flex:1; flex:1; min-width:0; margin:0 12px; }
-.pv2-setting-row input[type=range]::-webkit-slider-runnable-track { height:8px; background:#64758c; border-radius:4px; }
-.pv2-setting-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:30px; height:30px; margin-top:-11px; border-radius:50%; background:#f3d19b; border:3px solid #202b3a; }
-.pv2-presets { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; margin:4px -3px; }
-.pv2-preset { min-width:78px; min-height:44px; margin:3px; padding:7px 11px; border:1px solid #61738a; border-radius:10px; background:#34465b; color:#f3f5fa; font:16px Arial,sans-serif; }
-.pv2-preset.pv2-selected { border:2px solid #ffe0a3; padding:6px 10px; }
-.pv2-swatch { display:inline-block; width:17px; height:17px; border-radius:50%; margin-right:6px; vertical-align:middle; border:1px solid rgba(255,255,255,.4); }
+.pv2-setting-row { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; -webkit-align-items:center; align-items:center; -webkit-justify-content:space-between; justify-content:space-between; margin:4px 0 12px; }
+.pv2-setting-row label { font-size:17px; color:#dbe3ef; }
+.pv2-setting-row output { font-size:25px; line-height:34px; font-weight:bold; color:#ffe1ab; -webkit-order:1; order:1; }
+.pv2-setting-row input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:48px; background:transparent; margin:5px 0 0; -webkit-order:2; order:2; }
+.pv2-setting-row input[type=range]::-webkit-slider-runnable-track { height:32px; background:linear-gradient(to right,#596475,#f1cc8e); border-radius:18px; border:1px solid #8593a6; }
+.pv2-setting-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:44px; height:44px; margin-top:-7px; border-radius:50%; background:#fff3dc; border:3px solid #202b3a; box-shadow:0 2px 5px rgba(0,0,0,.4); }
+.pv2-presets { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; margin:0 -5px 5px; }
+.pv2-preset { width:76px; min-height:80px; margin:3px 5px; padding:5px 0; border:0; border-radius:13px; background:transparent; color:#dce5f0; font:14px Arial,sans-serif; text-align:center; -webkit-tap-highlight-color:transparent; }
+.pv2-preset:active { background:#354354; }
+.pv2-swatch { display:block; width:46px; height:46px; border-radius:50%; margin:3px auto 9px; border:1px solid rgba(255,255,255,.4); box-shadow:inset 0 2px 4px rgba(255,255,255,.25); }
+.pv2-preset.pv2-selected .pv2-swatch { outline:3px solid #f5f7fb; outline-offset:3px; }
+.pv2-preset.pv2-selected { color:white; font-weight:bold; }
+.pv2-dialog .pv2-presets-title { margin:5px 0; font-size:14px; color:#acbad0; font-weight:normal; }
+.pv2-dialog-actions { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
+.pv2-sound { min-height:46px; margin-right:10px; padding:8px 12px; border:1px solid #4b5e74; border-radius:10px; background:transparent; color:#c8d6e6; font:14px Arial,sans-serif; }
 .pv2-dialog-hint { margin:8px 0 0; color:#bac7d9; font-size:14px; line-height:20px; }
-.pv2-card:focus,.pv2-preset:focus,.pv2-close:focus,#pv2-countdown:focus { outline:2px solid #a9d8ee; outline-offset:2px; }
+/* Touch focus must not leave a selected-looking frame after closing a dialog.
+   Use an input-modality class rather than :focus-visible (unsupported in Chromium 44). */
+.pv2-card:focus,.pv2-preset:focus,.pv2-close:focus,.pv2-sound:focus { outline:none; }
+.pv2-keyboard .pv2-card:focus,.pv2-keyboard .pv2-preset:focus,.pv2-keyboard .pv2-close:focus,.pv2-keyboard .pv2-sound:focus { outline:2px solid #a9d8ee; outline-offset:2px; }
 @media (max-width:700px) { .pv2-clock { font-size:102px; } .pv2-card-label { font-size:17px; } .pv2-card svg { width:23px; margin-right:7px; } }
 /* Android's temporarily exposed system bar can reduce the WebView height. */
 @media (max-height:440px) {
@@ -77,4 +86,15 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
   .pv2-card { padding:6px 10px; }
   .pv2-card-label { font-size:17px; line-height:19px; }
   .pv2-card-state { font-size:12px; line-height:14px; margin-top:3px; }
+}
+
+.pv2-modal button { -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+
+.pv2-card.pv2-pending svg { opacity:.45; }
+
+.pv2-card.pv2-action .pv2-card-label { font-size:18px; line-height:21px; }
+.pv2-card.pv2-action .pv2-card-state { margin-top:3px; font-size:12px; line-height:15px; }
+@media (max-height:440px) {
+  .pv2-card.pv2-action .pv2-card-label { font-size:17px; line-height:19px; }
+  .pv2-card.pv2-action .pv2-card-state { line-height:14px; }
 }

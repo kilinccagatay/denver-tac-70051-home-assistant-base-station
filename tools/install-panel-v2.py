@@ -25,11 +25,16 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     result = copy.deepcopy(original)
     panel = result['dashboards'][dashboard]
     assert any(screen['name'] == 'Ana' for screen in panel['screens']), 'Ana screen is required'
+    removed = mapping.get('removedScreens', [])
+    assert isinstance(removed, list) and 'Ana' not in removed, 'Ana cannot be removed'
+    panel['screens'] = [s for s in panel['screens'] if s['name'] not in removed]
     custom = panel['theme'].get('custom', '').split(BEGIN)[0].rstrip()
     css = (assets / 'panel.css').read_text()
     js = (assets / 'core.js').read_text() + '\n' + (assets / 'panel.js').read_text()
     config = json.dumps(mapping, ensure_ascii=False).replace('<', '\\u003c')
-    panel['theme']['custom'] = (custom + '\n' + BEGIN + '\n</style>\n<style>' + css
+    loading = ("<script>(function(){var d=document.documentElement;d.classList.add('pv2-loading');"
+               "window.panelV2LoadingTimer=setTimeout(function(){d.classList.remove('pv2-loading');},8000);})();</script>")
+    panel['theme']['custom'] = (custom + '\n' + BEGIN + '\n</style>\n' + loading + '\n<style>' + css
                                + '</style>\n<script>window.PANEL_V2_CONFIG=' + config + ';\n'
                                + js + '\n</script>\n<style>\n')
     # Reuse subscriptions already supplied by cards on any screen. Avoid adding

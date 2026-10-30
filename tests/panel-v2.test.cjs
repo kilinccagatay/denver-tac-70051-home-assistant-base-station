@@ -16,6 +16,8 @@ assert.equal(C.robot(e('paused')).service,'return_to_base');
 assert.equal(C.robot(e('returning')).service,null);
 assert.equal(C.robot(e('unavailable')).service,null);
 assert.equal(C.robot(e('docked')).service,'start');
+assert.equal(C.robot(e('docked')).label,'Evi Temizle');
+assert.equal(C.robot(e('cleaning')).label,'Temizliği Durdur');
 assert.equal(C.timeLabel(60),'01:00');assert.equal(C.timeLabel(9),'00:09');
 let start='2026-10-30T10:00:00Z';
 assert.equal(C.remaining(e('on',{last_triggered:start}),Date.parse(start)+15000),45);

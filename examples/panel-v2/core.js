@@ -25,10 +25,10 @@
   };
   api.robot = function (e) {
     if (!api.available(e)) { return {label: 'Robot', detail: 'Bağlantı yok', service: null}; }
-    if (e.state === 'cleaning' || e.state === 'paused') { return {label: 'Robot Bitir', detail: e.state === 'paused' ? 'Duraklatıldı · istasyona gönder' : 'Temizliyor · istasyona gönder', service: 'return_to_base'}; }
+    if (e.state === 'cleaning' || e.state === 'paused') { return {label: 'Temizliği Durdur', detail: 'İstasyona gönder', service: 'return_to_base'}; }
     if (e.state === 'returning') { return {label: 'Robot Dönüyor', detail: 'İstasyona dönüyor', service: null}; }
     if (e.state === 'error') { return {label: 'Robot', detail: 'Hata · Robot sekmesine bak', service: null}; }
-    return {label: 'Robot Başlat', detail: e.state === 'docked' ? 'İstasyonda' : 'Temizliğe hazır', service: 'start'};
+    return {label: 'Evi Temizle', detail: e.state === 'docked' ? 'İstasyonda' : 'Temizliğe hazır', service: 'start'};
   };
   api.timeLabel = function (seconds) { return ('0' + Math.floor(seconds / 60)).slice(-2) + ':' + ('0' + (seconds % 60)).slice(-2); };
   api.remaining = function (e, now) {

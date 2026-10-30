@@ -21,7 +21,7 @@ optional fresh meeting indicator. The right column has eight controls, in this r
 
 | Left | Right |
 | --- | --- |
-| Kitchen off | Living room |
+| Kitchen | Living room |
 | Dining table | Corridor |
 | Office | Bedroom |
 | Robot | All lights off |
@@ -32,20 +32,34 @@ Their behaviors are:
 - Corridor: turn both corridor lights off if either is on, otherwise both on.
   Hold to adjust the two lights individually.
 - Bedroom and office: tap to toggle; hold for settings.
-- Kitchen off: **counter and sink only**, excluding the dining table.
-- Robot: start when idle/docked, return to base when cleaning/paused; show returning
-  without offering another start. Unavailable/error states do not offer actions.
+- Kitchen: toggle **counter and sink only**, excluding the dining table. If either
+  light is on, turn both off; otherwise turn both on. Hold for individual settings.
+- Robot: **Evi Temizle** when idle, **Temizliği Durdur** when cleaning (returns to
+  base, including when paused). While returning, another start is not offered. Unavailable/error states do not offer actions.
 - All lights off: schedule a 60-second shutdown; tap again to cancel. The countdown
-  also has a cancel button above the navigation on every tab.
+  is displayed only on this Home button; there is no duplicate banner.
 
 The settings dialog only offers the capabilities the entity supports: brightness,
-three white-temperature presets within the device limits, and four RGB presets.
+three white-temperature presets within the device limits, and six large circular RGB presets.
+The brightness control has a large thumb and percentage readout. An optional
+**Ses: Kapalı / Açık** button in the dialog enables a quiet synthesized click; the
+preference is saved in this browser only, defaults off, and requires no audio files
+or microphone permission. Unsupported audio browsers remain silent.
+Touch focus rings clear when the dialog closes; keyboard Tab focus stays visible.
+The Home Assistant label at the top indicates the connection to HA.
 Sliders send a command on release/change, not on every movement. There are no
 chevrons under light buttons; long presses do not also toggle. A dragged/canceled
 touch does not act. Other tabs keep their existing layouts, using the same light
-cards and modal. Printer power remains a separate original control.
+cards and modal. Set `removedScreens` to a list of exact screen names in the private
+mapping to remove unwanted tabs, including their swipe destinations. The installer
+backs up their original definitions; `Ana` cannot be removed.
 
 The UI distinguishes unavailable devices and disconnected transport from "off".
+Pending actions keep their labels and state text stable, dim only the icon, and
+prevent duplicate taps until acknowledged. Failures still show a notice.
+A small pre-render gate hides the legacy screen until the overlay is ready, avoiding
+a flash of the old Home layout. An eight-second fallback releases it if initialization
+fails, so a JavaScript failure does not leave a permanent loading screen.
 No blur, continuous animation, framework, or extra state polling is introduced.
 Weather changes merge attributes; missing temperature is never replaced with zero.
 On connection/reconnection, a one-time targeted REST reconciliation avoids stale

@@ -38,7 +38,10 @@ The current Home Assistant Android app does not support this Android version. Th
 The optional [Panel V2 guide](docs/panel-v2.md) adds eight Home controls, a larger
 weather readout, long-press brightness/color dialogs, grouped corridor control,
 robot return-to-base, and a server-side 60-second household-lights-off countdown
-with cancellation. Native battery long press and display helpers remain unchanged.
+with cancellation on its Home button. Kitchen toggles only counter/sink lights;
+large circular color presets and an optional quiet click improve touch controls.
+The guide includes current V2 browser captures and optional tab removal. Native
+battery long press and display helpers remain unchanged.
 
 ## Dashboard screenshots
 

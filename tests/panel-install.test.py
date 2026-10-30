@@ -36,6 +36,18 @@ class InstallationTests(unittest.TestCase):
         self.assertIn('light.example_printer_chamber', str(result))
         self.assertNotIn('light.example_printer_chamber', mapping['allLights'])
 
+    def test_removed_tab_is_not_a_swipe_destination_and_home_is_protected(self):
+        original = yaml.safe_load((ROOT / 'examples/hoarydash.example.yaml').read_text())
+        mapping = json.loads((ROOT / 'examples/panel-v2/config.example.json').read_text())
+        mapping['removedScreens'] = ['Yazıcı']
+        result = install.build_configuration(original, mapping, ROOT / 'examples/panel-v2')
+        names = [s['name'] for s in result['dashboards']['dash']['screens']]
+        self.assertNotIn('Yazıcı', names)
+        self.assertIn('Yazıcı', [s['name'] for s in original['dashboards']['dash']['screens']])
+        mapping['removedScreens'] = ['Ana']
+        with self.assertRaises(AssertionError):
+            install.build_configuration(original, mapping, ROOT / 'examples/panel-v2')
+
     def test_script_guards_empty_target_and_limits_household_lights(self):
         scripts = yaml.safe_load((ROOT / 'examples/panel-v2/lights-off-script.example.yaml').read_text())
         script = scripts['panel_lights_off_delayed']
