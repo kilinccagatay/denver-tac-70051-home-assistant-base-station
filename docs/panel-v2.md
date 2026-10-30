@@ -29,6 +29,9 @@ cards and modal. Printer power remains a separate original control.
 The UI distinguishes unavailable devices and disconnected transport from "off".
 No blur, continuous animation, framework, or extra state polling is introduced.
 Weather changes merge attributes; missing temperature is never replaced with zero.
+On connection/reconnection, a one-time targeted REST reconciliation avoids stale
+initial data from HoaryDash's warming pool. At most two requests run together,
+and WebSocket changes received while a request is in flight take precedence.
 
 ## Install
 
@@ -52,6 +55,8 @@ Weather changes merge attributes; missing temperature is never replaced with zer
    ```
 
 5. HoaryDash regenerates the dashboard and asks connected browsers to reload.
+   Restart the HoaryDash add-on once when adding new entity subscriptions; the
+   tested 0.13.0 proxy retains its startup subscription list until restart.
    Verify Home, every tab, dialogs, unavailable states, and timeout/motion wake on
    the actual tablet. The install preserves original screens and adds the entity
    subscriptions it requires. Re-running updates the injected overlay once.
@@ -80,3 +85,10 @@ Run `node tests/panel-v2.test.cjs` for compact state merging, device capabilitie
 group behavior, robot state transitions, countdown timing, and touch/long-press
 separation. Also run `node tests/weather-state.test.cjs` for weather regression.
 The old-browser syntax should be parsed as ES5 before deploying changed assets.
+
+For the countdown's actual HA script engine tests, use an isolated Python 3.13
+environment with `tests/requirements-panel-ha.txt`, then run
+`python tests/countdown-ha.test.py`. These four tests exercise allowlisted/currently
+on targets, empty-selection safety, lights turned on during the delay, and
+cancellation. They shorten only the delay and register a local recording service;
+no physical devices or network calls are used.

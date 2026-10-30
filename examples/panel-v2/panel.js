@@ -4,7 +4,8 @@
     var cfg = window.PANEL_V2_CONFIG, C = window.PanelV2Core;
     var home = document.getElementById('screen-Ana');
     if (!cfg || !C || !home || document.getElementById('panel-v2')) { return; }
-    var cache = {}, cards = [], busy = {}, listeners = window.entityListeners || {};
+    var cache = {}, versions = {}, cards = [], busy = {}, listeners = window.entityListeners || {};
+    var snapshotNeeded = false, connectionGeneration = 0;
     var modalIds = [], focusBeforeDialog = null, noticeTimer, modal;
     var paths = {
       bulb:'M9 18h6m-5 3h4M8 13a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z',
@@ -190,11 +191,37 @@
       banner.style.display=running?'block':'none';banner.disabled=!connection()||!!busy.countdown;
       if(running){setText(banner,'Işıklar '+(seconds===null?'geri sayım sonunda':C.timeLabel(seconds)+' sonra')+' kapanacak · İptal'+(!connection()?' · Bağlantı yok':''));}
     }
+    // HoaryDash's warming pool can replay an older initial snapshot. On each
+    // connection, reconcile only our small entity set once (two requests at a
+    // time), after that initial event. Newer WS changes win over in-flight REST.
+    function reconcileSnapshot(generation) {
+      snapshotNeeded = false;
+      var ids = cfg.allLights.concat(cfg.extraLights || [], [cfg.weather,cfg.vacuum,cfg.countdown,cfg.meeting]);
+      var unique = [], index = 0;
+      ids.forEach(function(id){if(unique.indexOf(id)===-1 && listeners[id]){unique.push(id);}});
+      function next(){
+        if(generation!==connectionGeneration || !connection() || index>=unique.length){return;}
+        var id=unique[index++], version=versions[id] || 0;
+        window.goFetch('/api/proxy/api/states/'+encodeURIComponent(id)+'?panel_snapshot='+new Date().getTime(),function(error,entry){
+          if(!error && generation===connectionGeneration && (versions[id]||0)===version && entry && entry.entity_id===id){
+            cache[id]={state:entry.state,attributes:entry.attributes || {}};render();
+          }
+          next();
+        });
+      }
+      next();next();
+    }
+    function connectionReady(){
+      var generation=++connectionGeneration;snapshotNeeded=true;
+      setTimeout(function(){if(snapshotNeeded && generation===connectionGeneration){reconcileSnapshot(generation);}},1000);
+    }
+    window.onHaReady.push(connectionReady);
+    if(connection()){connectionReady();}
     // Cache compact changes once, then deliver complete states to every old/new widget.
     // Old adjustable widgets otherwise throw on attribute-only/state-only updates.
     for(var eid in listeners){if(Object.prototype.hasOwnProperty.call(listeners,eid)){
       (function(id, callbacks){var old=callbacks.slice(0);callbacks.length=0;cache[id]={state:'unknown',attributes:{}};
-        callbacks.push(function(state,attrs){cache[id]=C.merge(get(id),state,attrs||{});render();for(var i=0;i<old.length;i++){if(old[i]){try{old[i](cache[id].state,cache[id].attributes);}catch(ignore){/* Isolate legacy widget failures. */}}}});
+        callbacks.push(function(state,attrs){versions[id]=(versions[id]||0)+1;cache[id]=C.merge(get(id),state,attrs||{});render();if(snapshotNeeded){snapshotNeeded=false;var generation=connectionGeneration;setTimeout(function(){if(generation===connectionGeneration){reconcileSnapshot(generation);}},0);}for(var i=0;i<old.length;i++){if(old[i]){try{old[i](cache[id].state,cache[id].attributes);}catch(ignore){/* Isolate legacy widget failures. */}}}});
       })(eid,listeners[eid]);
     }}
     var days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
