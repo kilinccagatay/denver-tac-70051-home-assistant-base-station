@@ -14,10 +14,22 @@ overlay and is therefore absent in a desktop browser.
 
 ![Long-press brightness and color dialog](../photos/panel-v2/light-dialog-browser.png)
 
+| Kitchen | Entrance |
+| --- | --- |
+| ![Kitchen controls](../photos/panel-v2/kitchen-browser.png) | ![Entrance controls](../photos/panel-v2/entrance-browser.png) |
+
+| Rooms | Robot |
+| --- | --- |
+| ![Room controls](../photos/panel-v2/rooms-browser.png) | ![Robot controls](../photos/panel-v2/robot-browser.png) |
+
+![Panel preferences](../photos/panel-v2/settings-browser.png)
+
 ## Home
 
 The left column has a large clock, two-line Turkish date, larger weather and an
-optional fresh meeting indicator. The right column has eight controls, in this row order:
+optional fresh meeting indicator. Every room/robot tab retains this same left
+column, with room-specific controls on the right. The battery overlay has its
+own reserved area at the top right on every screen. The right column has eight controls, in this row order:
 
 | Left | Right |
 | --- | --- |
@@ -42,15 +54,35 @@ Their behaviors are:
 The settings dialog only offers the capabilities the entity supports: brightness,
 three white-temperature presets within the device limits, and six large circular RGB presets.
 The brightness control has a large thumb and percentage readout. An optional
-**Ses: Kapalı / Açık** button in the dialog enables a quiet synthesized click; the
-preference is saved in this browser only, defaults off, and requires no audio files
-or microphone permission. Unsupported audio browsers remain silent.
+**Ses: Kapalı / Açık** preference in **Panel Ayarları** enables a quiet
+click. Open these separate panel settings using the settings icon below the clock/date
+at the lower left; sound controls are not part of individual lamp dialogs. The
+preference is saved in this browser only and defaults on unless explicitly disabled.
+Small MP3/PCM WAV files are served by HA’s public `/local/` static route
+for old WebView compatibility; no Internet audio request or microphone
+permission is needed. **Sesi Dene** plays a test and reports playback/load errors. The device media volume
+must be audible. Audio failures do not block controls.
+Panel settings also offer 450/650/900 ms lamp long-press timing (normal: 650 ms),
+a 20-second panel touch lock for cleaning, and a page reload button. The cleaning
+lock does not disable native Android controls or the native battery overlay.
+Neither preference changes the battery badge long press or native display helpers.
 Touch focus rings clear when the dialog closes; keyboard Tab focus stays visible.
 The Home Assistant label at the top indicates the connection to HA.
 Sliders send a command on release/change, not on every movement. There are no
 chevrons under light buttons; long presses do not also toggle. A dragged/canceled
-touch does not act. Other tabs keep their existing layouts, using the same light
-cards and modal. Set `removedScreens` to a list of exact screen names in the private
+touch does not act. The five tabs now use a shared layout:
+
+- **Ana:** the eight quick controls above.
+- **Mutfak:** counter, sink, and dining table, with no unrelated nearby-room section.
+- **Giriş:** entrance and the two corridor lights only.
+- **Odalar:** living room, office, bedroom, and a named accent light.
+- **Robot:** live status plus start, pause/resume, and return-to-base. Actions respect
+  reported HA vacuum feature flags and state; no start is offered during cleaning
+  or return, and no dock action while already docked/returning.
+
+Set `roomLights.entrance` and `roomLights.accent` in the private mapping; both must
+belong to `allLights`. The installer adds the Odalar navigation/swipe destination
+without changing unrelated HA entities or automations. Set `removedScreens` to a list of exact screen names in the private
 mapping to remove unwanted tabs, including their swipe destinations. The installer
 backs up their original definitions; `Ana` cannot be removed.
 
@@ -77,7 +109,13 @@ and WebSocket changes received while a request is in flight take precedence.
    reload scripts. Set `countdown` in the mapping to that script entity. The script
    and mapping must use the **same explicit household light list**. Exclude power
    switches, smart-plug indicators, printer illumination, and server devices.
-4. On the HoaryDash host, with Python 3 and PyYAML available, run:
+4. Copy `examples/panel-v2/panel-click.mp3` and `panel-click.wav` into Home
+   Assistant’s `/config/www/` directory. The defaults use
+   the dashboard hostname on HA port 8123, under `/local/`. Optional `clickSoundUrl`
+   and `clickSoundWavUrl` mappings override these URLs if HA uses another address.
+   Supervisor-backed API proxies can reject static-file paths, so media is loaded
+   directly from HA; no HA token is included in the URLs.
+   On the HoaryDash host, with Python 3 and PyYAML available, run:
 
    ```sh
    python3 tools/install-panel-v2.py \

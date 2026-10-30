@@ -21,6 +21,7 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     assert set(lights) == {'living', 'dining', 'front', 'rear', 'bedroom', 'office', 'counter', 'sink'}
     assert mapping['allLights'] and all(e.startswith('light.') for e in mapping['allLights'])
     assert set(lights.values()).issubset(mapping['allLights'])
+    assert all(e in mapping['allLights'] for e in mapping.get('roomLights', {}).values()), 'Room lights must be subscribed household lights'
     assert mapping['countdown'].startswith('script.') and mapping['vacuum'].startswith('vacuum.')
     result = copy.deepcopy(original)
     panel = result['dashboards'][dashboard]
@@ -28,6 +29,10 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     removed = mapping.get('removedScreens', [])
     assert isinstance(removed, list) and 'Ana' not in removed, 'Ana cannot be removed'
     panel['screens'] = [s for s in panel['screens'] if s['name'] not in removed]
+    if not any(s['name'] == 'Odalar' for s in panel['screens']) and 'Odalar' not in removed:
+        rooms = {'name': 'Odalar', 'icon': 'floor-plan', 'layout': 'tiled', 'dateclock': {'enabled': False}}
+        index = next((i for i, s in enumerate(panel['screens']) if s['name'] == 'Robot'), len(panel['screens']))
+        panel['screens'].insert(index, rooms)
     custom = panel['theme'].get('custom', '').split(BEGIN)[0].rstrip()
     css = (assets / 'panel.css').read_text()
     js = (assets / 'core.js').read_text() + '\n' + (assets / 'panel.js').read_text()

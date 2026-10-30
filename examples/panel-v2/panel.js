@@ -11,15 +11,17 @@
     function pointerInput(){keyboardInput=false;document.body.classList.remove('pv2-keyboard');}
     document.addEventListener('touchstart',pointerInput,true);
     document.addEventListener('mousedown',pointerInput,true);
-    var soundEnabled=false,audio=null;
-    try{soundEnabled=localStorage.getItem('panel-v2-click-sound')==='on';}catch(ignore){}
-    function clickSound(){
-      if(!soundEnabled){return;}
-      try{var Audio=window.AudioContext||window.webkitAudioContext;if(!Audio){return;}audio=audio||new Audio();if(audio.state==='suspended'&&audio.resume){audio.resume();}
-        var osc=audio.createOscillator(),gain=audio.createGain(),now=audio.currentTime;osc.type='sine';osc.frequency.setValueAtTime(950,now);osc.frequency.exponentialRampToValueAtTime(480,now+0.025);gain.gain.setValueAtTime(0.035,now);gain.gain.exponentialRampToValueAtTime(0.001,now+0.035);osc.connect(gain);gain.connect(audio.destination);osc.start(now);osc.stop(now+0.04);osc.onended=function(){osc.disconnect();gain.disconnect();};
-      }catch(ignore){/* Older browsers remain silent without blocking controls. */}
-    }
+    var soundEnabled=true,holdDelay=650,audio=document.createElement('audio'),audioStatus=null;
+    audio.preload='auto';audio.volume=1;audio.setAttribute('aria-hidden','true');audio.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none';
+    var soundBase=window.location.protocol+'//'+window.location.hostname+':8123/local/';
+    [{src:cfg.clickSoundUrl||soundBase+'panel-click.mp3',type:'audio/mpeg'},{src:cfg.clickSoundWavUrl||soundBase+'panel-click.wav',type:'audio/wav'}].forEach(function(source){var n=document.createElement('source');n.src=source.src;n.type=source.type;audio.appendChild(n);});document.body.appendChild(audio);
+    function soundStatus(text){if(audioStatus){setText(audioStatus,text);}}
+    audio.addEventListener('playing',function(){soundStatus('Ses oynatıldı. Duyulmuyorsa medya sesini kontrol edin.');},false);
+    audio.addEventListener('error',function(){soundStatus('Ses dosyası oynatılamadı. Hata: '+(audio.error?audio.error.code:'bilinmiyor'));},false);
+    try{var savedSound=localStorage.getItem('panel-v2-click-sound');if(savedSound==='on'||savedSound==='off'){soundEnabled=savedSound==='on';}var savedDelay=Number(localStorage.getItem('panel-v2-hold-ms'));if([450,650,900].indexOf(savedDelay)!==-1){holdDelay=savedDelay;}}catch(ignore){}
+    function clickSound(force){if(!soundEnabled&&!force){return;}try{try{audio.currentTime=0;}catch(ignore){}var playing=audio.play();if(playing&&playing.catch){playing.catch(function(error){soundStatus(error.name==='NotAllowedError'?'Tarayıcı ses oynatmayı engelledi. Sesi Dene düğmesine dokunun.':'Ses oynatılamadı: '+error.name);});}}catch(ignore){soundStatus('Bu tarayıcı sesi başlatamadı.');}}
     var paths = {
+      settings:'M4 6h16M4 12h16M4 18h16M8 3v6m8 0v6M8 15v6',
       bulb:'M9 18h6m-5 3h4M8 13a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z',
       kitchen:'M4 3v6m3-6v6m3-6v6M4 7h6M7 9v12M17 3v18m0-18c4 3 4 9 0 9',
       corridor:'M5 21V3h14v18M9 21V7h6v14m-3-8h1',
@@ -69,21 +71,27 @@
         clickSound();
         if (options.kind==='robot') { var robot=C.robot(get(cfg.vacuum)); if(robot.service){perform('robot','vacuum',robot.service,cfg.vacuum);} }
         else if(options.kind==='alloff'){toggleCountdown();}
+        else if(options.kind&&options.kind.indexOf('vacuum-')===0){var action=C.robotControl(get(cfg.vacuum),options.kind.slice(7));if(action.service){perform('vacuum','vacuum',action.service,cfg.vacuum);}}
         else{toggle(options.ids);}
-      },options.ids?function(){clickSound();openDialog(options.label,options.ids);}:null);
+      },options.ids?function(){clickSound();openDialog(options.label,options.ids);}:null,null,function(){return holdDelay;});
       return item;
     }
     document.body.classList.add('panel-v2');
-    var root=node('div');root.id='panel-v2';
-    var top=node('div','pv2-top');top.appendChild(node('span','pv2-brand','EVİM'));
-    var status=node('span','pv2-connection','Bağlanıyor');top.appendChild(status);root.appendChild(top);
-    var body=node('div','pv2-body'), overview=node('div','pv2-overview'), controls=node('div','pv2-controls');
-    var clock=node('div','pv2-clock'), date=node('div','pv2-date'), weekday=node('div','pv2-date');
-    overview.appendChild(clock);overview.appendChild(date);overview.appendChild(weekday);
-    var weather=node('div','pv2-weather'), weatherMain=node('div','pv2-weather-main'), weatherIcon=node('span'), temperature=node('span','pv2-temperature','--°'), condition=node('div','pv2-condition','Yükleniyor…');
-    weatherMain.appendChild(weatherIcon);weatherMain.appendChild(temperature);weather.appendChild(weatherMain);weather.appendChild(condition);overview.appendChild(weather);
-    var meeting=node('div','pv2-meeting');meeting.innerHTML='<span class="pv2-meeting-dot"></span>Toplantı';overview.appendChild(meeting);
-    body.appendChild(overview);body.appendChild(controls);root.appendChild(body);home.appendChild(root);
+    var views=[],robotStatus=null;
+    function makeView(name,title){
+      var screen=document.getElementById('screen-'+name);if(!screen){return null;}screen.classList.add('pv2-screen');
+      var root=node('div','pv2-panel');root.id=name==='Ana'?'panel-v2':'panel-v2-'+name;
+      var top=node('div','pv2-top');top.appendChild(node('span','pv2-brand',title));
+      var status=node('span','pv2-connection','Bağlanıyor');top.appendChild(status);root.appendChild(top);
+      var body=node('div','pv2-body'),overview=node('div','pv2-overview'),controls=node('div','pv2-controls');
+      var clock=node('div','pv2-clock'),date=node('div','pv2-date'),weekday=node('div','pv2-date');overview.appendChild(clock);overview.appendChild(date);overview.appendChild(weekday);
+      var weather=node('div','pv2-weather'),weatherMain=node('div','pv2-weather-main'),weatherIcon=node('span'),temperature=node('span','pv2-temperature','--°'),condition=node('div','pv2-condition','Yükleniyor…');weatherMain.appendChild(weatherIcon);weatherMain.appendChild(temperature);weather.appendChild(weatherMain);weather.appendChild(condition);overview.appendChild(weather);
+      var meeting=node('div','pv2-meeting');meeting.innerHTML='<span class="pv2-meeting-dot"></span>Toplantı';overview.appendChild(meeting);
+      var trigger=node('button','pv2-settings-trigger');trigger.type='button';trigger.innerHTML=icon('settings');trigger.setAttribute('aria-label','Panel Ayarları');trigger.title='Panel Ayarları';trigger.addEventListener('click',function(){clickSound();openPanelSettings();},false);overview.appendChild(trigger);
+      body.appendChild(overview);body.appendChild(controls);root.appendChild(body);screen.appendChild(root);
+      views.push({name:name,status:status,clock:clock,date:date,weekday:weekday,temperature:temperature,condition:condition,weatherIcon:weatherIcon,previousWeatherIcon:'',meeting:meeting});return controls;
+    }
+    var controls=makeView('Ana','EVİM');
     addCard(controls,{label:'Mutfak',ids:[cfg.lights.counter,cfg.lights.sink],icon:'kitchen'});
     addCard(controls,{label:'Salon',ids:[cfg.lights.living],icon:'bulb'});
     addCard(controls,{label:'Yemek Masası',ids:[cfg.lights.dining],icon:'bulb'});
@@ -92,26 +100,15 @@
     addCard(controls,{label:'Yatak Odası',ids:[cfg.lights.bedroom],icon:'bed'});
     addCard(controls,{label:'Evi Temizle',icon:'robot',kind:'robot',action:true});
     addCard(controls,{label:'Tüm Işıkları Kapat',icon:'moon',kind:'alloff',action:true});
+    function lightControl(parent,id,label,iconName){if(parent&&id){addCard(parent,{label:label,ids:[id],icon:iconName||'bulb'});}}
+    var kitchen=makeView('Mutfak','MUTFAK');if(kitchen){kitchen.classList.add('pv2-three');lightControl(kitchen,cfg.lights.counter,'Tezgâh');lightControl(kitchen,cfg.lights.sink,'Lavabo');lightControl(kitchen,cfg.lights.dining,'Yemek Masası');}
+    var room=cfg.roomLights||{},entrance=makeView('Giriş','GİRİŞ');if(entrance){entrance.classList.add('pv2-three');lightControl(entrance,room.entrance,'Antre','corridor');lightControl(entrance,cfg.lights.front,'Koridor Ön','corridor');lightControl(entrance,cfg.lights.rear,'Koridor Arka','corridor');}
+    var rooms=makeView('Odalar','ODALAR');if(rooms){rooms.classList.add('pv2-four');lightControl(rooms,cfg.lights.living,'Salon');lightControl(rooms,cfg.lights.office,'Çalışma Odası','desk');lightControl(rooms,cfg.lights.bedroom,'Yatak Odası','bed');lightControl(rooms,room.accent,cfg.labels&&cfg.labels[room.accent]||'Ek Aydınlatma');}
+    var robotControls=makeView('Robot','ROBOT');if(robotControls){robotControls.classList.add('pv2-robot-controls');var summary=node('div','pv2-robot-summary');summary.innerHTML=icon('robot');robotStatus=node('span','','Yükleniyor…');summary.appendChild(robotStatus);robotControls.appendChild(summary);['start','pause','dock'].forEach(function(kind){addCard(robotControls,{label:'Robot',icon:'robot',kind:'vacuum-'+kind,action:true});});}
     var errorNotice=node('div');errorNotice.id='pv2-notice';errorNotice.setAttribute('role','status');document.body.appendChild(errorNotice);
     function toggleCountdown(){
       if(!C.available(get(cfg.countdown))){notice('Geri sayım servisine ulaşılamıyor.');return;}
       perform('countdown','script',get(cfg.countdown).state==='on'?'turn_off':'turn_on',cfg.countdown);
-    }
-    // Replace only light cards, preserving printer power, robot commands, and native battery overlay.
-    var lightIds=cfg.allLights.slice(0);
-    var extra=cfg.extraLights || [];
-    for(var ex=0;ex<extra.length;ex++){if(lightIds.indexOf(extra[ex])===-1){lightIds.push(extra[ex]);}}
-    for(var li=0;li<lightIds.length;li++){
-      var id=lightIds[li], wrappers=document.querySelectorAll('[id^="'+id.replace('.','-')+'-"]');
-      for(var wi=0;wi<wrappers.length;wi++){
-        var wrapper=wrappers[wi];
-        if(home.contains(wrapper)){continue;}
-        var oldLabel=wrapper.querySelector('.entity-label');
-        if(!oldLabel){continue;}
-        wrapper.classList.add('pv2-legacy-host');
-        var friendly=cfg.labels && cfg.labels[id] || oldLabel.textContent.trim();
-        addCard(wrapper,{label:friendly,ids:[id],icon:'bulb'},true);
-      }
     }
     modal=node('div','pv2-modal');modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','pv2-dialog-title');
     var dialog=node('div','pv2-dialog'), header=node('div','pv2-dialog-header'), dialogTitle=node('h2');dialogTitle.id='pv2-dialog-title';
@@ -119,7 +116,7 @@
     var sound=node('button','pv2-sound');sound.type='button';
     function soundLabel(){setText(sound,'Ses: '+(soundEnabled?'Açık':'Kapalı'));sound.setAttribute('aria-pressed',soundEnabled?'true':'false');sound.title='Düğme tıklama sesi';}
     soundLabel();sound.addEventListener('click',function(){soundEnabled=!soundEnabled;try{localStorage.setItem('panel-v2-click-sound',soundEnabled?'on':'off');}catch(ignore){}soundLabel();clickSound();},false);
-    var headerActions=node('div','pv2-dialog-actions');headerActions.appendChild(sound);headerActions.appendChild(close);header.appendChild(dialogTitle);header.appendChild(headerActions);dialog.appendChild(header);
+    header.appendChild(dialogTitle);header.appendChild(close);dialog.appendChild(header);
     var settings=node('div');dialog.appendChild(settings);modal.appendChild(dialog);document.body.appendChild(modal);
     close.addEventListener('click',closeDialog,false);
     modal.addEventListener('click',function(ev){if(ev.target===modal){closeDialog();}},false);
@@ -136,6 +133,27 @@
       focusBeforeDialog=document.activeElement;modalIds=ids.slice(0);setText(dialogTitle,title);settings.innerHTML='';
       for(var di=0;di<ids.length;di++){buildSettings(ids[di],ids.length>1);}
       modal.classList.add('pv2-open');close.focus();
+    }
+    function openPanelSettings(){
+      focusBeforeDialog=document.activeElement;modalIds=[];setText(dialogTitle,'Panel Ayarları');settings.innerHTML='';
+      function preference(title,hint,control){var row=node('div','pv2-preference'),description=node('div');description.appendChild(node('h3','',title));description.appendChild(node('p','pv2-dialog-hint',hint));row.appendChild(description);row.appendChild(control);settings.appendChild(row);}
+      var audioActions=node('div','pv2-audio-actions'),testAudio=node('button','pv2-sound','Sesi Dene');testAudio.type='button';testAudio.addEventListener('click',function(){soundStatus('Ses deneniyor…');clickSound(true);},false);audioActions.appendChild(sound);audioActions.appendChild(testAudio);preference('Tıklama sesi','Hafif dokunma sesi. Tabletin medya sesi açık olmalı.',audioActions);audioStatus=node('p','pv2-dialog-hint');audioStatus.setAttribute('role','status');settings.appendChild(audioStatus);
+      var delays=node('div','pv2-delay-options');
+      [{label:'Hızlı',ms:450},{label:'Normal',ms:650},{label:'Uzun',ms:900}].forEach(function(p){var b=node('button','pv2-delay',p.label);b.type='button';b.setAttribute('aria-pressed',holdDelay===p.ms?'true':'false');b.addEventListener('click',function(){holdDelay=p.ms;try{localStorage.setItem('panel-v2-hold-ms',String(holdDelay));}catch(ignore){}var all=delays.querySelectorAll('button');for(var i=0;i<all.length;i++){all[i].setAttribute('aria-pressed',all[i]===b?'true':'false');}clickSound();},false);delays.appendChild(b);});
+      preference('Uzun basma','Lamba ayarlarının açılma süresi. Pil simgesini etkilemez.',delays);
+      var actions=node('div','pv2-settings-actions'),clean=node('button','','Ekranı Temizle'),reload=node('button','','Sayfayı Yenile');clean.type=reload.type='button';
+      clean.addEventListener('click',function(){clickSound();closeDialog();cleanScreen();},false);
+      reload.addEventListener('click',function(){clickSound();window.location.reload();},false);
+      actions.appendChild(clean);actions.appendChild(reload);settings.appendChild(actions);settings.appendChild(node('p','pv2-dialog-hint','Temizlik modu panel dokunmalarını 20 saniye engeller. Tercihler bu cihazda saklanır.'));
+      modal.classList.add('pv2-open');close.focus();
+    }
+    function cleanScreen(){
+      var cover=node('div','pv2-cleaning'),title=node('h2','','Ekranı silebilirsiniz'),remaining=node('div','pv2-cleaning-seconds'),hint=node('p','','Panel dokunmaları geçici olarak kilitli.');cover.appendChild(title);cover.appendChild(remaining);cover.appendChild(hint);cover.setAttribute('role','status');cover.tabIndex=-1;document.body.appendChild(cover);cover.focus();
+      function block(ev){ev.preventDefault();ev.stopPropagation();}
+      ['touchstart','touchmove','touchend','click','contextmenu','keydown'].forEach(function(name){cover.addEventListener(name,block,false);});
+      var deadline=new Date().getTime()+20000,timer;
+      function tick(){var left=Math.max(0,Math.ceil((deadline-new Date().getTime())/1000));setText(remaining,String(left));if(left===0){clearInterval(timer);if(cover.parentNode){cover.parentNode.removeChild(cover);}}}
+      timer=setInterval(tick,250);tick();
     }
     function buildSettings(id, showName){
       var entry=get(id), a=entry.attributes, cap=C.capabilities(entry), section=node('section','pv2-light-settings');
@@ -170,7 +188,8 @@
     function selectPreset(parent,button){clickSound();var all=parent.parentNode.querySelectorAll('.pv2-preset');for(var i=0;i<all.length;i++){all[i].classList.remove('pv2-selected');all[i].setAttribute('aria-pressed','false');}button.classList.add('pv2-selected');button.setAttribute('aria-pressed','true');}
     function drawCard(item){
       var o=item.options,b=item.button,label=o.label,detail='',on=false,unavailable=false,key=o.ids?o.ids.join(','):o.kind,disabled=!connection();
-      if(o.kind==='robot'){var robot=C.robot(get(cfg.vacuum));label=robot.label;detail=robot.detail;on=get(cfg.vacuum).state==='cleaning';disabled=disabled||!robot.service;unavailable=!C.available(get(cfg.vacuum));}
+      if(o.kind&&o.kind.indexOf('vacuum-')===0){var action=C.robotControl(get(cfg.vacuum),o.kind.slice(7));label=action.label;detail=action.detail;disabled=disabled||!action.service||!!busy.robot;unavailable=!C.available(get(cfg.vacuum));key='vacuum';}
+      else if(o.kind==='robot'){var robot=C.robot(get(cfg.vacuum));label=robot.label;detail=robot.detail;on=get(cfg.vacuum).state==='cleaning';disabled=disabled||!robot.service||!!busy.vacuum;unavailable=!C.available(get(cfg.vacuum));}
       else if(o.kind==='alloff'){
         var remaining=C.remaining(get(cfg.countdown),new Date().getTime());
         if(get(cfg.countdown).state==='on'){label=remaining===null?'Geri Sayım':C.timeLabel(remaining);detail='İptal için dokun';on=true;}
@@ -190,19 +209,18 @@
       b.setAttribute('aria-label',label+' · '+detail);if(o.ids){b.setAttribute('aria-pressed',on?'true':'false');b.title='Dokun: aç/kapat · Uzun bas: lamba ayarları';}
     }
     var conditions={'clear-night':'Açık gece','cloudy':'Bulutlu','exceptional':'Olağan dışı','fog':'Sisli','hail':'Dolu','lightning':'Şimşekli','lightning-rainy':'Gök gürültülü','partlycloudy':'Parçalı bulutlu','pouring':'Sağanak','rainy':'Yağmurlu','snowy':'Karlı','snowy-rainy':'Karla karışık','sunny':'Güneşli','windy':'Rüzgârlı','windy-variant':'Rüzgârlı'};
-    var previousWeatherIcon='';
     function render(){
-      setText(status,connection()?'● Home Assistant':'○ Bağlantı yok');status.title=connection()?'Home Assistant bağlantısı açık':'Home Assistant bağlantısı kesildi';status.setAttribute('aria-label',status.title);status.style.color=connection()?'#9fd8c2':'#ffb4b4';
       for(var i=0;i<cards.length;i++){drawCard(cards[i]);}
-      var entry=get(cfg.weather), t=entry.attributes.temperature;
-      var valid=C.available(entry)&&t!==null&&t!==undefined&&t!==''&&isFinite(Number(t));
-      setText(temperature,valid?String(Math.round(Number(t)*10)/10).replace('.',',')+'°':'--°');
-      setText(condition,!connection()?'Bağlantı yok':(C.available(entry)?conditions[entry.state]||'Hava durumu':'Veri yok'));
+      var entry=get(cfg.weather),t=entry.attributes.temperature,valid=C.available(entry)&&t!==null&&t!==undefined&&t!==''&&isFinite(Number(t));
       var weatherName=entry.state==='sunny'?'sun':entry.state==='clear-night'?'moon':(/rain|pouring|hail|snow/.test(entry.state)?'rain':'cloud');
-      if(weatherName!==previousWeatherIcon){weatherIcon.innerHTML=icon(weatherName);previousWeatherIcon=weatherName;}
-      var callState=get(cfg.meeting), age=new Date().getTime()/1000-Number(callState.attributes.last_report_epoch||0);
-      meeting.classList.toggle('pv2-active',connection()&&callState.state==='on'&&age>=-5&&age<40);
-
+      var callState=get(cfg.meeting),age=new Date().getTime()/1000-Number(callState.attributes.last_report_epoch||0);
+      for(var vi=0;vi<views.length;vi++){var v=views[vi];
+        setText(v.status,connection()?'● Home Assistant':'○ Bağlantı yok');v.status.title=connection()?'Home Assistant bağlantısı açık':'Home Assistant bağlantısı kesildi';v.status.setAttribute('aria-label',v.status.title);v.status.style.color=connection()?'#9fd8c2':'#ffb4b4';
+        setText(v.temperature,valid?String(Math.round(Number(t)*10)/10).replace('.',',')+'°':'--°');setText(v.condition,!connection()?'Bağlantı yok':(C.available(entry)?conditions[entry.state]||'Hava durumu':'Veri yok'));
+        if(weatherName!==v.previousWeatherIcon){v.weatherIcon.innerHTML=icon(weatherName);v.previousWeatherIcon=weatherName;}
+        v.meeting.classList.toggle('pv2-active',v.name==='Ana'&&connection()&&callState.state==='on'&&age>=-5&&age<40);
+      }
+      if(robotStatus){var names={docked:'İstasyonda',cleaning:'Temizlik yapıyor',paused:'Duraklatıldı',returning:'İstasyona dönüyor',idle:'Temizliğe hazır',error:'Robot hata bildiriyor'};setText(robotStatus,!connection()?'Bağlantı yok':names[get(cfg.vacuum).state]||'Robota ulaşılamıyor');}
     }
     // HoaryDash's warming pool can replay an older initial snapshot. On each
     // connection, reconcile only our small entity set once (two requests at a
@@ -238,7 +256,7 @@
       })(eid,listeners[eid]);
     }}
     var days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
-    function clockTick(){var now=new Date();function pad(n){return ('0'+n).slice(-2);}setText(clock,pad(now.getHours())+':'+pad(now.getMinutes()));setText(date,pad(now.getDate())+'.'+pad(now.getMonth()+1)+'.'+now.getFullYear());setText(weekday,days[now.getDay()]);render();}
+    function clockTick(){var now=new Date();function pad(n){return ('0'+n).slice(-2);}for(var vi=0;vi<views.length;vi++){var v=views[vi];setText(v.clock,pad(now.getHours())+':'+pad(now.getMinutes()));setText(v.date,pad(now.getDate())+'.'+pad(now.getMonth()+1)+'.'+now.getFullYear());setText(v.weekday,days[now.getDay()]);}render();}
     window.addEventListener('hashchange',closeDialog,false);
     window.addEventListener('screen-navigate',closeDialog,false);
     document.addEventListener('visibilitychange',function(){if(document.hidden){closeDialog();}},false);

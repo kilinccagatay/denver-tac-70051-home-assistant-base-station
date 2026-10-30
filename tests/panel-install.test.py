@@ -23,7 +23,11 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(result, second)
         self.assertEqual(original['dashboards']['dash'], untouched['dashboards']['dash'])
         self.assertEqual(result['dashboards']['another'], {'unchanged': True})
-        self.assertEqual(result['dashboards']['dash']['screens'][1:], original['dashboards']['dash']['screens'][1:])
+        by_name = {s['name']: s for s in result['dashboards']['dash']['screens']}
+        for screen in original['dashboards']['dash']['screens'][1:]:
+            if screen['name'] not in mapping.get('removedScreens', []):
+                self.assertEqual(by_name[screen['name']], screen)
+        self.assertIn('Odalar', by_name)
         custom = result['dashboards']['dash']['theme']['custom']
         self.assertEqual(custom.count(install.BEGIN), 1)
         self.assertTrue(custom.startswith(original['dashboards']['dash']['theme']['custom'].rstrip()))
@@ -33,7 +37,7 @@ class InstallationTests(unittest.TestCase):
         self.assertLessEqual(len(cards), 4, 'reuse existing subscriptions instead of duplicating light sensors')
         self.assertIn(mapping['countdown'], subscribed)
         self.assertIn(mapping['vacuum'], subscribed)
-        self.assertIn('light.example_printer_chamber', str(result))
+        self.assertNotIn('Yazıcı', by_name)
         self.assertNotIn('light.example_printer_chamber', mapping['allLights'])
 
     def test_removed_tab_is_not_a_swipe_destination_and_home_is_protected(self):

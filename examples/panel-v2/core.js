@@ -30,13 +30,23 @@
     if (e.state === 'error') { return {label: 'Robot', detail: 'Hata · Robot sekmesine bak', service: null}; }
     return {label: 'Evi Temizle', detail: e.state === 'docked' ? 'İstasyonda' : 'Temizliğe hazır', service: 'start'};
   };
+  api.robotControl = function(e,kind){
+    var labels={start:'Evi Temizle',pause:'Duraklat',dock:'İstasyona Dön'},result={label:labels[kind],detail:'',service:null};
+    if(!api.available(e)){result.detail='Bağlantı yok';return result;}
+    var state=e.state,features=e.attributes.supported_features||0;
+    if(state==='error'){result.detail='Robot hata bildiriyor';return result;}
+    if(kind==='start'){result.service=(features&8192)&&state!=='cleaning'&&state!=='returning'?'start':null;result.detail=state==='cleaning'?'Temizlik sürüyor':'Temizliği başlat';}
+    if(kind==='pause'){result.label=state==='paused'?'Devam Et':'Duraklat';result.service=state==='paused'&&(features&8192)?'start':state==='cleaning'&&(features&4)?'pause':null;result.detail=state==='paused'?'Temizliğe devam et':'Temizliğe ara ver';}
+    if(kind==='dock'){result.service=(features&16)&&state!=='docked'&&state!=='returning'?'return_to_base':null;result.detail=state==='docked'?'Zaten istasyonda':state==='returning'?'İstasyona dönüyor':'Temizliği bitir ve geri dön';}
+    return result;
+  };
   api.timeLabel = function (seconds) { return ('0' + Math.floor(seconds / 60)).slice(-2) + ':' + ('0' + (seconds % 60)).slice(-2); };
   api.remaining = function (e, now) {
     if (!e || e.state !== 'on') { return null; }
     var start = Date.parse(e.attributes.last_triggered || '');
     return isFinite(start) ? Math.max(0, Math.min(60, Math.ceil((start + 60000 - now) / 1000))) : null;
   };
-  api.bindPress = function (el, shortPress, longPress, scheduler) {
+  api.bindPress = function (el, shortPress, longPress, scheduler, holdDelay) {
     var timer = null, held = false, startX = 0, startY = 0, touchAt = 0;
     scheduler = scheduler || {set: function (fn, ms) { return setTimeout(fn, ms); }, clear: function (id) { clearTimeout(id); }, now: function () { return new Date().getTime(); }};
     function cancel() { if (timer !== null) { scheduler.clear(timer); timer = null; } }
@@ -47,7 +57,7 @@
       held = false;
       var p = ev.touches ? ev.touches[0] : ev; startX = p.clientX; startY = p.clientY;
       cancel();
-      if (longPress) { timer = scheduler.set(function () { timer = null; held = true; longPress(); }, 650); }
+      if (longPress) { timer = scheduler.set(function () { timer = null; held = true; longPress(); }, holdDelay ? holdDelay() : 650); }
     }
     el.addEventListener('mousedown', start, false);
     el.addEventListener('touchstart', start, false);
