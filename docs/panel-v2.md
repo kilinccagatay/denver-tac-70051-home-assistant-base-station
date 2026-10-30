@@ -29,7 +29,9 @@ overlay and is therefore absent in a desktop browser.
 The left column has a large clock, two-line Turkish date, larger weather and an
 optional fresh meeting indicator. Every room/robot tab retains this same left
 column, with room-specific controls on the right. The battery overlay has its
-own reserved area at the top right on every screen. The right column has eight controls, in this row order:
+own reserved area at the top left on every screen. The native badge is 58 × 28 dp
+with 8 dp top/left margins; headers start after an additional 82 CSS px inset
+inside the 22 px panel gutter, keeping every tab title clear of this native layer. The right column has eight controls, in this row order:
 
 | Left | Right |
 | --- | --- |
