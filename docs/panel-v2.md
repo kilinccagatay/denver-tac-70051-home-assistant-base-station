@@ -111,3 +111,16 @@ environment with `tests/requirements-panel-ha.txt`, then run
 on targets, empty-selection safety, lights turned on during the delay, and
 cancellation. They shorten only the delay and register a local recording service;
 no physical devices or network calls are used.
+
+## Tablet remains on the old layout
+
+The tested HoaryDash 0.13.0 proxy uses a shared reload channel; a rebuild notification
+can be consumed by another open dashboard connection instead of the tablet.
+A normal reboot also does not guarantee that the tablet fetches a fresh document.
+Do not erase WallPanel settings or reinstall the APK to solve this.
+
+The verified recovery is to temporarily navigate other dashboard browsers away,
+restart only the HoaryDash add-on to discard old connection handlers, let the
+tablet reconnect, then save a harmless YAML comment to request a rebuild/reload.
+Confirm the new layout on the physical tablet before reopening test dashboards.
+Home Assistant and native WallPanel helpers do not need to be restarted or changed.
