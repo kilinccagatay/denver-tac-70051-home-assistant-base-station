@@ -17,7 +17,16 @@ overlay and is therefore absent in a desktop browser.
 ## Home
 
 The left column has a large clock, two-line Turkish date, larger weather and an
-optional fresh meeting indicator. The right column has eight controls:
+optional fresh meeting indicator. The right column has eight controls, in this row order:
+
+| Left | Right |
+| --- | --- |
+| Kitchen off | Living room |
+| Dining table | Corridor |
+| Office | Bedroom |
+| Robot | All lights off |
+
+Their behaviors are:
 
 - Living room and dining table: tap to toggle; hold 650 ms for settings.
 - Corridor: turn both corridor lights off if either is on, otherwise both on.

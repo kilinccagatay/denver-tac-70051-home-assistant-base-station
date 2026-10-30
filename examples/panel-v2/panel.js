@@ -72,12 +72,12 @@
     weatherMain.appendChild(weatherIcon);weatherMain.appendChild(temperature);weather.appendChild(weatherMain);weather.appendChild(condition);overview.appendChild(weather);
     var meeting=node('div','pv2-meeting');meeting.innerHTML='<span class="pv2-meeting-dot"></span>Toplantı';overview.appendChild(meeting);
     body.appendChild(overview);body.appendChild(controls);root.appendChild(body);home.appendChild(root);
+    addCard(controls,{label:'Mutfak Kapat',ids:[cfg.lights.counter,cfg.lights.sink],icon:'kitchen',kind:'kitchen',action:true});
     addCard(controls,{label:'Salon',ids:[cfg.lights.living],icon:'bulb'});
     addCard(controls,{label:'Yemek Masası',ids:[cfg.lights.dining],icon:'bulb'});
     addCard(controls,{label:'Koridor',ids:[cfg.lights.front,cfg.lights.rear],icon:'corridor'});
-    addCard(controls,{label:'Yatak Odası',ids:[cfg.lights.bedroom],icon:'bed'});
     addCard(controls,{label:'Çalışma Odası',ids:[cfg.lights.office],icon:'desk'});
-    addCard(controls,{label:'Mutfak Kapat',ids:[cfg.lights.counter,cfg.lights.sink],icon:'kitchen',kind:'kitchen',action:true});
+    addCard(controls,{label:'Yatak Odası',ids:[cfg.lights.bedroom],icon:'bed'});
     addCard(controls,{label:'Robot Başlat',icon:'robot',kind:'robot',action:true});
     addCard(controls,{label:'Tüm Işıkları Kapat',icon:'moon',kind:'alloff',action:true});
     var banner=node('button');banner.id='pv2-countdown';banner.type='button';banner.setAttribute('aria-live','polite');document.body.appendChild(banner);
