@@ -4,6 +4,16 @@ Panel V2 is an optional ES5/CSS overlay on the existing HoaryDash dashboard.
 It preserves WallPanel's native battery badge (including its long press), camera,
 backlight profile, watchdog, and power-key behavior. No APK/firmware update is needed.
 
+## Screenshots
+
+These are 800 × 480 browser captures of the deployed dashboard with live HA data,
+not screenshots taken from the tablet. The battery badge is a native WallPanel
+overlay and is therefore absent in a desktop browser.
+
+![Home controls](../photos/panel-v2/home-browser.png)
+
+![Long-press brightness and color dialog](../photos/panel-v2/light-dialog-browser.png)
+
 ## Home
 
 The left column has a large clock, two-line Turkish date, larger weather and an
