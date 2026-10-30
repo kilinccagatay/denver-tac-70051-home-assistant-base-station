@@ -1,0 +1,67 @@
+/* Scoped, fixed-budget 800x480 touch UI. No blur, animation, framework, or webfont. */
+body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif; }
+.panel-v2 .screen { position:relative; transition:none !important; -webkit-transition:none !important; }
+.panel-v2 #screen-Ana > .layout-container { display:none !important; }
+#panel-v2 { position:absolute; top:14px; bottom:90px; left:22px; right:22px; font-family:Arial,sans-serif; }
+#panel-v2 *,.pv2-modal * { box-sizing:border-box; }
+.pv2-top { height:25px; display:-webkit-flex; display:flex; -webkit-justify-content:space-between; justify-content:space-between; padding-right:82px; }
+.pv2-brand { font-size:12px; font-weight:bold; letter-spacing:3px; color:#adb8c9; }
+.pv2-connection { font-size:12px; color:#9fd8c2; }
+.pv2-body { height:calc(100% - 25px); display:-webkit-flex; display:flex; }
+.pv2-overview { width:40%; padding-right:20px; text-align:center; display:-webkit-flex; display:flex; -webkit-flex-direction:column; flex-direction:column; -webkit-justify-content:center; justify-content:center; }
+.pv2-clock { font-size:128px; line-height:148px; font-weight:bold; letter-spacing:-7px; color:#f3f5fa; white-space:nowrap; }
+.pv2-date { font-size:22px; line-height:27px; color:#d8e0eb; }
+.pv2-weather { margin-top:13px; min-height:87px; }
+.pv2-weather-main { display:-webkit-flex; display:flex; -webkit-justify-content:center; justify-content:center; -webkit-align-items:center; align-items:center; }
+.pv2-weather-main svg { width:52px; height:52px; margin-right:10px; color:#b6d9ef; }
+.pv2-temperature { font-size:52px; line-height:60px; font-weight:bold; color:#f3f5fa; }
+.pv2-condition { font-size:22px; line-height:27px; color:#d8e0eb; }
+.pv2-meeting { height:24px; margin-top:8px; font-size:15px; color:#ffb2b2; visibility:hidden; }
+.pv2-meeting.pv2-active { visibility:visible; }
+.pv2-meeting-dot { display:inline-block; width:12px; height:12px; margin-right:7px; border-radius:50%; background:#ff575f; }
+.pv2-controls { width:60%; display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; -webkit-align-content:stretch; align-content:stretch; margin:-4px; }
+.pv2-card { width:calc(50% - 8px); height:calc(25% - 8px); margin:4px; padding:9px 12px; border:1px solid #3c485a; border-radius:13px; background:#252f3e; color:#f3f5fa; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; text-align:left; font-family:Arial,sans-serif; cursor:pointer; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+.pv2-card:active { background:#3b485b; }
+.pv2-card.pv2-on { background:#44392b; border-color:#927549; }
+.pv2-card svg { width:27px; height:27px; -webkit-flex-shrink:0; flex-shrink:0; margin-right:11px; color:#acbbce; }
+.pv2-card.pv2-on svg { color:#ffd08a; }
+.pv2-card.pv2-action { background:#243439; border-color:#3b565b; }
+.pv2-card.pv2-counting { background:#49362c; border-color:#c59557; }
+.pv2-card.pv2-unavailable { border-style:dashed; color:#c1c9d6; background:#222936; }
+.pv2-card:disabled { cursor:default; }
+.pv2-card-text { min-width:0; display:block; }
+.pv2-card-label { display:block; font-size:19px; line-height:22px; font-weight:bold; white-space:normal; }
+.pv2-card-state { display:block; margin-top:5px; font-size:13px; line-height:16px; color:#c1ccd9; white-space:normal; }
+.pv2-card.pv2-on .pv2-card-state { color:#f1d2a5; }
+.panel-v2 .navbar-container.navbar-bottom { bottom:0 !important; left:0 !important; right:0 !important; width:100% !important; padding:0 !important; transform:none !important; -webkit-transform:none !important; }
+.panel-v2 .navbar-container > nav { height:60px !important; width:100% !important; border:0 !important; border-top:1px solid #354254 !important; border-radius:0 !important; background:#1b2431 !important; padding:0 10px !important; }
+.panel-v2 .navbar-item { -webkit-flex:1; flex:1; min-width:0; padding:6px !important; border-radius:9px; }
+.panel-v2 .navbar-item.active { background:#304052 !important; }
+.panel-v2 .navbar-label { font-size:12px !important; line-height:14px !important; margin-top:3px !important; letter-spacing:1px !important; color:#d9e2ef !important; }
+.panel-v2 .navbar-icon { font-size:22px !important; color:#9fc7dc !important; }
+#pv2-countdown { position:fixed; z-index:60; left:0; right:0; bottom:60px; height:28px; display:none; border:0; background:#49362c; color:#ffe1af; font:14px Arial,sans-serif; text-align:center; cursor:pointer; }
+#pv2-notice { position:fixed; z-index:110; left:15px; right:15px; bottom:92px; padding:10px 16px; background:#492e34; color:#ffdce0; border:1px solid #9a5966; border-radius:10px; font:16px Arial,sans-serif; display:none; text-align:center; pointer-events:none; }
+.panel-v2 .pv2-legacy-light { width:100%; height:100%; min-height:70px; margin:0; }
+.panel-v2 .pv2-legacy-host > *:not(.pv2-card) { display:none !important; }
+.panel-v2 #mac-call-badge { display:none !important; }
+.pv2-modal { position:fixed; top:0; right:0; bottom:0; left:0; z-index:100; background:rgba(8,12,18,.9); display:none; -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center; font-family:Arial,sans-serif; color:#f3f5fa; }
+.pv2-modal.pv2-open { display:-webkit-flex; display:flex; }
+.pv2-dialog { width:620px; max-width:94vw; max-height:94vh; padding:18px 22px; border:1px solid #536278; border-radius:18px; background:#202b3a; box-shadow:0 12px 36px rgba(0,0,0,.4); overflow-y:auto; }
+.pv2-dialog-header { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:space-between; justify-content:space-between; margin-bottom:12px; }
+.pv2-dialog h2 { font:700 24px Arial,sans-serif; margin:0; }
+.pv2-close { min-width:90px; min-height:46px; padding:8px 14px; border:1px solid #64758b; border-radius:10px; background:#34465c; color:white; font:18px Arial,sans-serif; }
+.pv2-light-settings { border-top:1px solid #3e4d61; margin-top:9px; padding-top:10px; }
+.pv2-light-settings h3 { margin:0 0 6px; font-size:17px; color:#cbd7e5; }
+.pv2-setting-row { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; margin:5px 0; }
+.pv2-setting-row label { min-width:85px; font-size:16px; }
+.pv2-setting-row output { width:52px; text-align:right; font-size:18px; }
+.pv2-setting-row input[type=range] { -webkit-appearance:none; appearance:none; height:44px; background:transparent; -webkit-flex:1; flex:1; min-width:0; margin:0 12px; }
+.pv2-setting-row input[type=range]::-webkit-slider-runnable-track { height:8px; background:#64758c; border-radius:4px; }
+.pv2-setting-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:30px; height:30px; margin-top:-11px; border-radius:50%; background:#f3d19b; border:3px solid #202b3a; }
+.pv2-presets { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; margin:4px -3px; }
+.pv2-preset { min-width:78px; min-height:44px; margin:3px; padding:7px 11px; border:1px solid #61738a; border-radius:10px; background:#34465b; color:#f3f5fa; font:16px Arial,sans-serif; }
+.pv2-preset.pv2-selected { border:2px solid #ffe0a3; padding:6px 10px; }
+.pv2-swatch { display:inline-block; width:17px; height:17px; border-radius:50%; margin-right:6px; vertical-align:middle; border:1px solid rgba(255,255,255,.4); }
+.pv2-dialog-hint { margin:8px 0 0; color:#bac7d9; font-size:14px; line-height:20px; }
+.pv2-card:focus,.pv2-preset:focus,.pv2-close:focus,#pv2-countdown:focus { outline:2px solid #a9d8ee; outline-offset:2px; }
+@media (max-width:700px) { .pv2-clock { font-size:102px; } .pv2-card-label { font-size:17px; } .pv2-card svg { width:23px; margin-right:7px; } }

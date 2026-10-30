@@ -1,0 +1,28 @@
+# Under script: in configuration.yaml, or without that wrapper in scripts.yaml.
+# Add this script entity to HoaryDash's subscriptions; use the same ID in panel config.
+panel_lights_off_delayed:
+  alias: Panel - Ev aydınlatmaları 60 saniye sonra kapat
+  description: Only this explicit list of household lights; never power switches or printer lights.
+  mode: single
+  max_exceeded: silent
+  sequence:
+    - delay: "00:01:00"
+    - variables:
+        panel_lights:
+          - light.example_living_room
+          - light.example_dining_table
+          - light.example_front_corridor
+          - light.example_rear_corridor
+          - light.example_bedroom
+          - light.example_office
+          - light.example_kitchen_counter
+          - light.example_kitchen_sink
+          - light.example_entrance
+          - light.example_iris
+    - variables:
+        on_lights: "{{ expand(panel_lights) | selectattr('state', 'eq', 'on') | map(attribute='entity_id') | list }}"
+    - condition: template
+      value_template: "{{ on_lights | count > 0 }}"
+    - action: light.turn_off
+      target:
+        entity_id: "{{ on_lights }}"

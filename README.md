@@ -33,6 +33,13 @@ The enclosure, print profile, and assembly guide are on [MakerWorld](https://mak
 
 The current Home Assistant Android app does not support this Android version. The normal Home Assistant frontend also stops during loading in the tablet's old browser. Changing from a Lovelace URL to the Home Assistant root does not solve that JavaScript compatibility problem. HoaryDash renders the dashboard server-side for old Chromium versions and is the reliable path used here.
 
+## Updated touch controls
+
+The optional [Panel V2 guide](docs/panel-v2.md) adds eight Home controls, a larger
+weather readout, long-press brightness/color dialogs, grouped corridor control,
+robot return-to-base, and a server-side 60-second household-lights-off countdown
+with cancellation. Native battery long press and display helpers remain unchanged.
+
 ## Dashboard screenshots
 
 These are direct 800 × 480 screenshots captured from the tablet, not desktop mock-ups.

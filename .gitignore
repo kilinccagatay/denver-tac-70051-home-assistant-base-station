@@ -10,3 +10,5 @@ hoarydash.yaml
 node_modules/
 media/
 .DS_Store
+
+__pycache__/
