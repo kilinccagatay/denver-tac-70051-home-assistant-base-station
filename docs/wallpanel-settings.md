@@ -48,7 +48,7 @@ The stable baseline passed key-path toggles, a 30-second timeout, and a user-con
 
 ## Reliability and troubleshooting
 
-The current watchdog recovers missing/non-foreground dashboards and only performs a high-memory maintenance restart after five continuously dark minutes. Boot helpers use `setsid` so they can survive the one-shot init script's exit. Check process command lines, not just PID files; wait for an old service to exit before replacing it.
+The current watchdog recovers missing/non-foreground dashboards and only performs a high-memory maintenance restart after five continuously dark minutes. Boot helpers use `setsid`, and the boot launcher remains active to check their process identities every 30 seconds and recover missing helpers. Check process command lines, not just PID files; wait for an old service to exit before replacing it.
 
 Use SettingsProvider (`content query` / `content update`) for deliberate brightness diagnostics. Direct database writes can leave caches inconsistent, and external brightness changes do not reset the app's inactivity timer. Normal testing should use WallPanel's touch or power-key paths.
 
@@ -62,3 +62,7 @@ first-tap loss while preserving the battery long press and its 12-second auto-hi
 The tested in-place update retained the existing preference fingerprint. The
 [application-side notes](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/first-touch-fix.md)
 describe the flags and validation. No native clock/date/audio migration is included.
+
+## Mandatory acceptance gate
+
+Use the [complete regression checklist](regression-checklist.md) for every runtime change. Individual earlier test results are not a complete acceptance run for a later installed revision.
