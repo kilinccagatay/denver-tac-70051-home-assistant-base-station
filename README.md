@@ -97,13 +97,17 @@ Accessibility and sends only `in_call: true/false` to Home Assistant. General
 Busy status alone does not trigger it. No meeting title, participant, phone
 number, Graph permission, or Entra registration is needed.
 
-The small **Toplantı** badge appears only on Ana (Home). Its red dot sits above
-the centered label, clear of the bottom navigation. Missing heartbeats expire
+The small **Toplantı** badge appears only on **Evim** (internal `Ana` route).
+In Panel V2 it sits below the weather in the left column, clear of navigation. Missing heartbeats expire
 the state after 40 seconds, and the browser also hides stale/disconnected data.
 The Mac menu provides **Start at Login**; no tablet APK or firmware change is
 needed for this integration.
 
-![Call indicator on the real tablet](photos/screenshots/home-call-indicator.png)
+![Active meeting indicator on the updated physical Denver tablet](photos/panel-v2/home-meeting-tablet.png)
+
+This is a direct capture from the tablet running Build 8 during an active meeting,
+including its native battery badge. Only the orientation was rotated 180° to match
+the mounted tablet; no meeting name, participant, or company content is shown.
 
 Follow the [integration guide](docs/mac-call-indicator.md). The full dashboard
 example includes the optional badge; without the companion entity it stays

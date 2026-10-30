@@ -24,6 +24,14 @@ overlay and is therefore absent in a desktop browser.
 
 ![Panel preferences](../photos/panel-v2/settings-browser.png)
 
+### Meeting indicator on the actual tablet
+
+Unlike the browser captures above, this is a direct tablet capture with the native
+battery badge visible. It shows an active meeting on Evim; only its orientation
+was rotated 180° to match the mounted display.
+
+![Active meeting on the physical Denver tablet](../photos/panel-v2/home-meeting-tablet.png)
+
 ## Home
 
 The left column has a large clock, two-line Turkish date, larger weather and an

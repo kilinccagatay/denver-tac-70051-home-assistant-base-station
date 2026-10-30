@@ -48,11 +48,21 @@ contains the optional card and script. For an existing dashboard instead:
    the previous page even after an app restart. Use a cache-clearing refresh
    before diagnosing the badge as broken. Keep periodic Browser Refresh off.
 
-The badge is a 62-pixel-wide block, 12 pixels from the right and 14 pixels from
+The original dashboard example places the badge in a 62-pixel-wide block, 12 pixels from the right and 14 pixels from
 the bottom of Ana. A 14-pixel red dot sits above the centered **Toplantı** label.
 This clears the existing navigation on the tested 800 × 480 panel. It does not
 move the clock, weather, lights, or navigation. Other screen names/layouts may
 need different selectors and offsets. Keep custom JavaScript ES5-compatible.
+
+## Panel V2 on the physical tablet
+
+Panel V2 includes its own meeting indicator below the weather on **Evim** (the
+internal screen remains `Ana`). Do not add a second legacy overlay to Panel V2.
+The image below was captured directly from the Denver tablet during an active
+meeting, with the native battery badge visible. It was rotated 180° to match the
+physical mounting; the screen content was not otherwise changed.
+
+![Meeting active on the actual Denver tablet](../photos/panel-v2/home-meeting-tablet.png)
 
 ## Verification and limits
 
