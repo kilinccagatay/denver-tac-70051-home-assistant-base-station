@@ -50,17 +50,44 @@ battery long press and display helpers remain unchanged.
 
 ## Dashboard screenshots
 
-These are direct 800 × 480 screenshots captured from the tablet, not desktop mock-ups.
+The current Panel V2 interface is shown below. These are **800 × 480 browser
+captures of the deployed dashboard with live Home Assistant data**. WallPanel’s
+native battery badge is drawn by Android and is therefore absent from these images.
+
+![Evim dashboard with clock, weather, and quick controls](photos/panel-v2/home-browser.png)
+
+| Kitchen | Entrance |
+| --- | --- |
+| ![Kitchen controls](photos/panel-v2/kitchen-browser.png) | ![Entrance and corridor controls](photos/panel-v2/entrance-browser.png) |
+
+| Rooms | Robot vacuum |
+| --- | --- |
+| ![Room lighting controls](photos/panel-v2/rooms-browser.png) | ![Robot vacuum status and controls](photos/panel-v2/robot-browser.png) |
+
+| Brightness and color presets | Panel settings |
+| --- | --- |
+| ![Long-press light settings with brightness and color presets](photos/panel-v2/light-dialog-browser.png) | ![Sound, long-press timing, cleaning mode, and reload settings](photos/panel-v2/settings-browser.png) |
+
+See the [Panel V2 guide](docs/panel-v2.md) for interaction behavior, configuration,
+and installation.
+
+<details>
+<summary>Earlier interface — screenshots from the physical tablet</summary>
+
+These direct tablet captures document the previous layout, including its printer
+page. The current five-tab Panel V2 layout appears in the gallery above.
 
 | Home | Kitchen |
 | --- | --- |
-| ![Home page with clock, weather, and lights](photos/screenshots/home.png) | ![Kitchen lighting page](photos/screenshots/kitchen.png) |
+| ![Earlier Home page](photos/screenshots/home.png) | ![Earlier Kitchen page](photos/screenshots/kitchen.png) |
 
 | Entrance | Robot vacuum |
 | --- | --- |
-| ![Entrance and room lighting page](photos/screenshots/entrance.png) | ![Robot vacuum controls](photos/screenshots/robot.png) |
+| ![Earlier Entrance page](photos/screenshots/entrance.png) | ![Earlier Robot page](photos/screenshots/robot.png) |
 
-![Bambu Lab printer status and controls](photos/screenshots/printer.png)
+![Earlier Bambu Lab printer page](photos/screenshots/printer.png)
+
+</details>
 
 ## Mac call indicator
 
