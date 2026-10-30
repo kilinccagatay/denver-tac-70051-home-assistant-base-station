@@ -130,3 +130,5 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 .pv2-audio-actions { display:-webkit-flex; display:flex; }
 .pv2-audio-actions .pv2-sound { min-width:90px; margin-left:5px; padding:8px; }
 .pv2-card:disabled:not(.pv2-pending) { opacity:.6; }
+
+.pv2-card,.pv2-preset,.pv2-settings-trigger { touch-action:manipulation; }

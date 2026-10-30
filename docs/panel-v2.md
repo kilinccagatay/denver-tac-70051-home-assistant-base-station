@@ -43,8 +43,8 @@ inside the 22 px panel gutter, keeping every tab title clear of this native laye
 Their behaviors are:
 
 - Living room and dining table: tap to toggle; hold 650 ms for settings.
-- Corridor: turn both corridor lights off if either is on, otherwise both on.
-  Hold to adjust the two lights individually.
+- Corridor: group the front corridor, rear corridor, and entrance lights. If any
+  is on, turn all three off; otherwise turn all three on. Hold for individual settings.
 - Bedroom and office: tap to toggle; hold for settings.
 - Kitchen: toggle **counter and sink only**, excluding the dining table. If either
   light is on, turn both off; otherwise turn both on. Hold for individual settings.
@@ -55,7 +55,11 @@ Their behaviors are:
 
 The settings dialog only offers the capabilities the entity supports: brightness,
 three white-temperature presets within the device limits, and six large circular RGB presets.
-The brightness control has a large thumb and percentage readout. An optional
+The brightness control has a large thumb and percentage readout. Off lamps open
+at 0% even if HA retains an old brightness attribute; missing brightness on an on
+lamp is shown as unknown rather than 100%. Opening the dialog sends no command.
+Moving the slider to zero turns the lamp off; a positive value turns it on at the
+chosen level. Ordinary on/off taps still let HA restore its previous brightness. An optional
 **Ses: Kapalı / Açık** preference in **Panel Ayarları** enables a quiet
 click. Open these separate panel settings using the settings icon below the clock/date
 at the lower left; sound controls are not part of individual lamp dialogs. The
@@ -63,7 +67,11 @@ preference is saved in this browser only and defaults on unless explicitly disab
 Small MP3/PCM WAV files are served by HA’s public `/local/` static route
 for old WebView compatibility; no Internet audio request or microphone
 permission is needed. **Sesi Dene** plays a test and reports playback/load errors. The device media volume
-must be audible. Audio failures do not block controls.
+must be audible. Audio failures do not block controls. Light/control card feedback
+starts on touch/mouse down, before the touch-release service command. Valid short touches act at touchend
+without waiting for legacy click synthesis; follow-up mouse/click events are
+suppressed to avoid double commands. Long presses
+do not replay it when opening settings. Drag cancellation still prevents commands.
 Panel settings also offer 450/650/900 ms lamp long-press timing (normal: 650 ms),
 a 20-second panel touch lock for cleaning, and a page reload button. The cleaning
 lock does not disable native Android controls or the native battery overlay.
@@ -94,6 +102,9 @@ prevent duplicate taps until acknowledged. Failures still show a notice.
 A small pre-render gate hides the legacy screen until the overlay is ready, avoiding
 a flash of the old Home layout. An eight-second fallback releases it if initialization
 fails, so a JavaScript failure does not leave a permanent loading screen.
+Only the active tab is rendered. The one-second clock tick updates that tab’s
+clock/meeting freshness and an active Home countdown; it does not redraw all lamp
+cards or hidden tabs. HA event bursts are coalesced into one pending UI update.
 No blur, continuous animation, framework, or extra state polling is introduced.
 Weather changes merge attributes; missing temperature is never replaced with zero.
 On connection/reconnection, a one-time targeted REST reconciliation avoids stale

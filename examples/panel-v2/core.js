@@ -23,6 +23,13 @@
       min: a.min_color_temp_kelvin || (a.max_mireds ? Math.round(1000000 / a.max_mireds) : 2200),
       max: a.max_color_temp_kelvin || (a.min_mireds ? Math.round(1000000 / a.min_mireds) : 6500)};
   };
+  api.brightness = function(e){
+    if(e.state==='off'){return {value:0,label:'0%'};}
+    var b=e.attributes.brightness;
+    if(b===undefined||b===null||!isFinite(Number(b))){return {value:0,label:'—'};}
+    var value=Math.max(0,Math.min(100,Math.round(Number(b)/255*100)));
+    return {value:value,label:value+'%'};
+  };
   api.robot = function (e) {
     if (!api.available(e)) { return {label: 'Robot', detail: 'Bağlantı yok', service: null}; }
     if (e.state === 'cleaning' || e.state === 'paused') { return {label: 'Temizliği Durdur', detail: 'İstasyona gönder', service: 'return_to_base'}; }
@@ -46,15 +53,16 @@
     var start = Date.parse(e.attributes.last_triggered || '');
     return isFinite(start) ? Math.max(0, Math.min(60, Math.ceil((start + 60000 - now) / 1000))) : null;
   };
-  api.bindPress = function (el, shortPress, longPress, scheduler, holdDelay) {
-    var timer = null, held = false, startX = 0, startY = 0, touchAt = 0;
+  api.bindPress = function (el, shortPress, longPress, scheduler, holdDelay, pressStart) {
+    var timer = null, held = false, startX = 0, startY = 0, touchAt = 0, started = false, suppressClickUntil = 0;
     scheduler = scheduler || {set: function (fn, ms) { return setTimeout(fn, ms); }, clear: function (id) { clearTimeout(id); }, now: function () { return new Date().getTime(); }};
     function cancel() { if (timer !== null) { scheduler.clear(timer); timer = null; } }
     function start(ev) {
       if (ev.type === 'mousedown' && (scheduler.now() - touchAt < 800 || ev.button !== 0)) { return; }
-      if (ev.touches && ev.touches.length !== 1) { cancel(); return; }
+      if (ev.touches && ev.touches.length !== 1) { cancel(); held=true;started=false;return; }
       if (ev.touches) { touchAt = scheduler.now(); }
-      held = false;
+      held = false;started = true;
+      if(pressStart){pressStart();}
       var p = ev.touches ? ev.touches[0] : ev; startX = p.clientX; startY = p.clientY;
       cancel();
       if (longPress) { timer = scheduler.set(function () { timer = null; held = true; longPress(); }, holdDelay ? holdDelay() : 650); }
@@ -62,12 +70,12 @@
     el.addEventListener('mousedown', start, false);
     el.addEventListener('touchstart', start, false);
     el.addEventListener('touchmove', function (ev) { var p = ev.touches[0]; if (!p || Math.abs(p.clientX - startX) > 12 || Math.abs(p.clientY - startY) > 12) { cancel(); held = true; } }, false);
-    el.addEventListener('touchend', cancel, false);
-    el.addEventListener('touchcancel', function () { cancel(); held = true; }, false);
+    el.addEventListener('touchend', function(ev){cancel();touchAt=scheduler.now();suppressClickUntil=touchAt+800;ev.preventDefault();var act=started&&!held;started=false;held=false;if(act){shortPress();}},false);
+    el.addEventListener('touchcancel', function () { cancel();touchAt=scheduler.now();suppressClickUntil=touchAt+800;held=false;started=false; }, false);
     el.addEventListener('mouseup', cancel, false);
     el.addEventListener('mouseleave', cancel, false);
     el.addEventListener('contextmenu', function (ev) { ev.preventDefault(); }, false);
-    el.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); cancel(); if (!held) { shortPress(); } held = false; }, false);
+    el.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); cancel(); if(scheduler.now()<suppressClickUntil){return;} if (!held) { if(!started&&pressStart){pressStart();} shortPress(); } held = false;started = false; }, false);
     el.addEventListener('keydown', function (ev) { if (ev.keyCode === 27) { cancel(); held = false; } }, false);
   };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else { root.PanelV2Core = api; }
