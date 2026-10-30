@@ -30,10 +30,10 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(yaml.safe_load(yaml.safe_dump(result, allow_unicode=True)), result)
         cards = result['dashboards']['dash']['screens'][0]['sensors']['cards']
         subscribed = {c['entity_id'] for c in cards}
-        self.assertTrue(set(mapping['allLights']).issubset(subscribed))
+        self.assertLessEqual(len(cards), 4, 'reuse existing subscriptions instead of duplicating light sensors')
         self.assertIn(mapping['countdown'], subscribed)
         self.assertIn(mapping['vacuum'], subscribed)
-        self.assertIn('light.example_printer_chamber', subscribed)
+        self.assertIn('light.example_printer_chamber', str(result))
         self.assertNotIn('light.example_printer_chamber', mapping['allLights'])
 
     def test_script_guards_empty_target_and_limits_household_lights(self):

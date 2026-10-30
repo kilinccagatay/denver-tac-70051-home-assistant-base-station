@@ -32,12 +32,33 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     panel['theme']['custom'] = (custom + '\n' + BEGIN + '\n</style>\n<style>' + css
                                + '</style>\n<script>window.PANEL_V2_CONFIG=' + config + ';\n'
                                + js + '\n</script>\n<style>\n')
-    # The stock markup remains the subscription source, although Home is replaced.
+    # Reuse subscriptions already supplied by cards on any screen. Avoid adding
+    # ten duplicate sensor widgets just to obtain ten existing light states.
     home = next(s for s in panel['screens'] if s['name'] == 'Ana')
     cards = home.setdefault('sensors', {}).setdefault('cards', [])
-    existing = {card.get('entity_id') for card in cards}
     needed = list(mapping['allLights']) + mapping.get('extraLights', []) + [
         mapping['weather'], mapping['vacuum'], mapping['countdown'], mapping['meeting']]
+
+    def entity_ids(value):
+        found = set()
+        if isinstance(value, dict):
+            if isinstance(value.get('entity_id'), str):
+                found.add(value['entity_id'])
+            for child in value.values():
+                found.update(entity_ids(child))
+        elif isinstance(value, list):
+            for child in value:
+                found.update(entity_ids(child))
+        return found
+
+    # Also trim redundant generated sensor cards from earlier V2 installations.
+    home['sensors']['cards'] = []
+    elsewhere = entity_ids(panel['screens'])
+    home['sensors']['cards'] = [c for c in cards if not (
+        c.get('entity_id') in needed and c.get('entity_id') in elsewhere
+        and c.get('label') == '' and c.get('icon') == 'circle')]
+    cards = home['sensors']['cards']
+    existing = entity_ids(panel['screens'])
     for entity in needed:
         if entity not in existing:
             cards.append({'entity_id': entity, 'label': '', 'icon': 'circle'})
