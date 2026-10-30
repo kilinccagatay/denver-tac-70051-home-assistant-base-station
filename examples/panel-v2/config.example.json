@@ -9,7 +9,7 @@
     "bedroom": "light.example_bedroom", "office": "light.example_office",
     "counter": "light.example_kitchen_counter", "sink": "light.example_kitchen_sink"
   },
-  "allLights": ["light.example_living_room", "light.example_dining_table", "light.example_front_corridor", "light.example_rear_corridor", "light.example_bedroom", "light.example_office", "light.example_kitchen_counter", "light.example_kitchen_sink", "light.example_entrance", "light.example_iris"],
+  "allLights": ["light.example_living_room", "light.example_dining_table", "light.example_front_corridor", "light.example_rear_corridor", "light.example_bedroom", "light.example_office", "light.example_kitchen_counter", "light.example_kitchen_sink", "light.example_entrance", "light.example_floor_lamp"],
   "extraLights": ["light.example_printer_chamber"],
   "labels": {"light.example_front_corridor":"Koridor Ön", "light.example_rear_corridor":"Koridor Arka"}
 }

@@ -18,7 +18,7 @@ panel_lights_off_delayed:
           - light.example_kitchen_counter
           - light.example_kitchen_sink
           - light.example_entrance
-          - light.example_iris
+          - light.example_floor_lamp
     - variables:
         on_lights: "{{ expand(panel_lights) | selectattr('state', 'eq', 'on') | map(attribute='entity_id') | list }}"
     - condition: template
