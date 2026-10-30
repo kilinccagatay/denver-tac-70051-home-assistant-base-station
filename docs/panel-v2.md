@@ -42,7 +42,7 @@ inside the 22 px panel gutter, keeping every tab title clear of this native laye
 
 Their behaviors are:
 
-- Living room and dining table: tap to toggle; hold 650 ms for settings.
+- Living room and dining table: tap to toggle; hold the configured delay for settings (normal: 500 ms).
 - Corridor: group the front corridor, rear corridor, and entrance lights. If any
   is on, turn all three off; otherwise turn all three on. Hold for individual settings.
 - Bedroom and office: tap to toggle; hold for settings.
@@ -57,22 +57,41 @@ The settings dialog only offers the capabilities the entity supports: brightness
 three white-temperature presets within the device limits, and six large circular RGB presets.
 The brightness control has a large thumb and percentage readout. Off lamps open
 at 0% even if HA retains an old brightness attribute; missing brightness on an on
-lamp is shown as unknown rather than 100%. Opening the dialog sends no command.
+lamp is shown as unknown rather than 100%. Opening the dialog sends no command. Its brightness and selected color follow live
+HA state without replacing a slider while it is being dragged. Single RGB lamp
+cards use a dark tint derived from their actual reported color; off/group cards
+retain their standard appearance. A preset closes the dialog after a successful HA service response; a failure
+keeps it open with a notice. Sliders keep the dialog open. Menu DOM is cached per lamp/group and capability
+set, so repeated opens reuse controls while refreshing current values.
 Moving the slider to zero turns the lamp off; a positive value turns it on at the
-chosen level. Ordinary on/off taps still let HA restore its previous brightness. An optional
+chosen level. Ordinary on/off taps preserve HA’s previous brightness. Optional `defaultLightStates`
+profiles supply each lamp’s normal color on the next **panel** turn-on, in the same
+command that lights it. A normal warm-white profile stays warm; no universal cold
+white is imposed. Off commands do not briefly turn lamps on to reset color.
+Calibrate profiles from actual normal/power-on states: Kelvin for color-temperature
+lamps, RGB for RGB-only lamps. Off-state null attributes are not usable calibration.
+Example values are illustrative; replace them with your own observed defaults.
+Other HA controls/automations are not intercepted by this frontend setting. An optional
 **Ses: Kapalı / Açık** preference in **Panel Ayarları** enables a quiet
 click. Open these separate panel settings using the settings icon below the clock/date
 at the lower left; sound controls are not part of individual lamp dialogs. The
 preference is saved in this browser only and defaults on unless explicitly disabled.
-Small MP3/PCM WAV files are served by HA’s public `/local/` static route
+For low-latency feedback, a tiny PCM sample is decoded into a Web Audio buffer
+once and started on touch-down. Unsupported/failed Web Audio engines retain the
+working HTML audio fallback: MP3/PCM WAV files served by HA’s public `/local/` static route
 for old WebView compatibility; no Internet audio request or microphone
 permission is needed. **Sesi Dene** plays a test and reports playback/load errors. The device media volume
-must be audible. Audio failures do not block controls. Light/control card feedback
-starts on touch/mouse down, before the touch-release service command. Valid short touches act at touchend
+must be audible. Audio failures do not block controls. Feedback on interactive controls, presets, close icons, sliders, and navigation
+starts on touch/mouse down, before the touch-release/click command. A shared capture listener excludes disabled
+controls and blank areas, suppresses synthetic mouse/click duplicates, and retains
+keyboard feedback. Valid short touches act at touchend
 without waiting for legacy click synthesis; follow-up mouse/click events are
-suppressed to avoid double commands. Long presses
-do not replay it when opening settings. Drag cancellation still prevents commands.
-Panel settings also offer 450/650/900 ms lamp long-press timing (normal: 650 ms),
+suppressed to avoid double commands. An unpaired touchend does not swallow the
+browser click fallback, preserving input recovery when a start event is missing. Long presses
+do not replay it when opening settings. The dialog closes with an × icon labeled
+"Pencereyi kapat" for accessibility, distinct from turning a lamp off. Drag cancellation still prevents commands.
+Panel settings also offer 250/500/800 ms lamp long-press timing (normal: 500 ms; older preferences migrate
+by their Fast/Normal/Long choice),
 a 20-second panel touch lock for cleaning, and a page reload button. The cleaning
 lock does not disable native Android controls or the native battery overlay.
 Neither preference changes the battery badge long press or native display helpers.
@@ -82,7 +101,7 @@ Sliders send a command on release/change, not on every movement. There are no
 chevrons under light buttons; long presses do not also toggle. A dragged/canceled
 touch does not act. The five tabs now use a shared layout:
 
-- **Ana:** the eight quick controls above.
+- **Evim** (internal `Ana` route): the eight quick controls above.
 - **Mutfak:** counter, sink, and dining table, with no unrelated nearby-room section.
 - **Giriş:** entrance and the two corridor lights only.
 - **Odalar:** living room, office, bedroom, and a named accent light.
@@ -164,6 +183,18 @@ then clears its countdown. This is a short exit delay, not a persistent schedule
 Cancellation cannot undo a turn-off service already dispatched at expiry.
 
 ## Tests
+
+For the DOM interaction regression (no physical HA/device commands), install the
+optional test dependency and run:
+
+```sh
+npm install --prefix /tmp/denver-panel-ui-tests --no-save jsdom@26.1.0
+NODE_PATH=/tmp/denver-panel-ui-tests/node_modules node tests/panel-ui.test.cjs
+```
+
+This checks live modal brightness/color, drag protection, cached menu reuse,
+250 ms Fast timing/migration, shared feedback, automatic close only after successful
+presets, failure notices, Home display naming, and tab activation from cached state.
 
 Run `node tests/panel-v2.test.cjs` for compact state merging, device capabilities,
 group behavior, robot state transitions, countdown timing, and touch/long-press

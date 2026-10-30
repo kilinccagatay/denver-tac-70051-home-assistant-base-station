@@ -36,5 +36,17 @@
   },
   "removedScreens": [
     "Yazıcı"
-  ]
+  ],
+  "defaultLightStates": {
+    "light.example_dining_table": {
+      "color_temp_kelvin": 2700
+    },
+    "light.example_floor_lamp": {
+      "rgb_color": [
+        255,
+        168,
+        90
+      ]
+    }
+  }
 }

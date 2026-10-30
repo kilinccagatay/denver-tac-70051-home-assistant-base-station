@@ -42,6 +42,9 @@ with cancellation on its Home button. Kitchen toggles only counter/sink lights;
 large circular color presets and an optional quiet click improve touch controls.
 A common clock/weather column appears on Home, Kitchen, Entrance, Rooms, and Robot;
 a lower-left settings icon opens sound, hold timing, cleaning lock, and reload.
+Live brightness/color stays synchronized in reused dialogs; presets close after a
+successful command. Configurable per-lamp default color profiles restore each
+lamp’s own normal tone on the next panel turn-on, preserving brightness.
 The guide includes current V2 browser captures and optional tab removal. Native
 battery long press and display helpers remain unchanged.
 

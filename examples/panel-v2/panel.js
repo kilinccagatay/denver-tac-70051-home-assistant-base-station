@@ -8,20 +8,38 @@
     var snapshotNeeded = false, connectionGeneration = 0, renderQueued=false,lastConnection=null;
     function activeView(){try{return decodeURIComponent(window.location.hash.replace(/^#screen-/,''))||'Ana';}catch(ignore){return 'Ana';}}
     function scheduleRender(){if(renderQueued){return;}renderQueued=true;setTimeout(function(){renderQueued=false;render();},16);}
-    var modalIds = [], focusBeforeDialog = null, noticeTimer, modal, keyboardInput = false;
+    var modalIds = [], modalControls=[],dialogCache={},modalRevision=0,focusBeforeDialog = null, noticeTimer, modal, keyboardInput = false;
     document.addEventListener('keydown',function(ev){if(ev.keyCode===9){keyboardInput=true;document.body.classList.add('pv2-keyboard');}},true);
     function pointerInput(){keyboardInput=false;document.body.classList.remove('pv2-keyboard');}
     document.addEventListener('touchstart',pointerInput,true);
     document.addEventListener('mousedown',pointerInput,true);
-    var soundEnabled=true,holdDelay=650,audio=document.createElement('audio'),audioStatus=null;
+    var soundEnabled=true,holdDelay=500,audio=document.createElement('audio'),audioStatus=null;
     audio.preload='auto';audio.volume=1;audio.setAttribute('aria-hidden','true');audio.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none';
     var soundBase=window.location.protocol+'//'+window.location.hostname+':8123/local/';
     [{src:cfg.clickSoundUrl||soundBase+'panel-click.mp3',type:'audio/mpeg'},{src:cfg.clickSoundWavUrl||soundBase+'panel-click.wav',type:'audio/wav'}].forEach(function(source){var n=document.createElement('source');n.src=source.src;n.type=source.type;audio.appendChild(n);});document.body.appendChild(audio);
     function soundStatus(text){if(audioStatus){setText(audioStatus,text);}}
     audio.addEventListener('playing',function(){soundStatus('Ses oynatıldı. Duyulmuyorsa medya sesini kontrol edin.');},false);
     audio.addEventListener('error',function(){soundStatus('Ses dosyası oynatılamadı. Hata: '+(audio.error?audio.error.code:'bilinmiyor'));},false);
-    try{var savedSound=localStorage.getItem('panel-v2-click-sound');if(savedSound==='on'||savedSound==='off'){soundEnabled=savedSound==='on';}var savedDelay=Number(localStorage.getItem('panel-v2-hold-ms'));if([450,650,900].indexOf(savedDelay)!==-1){holdDelay=savedDelay;}}catch(ignore){}
-    function clickSound(force){if(!soundEnabled&&!force){return;}try{try{audio.currentTime=0;}catch(ignore){}var playing=audio.play();if(playing&&playing.catch){playing.catch(function(error){soundStatus(error.name==='NotAllowedError'?'Tarayıcı ses oynatmayı engelledi. Sesi Dene düğmesine dokunun.':'Ses oynatılamadı: '+error.name);});}}catch(ignore){soundStatus('Bu tarayıcı sesi başlatamadı.');}}
+    try{var savedSound=localStorage.getItem('panel-v2-click-sound');if(savedSound==='on'||savedSound==='off'){soundEnabled=savedSound==='on';}var savedDelay=Number(localStorage.getItem('panel-v2-hold-ms'));if(savedDelay===450){savedDelay=250;}else if(savedDelay===650){savedDelay=500;}else if(savedDelay===900){savedDelay=800;}if([250,500,800].indexOf(savedDelay)!==-1){holdDelay=savedDelay;}}catch(ignore){}
+    // Decode once; a new lightweight buffer source starts directly on touch-down.
+    // The proven HTML media path remains a fallback for older/unsupported engines.
+    var fastContext=null,fastBuffer=null,fastFailed=false;
+    try{var AudioEngine=window.AudioContext||window.webkitAudioContext;if(AudioEngine){fastContext=new AudioEngine();var raw=atob('UklGRnoKAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YVYKAAAAAGcAdwHTAgcEtgS3BBwEGgPsAawARP93/Q77APic9I3xue8C8PLyg/gAAC0Ijw/XFDYXmRaUEykPYArqBewBBv6R+RH0ju3J5i7hcd4K4Kjm1/EAAL0OdBtQI8MlWSN+HQYWjQ4FCIYCfP0S+LrxkOqD4x/eFdys3jvm9PEAAPANYBmRINQimSAzG08UbA1mB1QCrv2w+NbyO+y75cHg4N5D4TzoDPMAANsMZxcJHh4gEB4VGbsSYAzSBiUC3f1C+dzzxe3G5y/jdOGn4xXqDvQAANsLlRWzG58duhsiF0YRagtKBvsBB/7I+c70MO+o6W3l1OPb5cnr/PQAAO8K5xOMGVEbkhlVFe4PhwrNBdMBL/5E+q31fvBl637nBebk51zt1/UAABUKWxKPFzEZlRetE7EOtQlaBa8BU/62+nr2s/H/7GbpCujE6c/uofYAAEwJ7hC6FTwXvxUlEowN9AjvBI0BdP4f+zj30PJ57ijr5+l/6yXwXPcAAJMInQ8JFG0VDhS8EH8MQgiNBG4Bk/6B++f31vPW78fsn+sX7WHxCPgAAOgHZg57EsMTfxJvD4YLnQcyBFIBr/7a+4j4yfQY8UbuNe2P7oTyp/gAAEsHRw0LETkSDxE7DqEKBgffAzgByv4t/B35qPVB8qfvq+7r75DzOfkAALoGPwy3D84Quw8gDc0JegaSAx8B4v55/Kb5dvZT8+zwBPAr8Yj0wPkAADQGSwt+DoAPgg4bDAoJ+QVLAwkB+P6//CT6NPdP9BjyQvFS8mz1PPoAALgFagpeDUsOYQ0qC1YIggUJA/QADf8A/Zn64/c49S3zaPJi8z/2r/oAAEYFmwlUDC8NVwxLCrAHFAXMAuEAIP88/QX7hfgO9iz0dvNe9AH3GfsAAN0E3AheCygMYQt+CRcHrwSVAtAAMf9z/Wj7GvnU9hj1cPRF9bT3e/sAAHwEKwh8CjYLfgrBCIoGUgRhAr8AQf+m/cP7o/mL9/H1VvUb9ln41fsAACMEiQerCVcKrgkTCAcG/AMyArEAUP/V/Rj8Ivoz+Ln2K/bg9vL4KPwAANED8wbrCIkJ7QhyB48FrAMGAqMAXv8A/mb8l/rP+HL37vaW9375dPwAAIUDaAY5CMsIOwjeBiEFYwPeAZYAav8o/q38Avte+Rz4o/c9+AD6u/wAAD8D6QWVBxwIlwdVBrsEIAO5AYoAdv9M/u/8Zvvi+bn4SfjY+Hf6/PwAAP4CcwX+BnsHAAfXBVwE4gKWAYAAgf9u/i39wftc+kr54/hm+eb6OP0AAMICBgVzBuYGdQZjBQYEqAJ3AXYAi/+O/mX9FvzM+tD5cfnq+Uv7cP0AAIsCogTzBVwG9AX4BLUDcwJaAWwAlP+q/pn9ZPw0+0v68/lj+qn7o/0AAFkCRgR8Bd4FfgWVBGwDQgI/AWQAnP/F/sn9rPyT+736bPrT+v/70v0AACoC8QMPBWkFEAU5BCcDFQImAVwApP/e/vX97vzr+yb72/o6+0/8/f0AAP8BogOqBP0EqwTlA+kC7AEPAVUAq//0/h7+K/09/Ib7QfuZ+5n8Jf4AANcBWgNNBJoETgSYA68CxgH6AE4Asv8J/0P+ZP2I/N/7oPvx+9z8Sv4AALIBFwP4Az4E+QNQA3kCogHmAEgAuP8c/2b+mP3N/DL89/tB/Bv9bP4AAJEB2gKpA+oDqgMOA0gCggHUAEMAvv8u/4b+yP0N/X38R/yM/FX9jP4AAHEBoQJgA5wDYQPRAhoCZAHEAD0Aw/8+/6P+9P1H/cP8kfzR/Ir9qf4AAFUBbQIdA1QDHQOZAvEBSAG1ADkAyP9O/77+Hf5+/QT91vwQ/bv9w/4AADoBPALfAhID3wJlAsoBLgGmADQAzP9b/9f+Qv6w/T/9Ff1L/ej93P4AACIBEAKlAtQCpgI2AqYBFwGaADAA0P9o/+7+Zf7e/Xb9T/2B/RL+8/4AAAsB5wFxApwCcQIKAoUBAQGOACwA1P90/wT/hf4I/qn9hf2y/Tj+CP8AAPYAwQFAAmgCQQLhAWcB7QCCACkA1/9//xf/ov4v/tf9tv3g/Vz+G/8AAOMAngETAjgCFAK8AUsB2wB4ACYA2/+J/yr/vv5U/gL+5P0L/nz+Lf8AANEAfgHqAQwC6gGZATEBygBvACMA3v+S/zr/1/51/ir+Dv4y/pv+Pf8AAMEAYAHEAeMBxAF5ARoBugBmACAA4P+b/0r/7v6U/k/+Nf5W/rb+Tf8AALIARQGhAb4BoQFcAQQBqwBeAB0A4/+j/1j/A/+w/nD+WP53/tD+W/8AAKQAKwGAAZsBgQFBAe8AngBXABsA5f+q/2X/F//K/o/+ef6V/uj+Z/8AAJcAFAFiAXsBYwEoAd0AkgBQABkA5/+x/3H/Kf/i/qz+mP6y/v7+c/8AAIwA/gBHAV0BRwERAcwAhgBKABcA6f+3/3z/Ov/5/sf+tP7M/hL/fv8AAIEA6wAtAUIBLgH7ALwAfABEABUA6/+9/4f/Sf8N/9/+zv7k/iT/iP8AAHcA2AAWASkBFgHoAK0AcgA/ABMA7f/C/5D/WP8g//b+5f76/jX/kv8AAG0AxwAAARIBAAHWAKAAaQA6ABIA7v/H/5n/Zf8x/wr/+/4O/0X/mv8AAGUAuADsAP0A7ADFAJMAYQA1ABAA8P/L/6H/cf9C/x3/EP8h/1T/ov8AAF0AqgDaAOkA2gC2AIgAWQAxAA8A8f/P/6j/fP9Q/y//I/8y/2H/qv8AAFYAnADJANcAyQCoAH0AUgAtAA4A8v/T/6//hv9e/z//NP9D/27/sP8AAE8AkAC5AMYAuQCbAHMATAAqAA0A8//X/7X/kP9r/07/RP9R/3n/t/8AAEkAhQCrALcAqwCOAGoARgAmAAwA9P/a/7v/mf92/1z/Uv9f/4T/vP8AAEMAewCdAKgAngCDAGIAQQAjAAsA9f/d/8H/of+B/2n/YP9r/43/wv8AAD4AcQCRAJsAkQB5AFoAPAAhAAoA9v/g/8b/qP+L/3X/bP93/5b/x/8AADkAaACGAI8AhgBwAFMANwAeAAkA9//i/8r/r/+U/4D/eP+C/5//y/8AADUAYAB7AIQAewBnAE0AMwAcAAgA+P/l/87/tf+d/4r/g/+M/6b/z/8AADAAWAByAHoAcgBfAEcALwAZAAgA+P/n/9L/u/+k/5P/jP+V/63/0/8AAC0AUgBpAHAAaQBXAEEAKwAXAAcA+f/p/9b/wf+s/5v/lf+d/7T/1/8AACkASwBhAGcAYQBRADwAKAAWAAYA+v/r/9n/xv+y/6P/nv+l/7r/2v8AACYARQBZAF8AWQBKADcAJAAUAAYA+v/s/9z/yv+4/6v/pf+s/7//3f8AACMAQABSAFgAUgBFADMAIgASAAUA+//u/9//zv++/7H/rP+z/8T/4P8AACAAOwBMAFEATAA/AC8AHwARAAUA+//v/+L/0v/D/7f/s/+5/8n/4v8AAB4ANgBGAEsARgA6ACsAHAAPAAUA+//x/+T/1v/I/73/uf++/83/5f8='),bytes=new Uint8Array(raw.length);for(var ai=0;ai<raw.length;ai++){bytes[ai]=raw.charCodeAt(ai);}fastContext.decodeAudioData(bytes.buffer,function(buffer){fastBuffer=buffer;},function(){fastFailed=true;});}}catch(ignore){fastFailed=true;}
+    function fastSound(){
+      if(!fastContext||!fastBuffer||fastFailed){return false;}
+      try{if(fastContext.state==='suspended'&&fastContext.resume){var resuming=fastContext.resume();if(resuming&&resuming.catch){resuming.catch(function(){fastFailed=true;});}}
+        var source=fastContext.createBufferSource();source.buffer=fastBuffer;source.connect(fastContext.destination);source.onended=function(){source.disconnect();};if(source.start){source.start(0);}else{source.noteOn(0);}soundStatus('Ses oynatıldı · Hızlı ses');return true;
+      }catch(ignore){fastFailed=true;return false;}
+    }
+    function clickSound(force){if(!soundEnabled&&!force){return;}if(fastSound()){return;}try{try{audio.currentTime=0;}catch(ignore){}var playing=audio.play();if(playing&&playing.catch){playing.catch(function(error){soundStatus(error.name==='NotAllowedError'?'Tarayıcı ses oynatmayı engelledi. Sesi Dene düğmesine dokunun.':'Ses oynatılamadı: '+error.name);});}}catch(ignore){soundStatus('Bu tarayıcı sesi başlatamadı.');}}
+    var lastTouchSoundAt=0,lastPointerSoundAt=0,lastPointerControl=null,touchFeedbackActive=false;
+    function feedbackControl(target){for(var el=target;el&&el!==document.body;el=el.parentNode){if(el.nodeType!==1){continue;}var tag=el.tagName;if(tag==='BUTTON'||tag==='SELECT'||tag==='INPUT'||tag==='A'||el.classList.contains('navbar-item')){return el.disabled||el.getAttribute('aria-disabled')==='true'?null:el;}}return null;}
+    function pressFeedback(ev){var now=new Date().getTime();if(ev.type==='mousedown'&&(ev.button!==0||now-lastTouchSoundAt<800)){return;}if(ev.touches&&ev.touches.length!==1){return;}var el=feedbackControl(ev.target);if(!el){return;}if(ev.touches){lastTouchSoundAt=now;touchFeedbackActive=true;}lastPointerSoundAt=now;lastPointerControl=el;clickSound(el.classList.contains('pv2-sound-test'));}
+    document.addEventListener('touchstart',pressFeedback,true);
+    document.addEventListener('mousedown',pressFeedback,true);
+    document.addEventListener('touchend',function(){if(touchFeedbackActive){lastTouchSoundAt=new Date().getTime();lastPointerSoundAt=lastTouchSoundAt;touchFeedbackActive=false;}},true);
+    document.addEventListener('mouseup',function(){lastPointerSoundAt=new Date().getTime();},true);
+    document.addEventListener('click',function(ev){if(ev.isTrusted===false){return;}var el=feedbackControl(ev.target);if(!el){return;}if(el===lastPointerControl&&new Date().getTime()-lastPointerSoundAt<1000){return;}clickSound(el.classList.contains('pv2-sound-test'));},true);
     var paths = {
       settings:'M4 6h16M4 12h16M4 18h16M8 3v6m8 0v6M8 15v6',
       bulb:'M9 18h6m-5 3h4M8 13a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z',
@@ -51,32 +69,39 @@
         request.then(function(result){clearTimeout(timeout);resolve(result);},function(error){clearTimeout(timeout);reject(error);});
       });
     }
-    function perform(key, domain, service, ids, data) {
+    function perform(key, domain, service, ids, data, onSuccess) {
       if (busy[key]) { return; }
       busy[key]=true; scheduleRender();
-      call(domain,service,ids,data).then(function(){busy[key]=false;scheduleRender();},function(){busy[key]=false;scheduleRender();notice('İşlem gerçekleştirilemedi. Bağlantıyı kontrol edin.');});
+      call(domain,service,ids,data).then(function(){busy[key]=false;scheduleRender();if(onSuccess){onSuccess();}},function(){busy[key]=false;scheduleRender();notice('İşlem gerçekleştirilemedi. Bağlantıyı kontrol edin.');});
     }
     function supported(ids) { return ids.filter(function(id){return C.available(get(id));}); }
     function toggle(ids) {
       var g=C.group(ids,cache), active=supported(ids);
       if (!active.length) { notice('Lambaya ulaşılamıyor.'); return; }
-      perform(ids.join(','),'light',g.service,active);
+      if(g.service==='turn_on'){turnOn(active,ids.join(','));}else{perform(ids.join(','),'light','turn_off',active);}
+    }
+    function turnOn(ids,key){
+      var targets=ids.map(function(id){return {id:id,data:C.defaultLightData(get(id),cfg.defaultLightStates&&cfg.defaultLightStates[id])};});
+      if(!targets.some(function(t){return !!t.data;})){perform(key,'light','turn_on',ids);return;}
+      if(busy[key]){return;}busy[key]=true;scheduleRender();
+      Promise.all(targets.map(function(t){return call('light','turn_on',t.id,t.data).then(function(){return true;},function(){return false;});})).then(function(results){busy[key]=false;scheduleRender();if(results.some(function(ok){return !ok;})){notice('Bazı lambalar açılamadı. Bağlantıyı kontrol edin.');}});
     }
     function addCard(parent, options, legacy) {
       var b=node('button','pv2-card'+(options.action?' pv2-action':'')+(legacy?' pv2-legacy-light':'')); b.type='button';
       b.innerHTML=icon(options.icon);
       var text=node('span','pv2-card-text'), label=node('span','pv2-card-label',options.label), state=node('span','pv2-card-state','Yükleniyor…');
       text.appendChild(label);text.appendChild(state);b.appendChild(text);parent.appendChild(b);
-      var item={button:b,label:label,status:state,options:options,view:parent.getAttribute('data-pv2-screen')};cards.push(item);
+      var item={button:b,label:label,status:state,options:options,icon:b.querySelector('svg'),view:parent.getAttribute('data-pv2-screen')};cards.push(item);
       C.bindPress(b,function(){
         if (b.disabled) { return; }
         if (options.kind==='robot') { var robot=C.robot(get(cfg.vacuum)); if(robot.service){perform('robot','vacuum',robot.service,cfg.vacuum);} }
         else if(options.kind==='alloff'){toggleCountdown();}
         else if(options.kind&&options.kind.indexOf('vacuum-')===0){var action=C.robotControl(get(cfg.vacuum),options.kind.slice(7));if(action.service){perform('vacuum','vacuum',action.service,cfg.vacuum);}}
         else{toggle(options.ids);}
-      },options.ids?function(){openDialog(options.label,options.ids);}:null,null,function(){return holdDelay;},function(){if(!b.disabled){clickSound();}});
+      },options.ids?function(){openDialog(options.label,options.ids);}:null,null,function(){return holdDelay;});
       return item;
     }
+    var navLabels=document.querySelectorAll('.navbar-label');for(var ni=0;ni<navLabels.length;ni++){if(navLabels[ni].textContent.trim().toLowerCase()==='ana'){setText(navLabels[ni],'EVİM');}}
     document.body.classList.add('panel-v2');
     var views=[],robotStatus=null;
     function makeView(name,title){
@@ -88,7 +113,7 @@
       var clock=node('div','pv2-clock'),date=node('div','pv2-date'),weekday=node('div','pv2-date');overview.appendChild(clock);overview.appendChild(date);overview.appendChild(weekday);
       var weather=node('div','pv2-weather'),weatherMain=node('div','pv2-weather-main'),weatherIcon=node('span'),temperature=node('span','pv2-temperature','--°'),condition=node('div','pv2-condition','Yükleniyor…');weatherMain.appendChild(weatherIcon);weatherMain.appendChild(temperature);weather.appendChild(weatherMain);weather.appendChild(condition);overview.appendChild(weather);
       var meeting=node('div','pv2-meeting');meeting.innerHTML='<span class="pv2-meeting-dot"></span>Toplantı';overview.appendChild(meeting);
-      var trigger=node('button','pv2-settings-trigger');trigger.type='button';trigger.innerHTML=icon('settings');trigger.setAttribute('aria-label','Panel Ayarları');trigger.title='Panel Ayarları';trigger.addEventListener('click',function(){clickSound();openPanelSettings();},false);overview.appendChild(trigger);
+      var trigger=node('button','pv2-settings-trigger');trigger.type='button';trigger.innerHTML=icon('settings');trigger.setAttribute('aria-label','Panel Ayarları');trigger.title='Panel Ayarları';trigger.addEventListener('click',function(){openPanelSettings();},false);overview.appendChild(trigger);
       body.appendChild(overview);body.appendChild(controls);root.appendChild(body);screen.appendChild(root);
       views.push({name:name,status:status,clock:clock,date:date,weekday:weekday,temperature:temperature,condition:condition,weatherIcon:weatherIcon,previousWeatherIcon:'',meeting:meeting});return controls;
     }
@@ -114,10 +139,10 @@
     }
     modal=node('div','pv2-modal');modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','pv2-dialog-title');
     var dialog=node('div','pv2-dialog'), header=node('div','pv2-dialog-header'), dialogTitle=node('h2');dialogTitle.id='pv2-dialog-title';
-    var close=node('button','pv2-close','Kapat');close.type='button';
+    var close=node('button','pv2-close','×');close.type='button';close.setAttribute('aria-label','Pencereyi kapat');close.title='Pencereyi kapat';
     var sound=node('button','pv2-sound');sound.type='button';
     function soundLabel(){setText(sound,'Ses: '+(soundEnabled?'Açık':'Kapalı'));sound.setAttribute('aria-pressed',soundEnabled?'true':'false');sound.title='Düğme tıklama sesi';}
-    soundLabel();sound.addEventListener('click',function(){soundEnabled=!soundEnabled;try{localStorage.setItem('panel-v2-click-sound',soundEnabled?'on':'off');}catch(ignore){}soundLabel();clickSound();},false);
+    soundLabel();sound.addEventListener('click',function(){soundEnabled=!soundEnabled;try{localStorage.setItem('panel-v2-click-sound',soundEnabled?'on':'off');}catch(ignore){}soundLabel();if(soundEnabled){clickSound(true);}},false);
     header.appendChild(dialogTitle);header.appendChild(close);dialog.appendChild(header);
     var settings=node('div');dialog.appendChild(settings);modal.appendChild(dialog);document.body.appendChild(modal);
     close.addEventListener('click',closeDialog,false);
@@ -130,22 +155,23 @@
     modal.addEventListener('touchstart',function(ev){ev.stopPropagation();},false);
     modal.addEventListener('touchmove',function(ev){ev.stopPropagation();},false);
     modal.addEventListener('touchend',function(ev){ev.stopPropagation();},false);
-    function closeDialog(){var wasOpen=modal.classList.contains('pv2-open');modal.classList.remove('pv2-open');modalIds=[];if(wasOpen&&focusBeforeDialog&&document.body.contains(focusBeforeDialog)){if(keyboardInput){focusBeforeDialog.focus();}else if(document.activeElement&&document.activeElement.blur){document.activeElement.blur();}}}
+    function closeDialog(){modalRevision++;var wasOpen=modal.classList.contains('pv2-open');modal.classList.remove('pv2-open');modalIds=[];modalControls=[];if(wasOpen&&focusBeforeDialog&&document.body.contains(focusBeforeDialog)){if(keyboardInput){focusBeforeDialog.focus();}else if(document.activeElement&&document.activeElement.blur){document.activeElement.blur();}}}
     function openDialog(title, ids){
-      focusBeforeDialog=document.activeElement;modalIds=ids.slice(0);setText(dialogTitle,title);settings.innerHTML='';
-      for(var di=0;di<ids.length;di++){buildSettings(ids[di],ids.length>1);}
-      modal.classList.add('pv2-open');close.focus();
+      modalRevision++;focusBeforeDialog=document.activeElement;modalIds=ids.slice(0);setText(dialogTitle,title);settings.innerHTML='';
+      var key=ids.join('|'),signature='';for(var si=0;si<ids.length;si++){var state=get(ids[si]);signature+=String(C.available(state))+JSON.stringify(C.capabilities(state));}
+      var page=dialogCache[key];if(!page||page.signature!==signature){page={content:node('div'),controls:[],signature:signature};modalControls=[];for(var di=0;di<ids.length;di++){buildSettings(ids[di],ids.length>1,page.content);}page.controls=modalControls;dialogCache[key]=page;}else{modalControls=page.controls;}
+      for(var ci=0;ci<modalControls.length;ci++){modalControls[ci].editing=false;}settings.appendChild(page.content);syncDialog();modal.classList.add('pv2-open');close.focus();
     }
     function openPanelSettings(){
-      focusBeforeDialog=document.activeElement;modalIds=[];setText(dialogTitle,'Panel Ayarları');settings.innerHTML='';
+      modalRevision++;focusBeforeDialog=document.activeElement;modalIds=[];modalControls=[];setText(dialogTitle,'Panel Ayarları');settings.innerHTML='';
       function preference(title,hint,control){var row=node('div','pv2-preference'),description=node('div');description.appendChild(node('h3','',title));description.appendChild(node('p','pv2-dialog-hint',hint));row.appendChild(description);row.appendChild(control);settings.appendChild(row);}
-      var audioActions=node('div','pv2-audio-actions'),testAudio=node('button','pv2-sound','Sesi Dene');testAudio.type='button';testAudio.addEventListener('click',function(){soundStatus('Ses deneniyor…');clickSound(true);},false);audioActions.appendChild(sound);audioActions.appendChild(testAudio);preference('Tıklama sesi','Hafif dokunma sesi. Tabletin medya sesi açık olmalı.',audioActions);audioStatus=node('p','pv2-dialog-hint');audioStatus.setAttribute('role','status');settings.appendChild(audioStatus);
+      var audioActions=node('div','pv2-audio-actions'),testAudio=node('button','pv2-sound pv2-sound-test','Sesi Dene');testAudio.type='button';audioActions.appendChild(sound);audioActions.appendChild(testAudio);preference('Tıklama sesi','Hafif dokunma sesi. Tabletin medya sesi açık olmalı.',audioActions);audioStatus=node('p','pv2-dialog-hint');audioStatus.setAttribute('role','status');settings.appendChild(audioStatus);
       var delays=node('div','pv2-delay-options');
-      [{label:'Hızlı',ms:450},{label:'Normal',ms:650},{label:'Uzun',ms:900}].forEach(function(p){var b=node('button','pv2-delay',p.label);b.type='button';b.setAttribute('aria-pressed',holdDelay===p.ms?'true':'false');b.addEventListener('click',function(){holdDelay=p.ms;try{localStorage.setItem('panel-v2-hold-ms',String(holdDelay));}catch(ignore){}var all=delays.querySelectorAll('button');for(var i=0;i<all.length;i++){all[i].setAttribute('aria-pressed',all[i]===b?'true':'false');}clickSound();},false);delays.appendChild(b);});
+      [{label:'Hızlı',ms:250},{label:'Normal',ms:500},{label:'Uzun',ms:800}].forEach(function(p){var b=node('button','pv2-delay',p.label);b.type='button';b.setAttribute('aria-pressed',holdDelay===p.ms?'true':'false');b.addEventListener('click',function(){holdDelay=p.ms;try{localStorage.setItem('panel-v2-hold-ms',String(holdDelay));}catch(ignore){}var all=delays.querySelectorAll('button');for(var i=0;i<all.length;i++){all[i].setAttribute('aria-pressed',all[i]===b?'true':'false');}},false);delays.appendChild(b);});
       preference('Uzun basma','Lamba ayarlarının açılma süresi. Pil simgesini etkilemez.',delays);
       var actions=node('div','pv2-settings-actions'),clean=node('button','','Ekranı Temizle'),reload=node('button','','Sayfayı Yenile');clean.type=reload.type='button';
-      clean.addEventListener('click',function(){clickSound();closeDialog();cleanScreen();},false);
-      reload.addEventListener('click',function(){clickSound();window.location.reload();},false);
+      clean.addEventListener('click',function(){closeDialog();cleanScreen();},false);
+      reload.addEventListener('click',function(){window.location.reload();},false);
       actions.appendChild(clean);actions.appendChild(reload);settings.appendChild(actions);settings.appendChild(node('p','pv2-dialog-hint','Temizlik modu panel dokunmalarını 20 saniye engeller. Tercihler bu cihazda saklanır.'));
       modal.classList.add('pv2-open');close.focus();
     }
@@ -157,37 +183,49 @@
       function tick(){var left=Math.max(0,Math.ceil((deadline-new Date().getTime())/1000));setText(remaining,String(left));if(left===0){clearInterval(timer);if(cover.parentNode){cover.parentNode.removeChild(cover);}}}
       timer=setInterval(tick,250);tick();
     }
-    function buildSettings(id, showName){
+    function buildSettings(id, showName, container){
       var entry=get(id), a=entry.attributes, cap=C.capabilities(entry), section=node('section','pv2-light-settings');
       if(showName){section.appendChild(node('h3','',cfg.labels && cfg.labels[id] || a.friendly_name || 'Lamba'));}
-      if(!C.available(entry)){section.appendChild(node('p','pv2-dialog-hint','Bu lambaya şu anda ulaşılamıyor.'));settings.appendChild(section);return;}
+      if(!C.available(entry)){section.appendChild(node('p','pv2-dialog-hint','Bu lambaya şu anda ulaşılamıyor.'));container.appendChild(section);return;}
+      var control={id:id,input:null,output:null,presets:[],editing:false};modalControls.push(control);
       if(cap.dim){
         var row=node('div','pv2-setting-row'),label=node('label','','Parlaklık'),input=node('input'),output=node('output');
         var brightness=C.brightness(entry);input.type='range';input.min='0';input.max='100';input.step='1';input.value=String(brightness.value);input.setAttribute('aria-label',(cfg.labels&&cfg.labels[id]||'Lamba')+' parlaklık');
         input.id='pv2-dim-'+id.replace(/\./g,'-');label.htmlFor=input.id;output.textContent=brightness.label;
+        control.input=input;control.output=output;
+        input.addEventListener('mousedown',function(){control.editing=true;},false);input.addEventListener('touchstart',function(){control.editing=true;},false);
+        input.addEventListener('touchcancel',function(){control.editing=false;syncDialog();},false);
+        input.addEventListener('mouseup',function(){control.editing=false;},false);input.addEventListener('touchend',function(){control.editing=false;},false);
         input.addEventListener('input',function(){setText(output,input.value+'%');},false);
-        input.addEventListener('change',function(){clickSound();var value=Number(input.value);if(value===0){perform('dim:'+id,'light','turn_off',id);}else{perform('dim:'+id,'light','turn_on',id,{brightness_pct:value});}},false);
+        input.addEventListener('change',function(){control.editing=false;var value=Number(input.value);if(value===0){perform('dim:'+id,'light','turn_off',id);}else{perform('dim:'+id,'light','turn_on',id,{brightness_pct:value});}},false);
         row.appendChild(label);row.appendChild(input);row.appendChild(output);section.appendChild(row);
       }
       if(cap.temperature){
         var temps=node('div','pv2-presets');section.appendChild(node('h3','pv2-presets-title','Beyaz tonları'));
         [{label:'Sıcak',k:2700,color:'#ffd18b'},{label:'Doğal',k:4000,color:'#fff0d9'},{label:'Soğuk',k:6500,color:'#dcecff'}].forEach(function(p){
           var k=Math.max(cap.min,Math.min(cap.max,p.k));
-          var b=preset(p.label,p.color);b.setAttribute('aria-label',p.label+' beyaz');
-          b.addEventListener('click',function(){selectPreset(temps,b);perform('color:'+id,'light','turn_on',id,{color_temp_kelvin:k});},false);temps.appendChild(b);
+          var b=preset(p.label,p.color);b.setAttribute('aria-label',p.label+' beyaz');control.presets.push({button:b,kelvin:k});
+          b.addEventListener('click',function(){selectPreset(temps,b);applyPreset(id,{color_temp_kelvin:k});},false);temps.appendChild(b);
         });section.appendChild(temps);
       }
       if(cap.rgb){
         var colors=node('div','pv2-presets');section.appendChild(node('h3','pv2-presets-title','Renkler'));
         [{label:'Kırmızı',rgb:[255,55,55],color:'#ff5555'},{label:'Amber',rgb:[255,165,45],color:'#ffb64d'},{label:'Yeşil',rgb:[65,220,110],color:'#51d984'},{label:'Mavi',rgb:[65,135,255],color:'#679dff'},{label:'Mor',rgb:[175,85,255],color:'#b278fa'},{label:'Pembe',rgb:[255,95,170],color:'#ff7db4'}].forEach(function(p){
-          var b=preset(p.label,p.color);b.addEventListener('click',function(){selectPreset(colors,b);perform('color:'+id,'light','turn_on',id,{rgb_color:p.rgb});},false);colors.appendChild(b);
+          var b=preset(p.label,p.color);control.presets.push({button:b,rgb:p.rgb});b.addEventListener('click',function(){selectPreset(colors,b);applyPreset(id,{rgb_color:p.rgb});},false);colors.appendChild(b);
         });section.appendChild(colors);
       }
       if(!cap.dim&&!cap.temperature&&!cap.rgb){section.appendChild(node('p','pv2-dialog-hint','Bu lamba yalnızca aç/kapat destekliyor.'));}
-      settings.appendChild(section);
+      container.appendChild(section);
+    }
+    function applyPreset(id,data){var revision=modalRevision;perform('color:'+id,'light','turn_on',id,data,function(){if(modalRevision===revision){closeDialog();}});}
+    function syncDialog(){
+      for(var mi=0;mi<modalControls.length;mi++){var control=modalControls[mi],entry=get(control.id),available=connection()&&C.available(entry);
+        if(control.input){control.input.disabled=!available;if(!control.editing&&!busy['dim:'+control.id]){var brightness=C.brightness(entry);control.input.value=String(brightness.value);setText(control.output,brightness.label);}}
+        for(var pi=0;pi<control.presets.length;pi++){var p=control.presets[pi],selected=C.presetSelected(entry,p);p.button.disabled=!available||!!busy['color:'+control.id];if(!busy['color:'+control.id]){p.button.classList.toggle('pv2-selected',selected);p.button.setAttribute('aria-pressed',selected?'true':'false');}}
+      }
     }
     function preset(label,color){var b=node('button','pv2-preset');b.type='button';b.setAttribute('aria-pressed','false');var dot=node('span','pv2-swatch');dot.style.backgroundColor=color;b.appendChild(dot);b.appendChild(document.createTextNode(label));return b;}
-    function selectPreset(parent,button){clickSound();var all=parent.parentNode.querySelectorAll('.pv2-preset');for(var i=0;i<all.length;i++){all[i].classList.remove('pv2-selected');all[i].setAttribute('aria-pressed','false');}button.classList.add('pv2-selected');button.setAttribute('aria-pressed','true');}
+    function selectPreset(parent,button){var all=parent.parentNode.querySelectorAll('.pv2-preset');for(var i=0;i<all.length;i++){all[i].classList.remove('pv2-selected');all[i].setAttribute('aria-pressed','false');}button.classList.add('pv2-selected');button.setAttribute('aria-pressed','true');}
     function drawCard(item){
       var o=item.options,b=item.button,label=o.label,detail='',on=false,unavailable=false,key=o.ids?o.ids.join(','):o.kind,disabled=!connection();
       if(o.kind&&o.kind.indexOf('vacuum-')===0){var action=C.robotControl(get(cfg.vacuum),o.kind.slice(7));label=action.label;detail=action.detail;disabled=disabled||!action.service||!!busy.robot;unavailable=!C.available(get(cfg.vacuum));key='vacuum';}
@@ -205,6 +243,8 @@
         else{detail=group.on?group.on+'/'+group.total+' açık':'Kapalı';if(group.ready<group.total){detail+=' · eksik bağlantı';}}
         disabled=disabled||unavailable;
       }
+      var tint=o.ids&&o.ids.length===1?C.lightTint(get(o.ids[0])):null;
+      b.style.backgroundColor=tint?tint.background:'';b.style.borderColor=tint?tint.border:'';if(item.icon){item.icon.style.color=tint?tint.foreground:'';}item.status.style.color=tint?tint.foreground:'';
       b.disabled=disabled||!!busy[key];b.classList.toggle('pv2-on',on);b.classList.toggle('pv2-unavailable',unavailable);
       b.classList.toggle('pv2-pending',!!busy[key]);b.setAttribute('aria-busy',busy[key]?'true':'false');
       setText(item.label,label);setText(item.status,!connection()?'Bağlantı yok':detail);
@@ -213,7 +253,7 @@
     var conditions={'clear-night':'Açık gece','cloudy':'Bulutlu','exceptional':'Olağan dışı','fog':'Sisli','hail':'Dolu','lightning':'Şimşekli','lightning-rainy':'Gök gürültülü','partlycloudy':'Parçalı bulutlu','pouring':'Sağanak','rainy':'Yağmurlu','snowy':'Karlı','snowy-rainy':'Karla karışık','sunny':'Güneşli','windy':'Rüzgârlı','windy-variant':'Rüzgârlı'};
     function updateMeeting(v){var entry=get(cfg.meeting),age=new Date().getTime()/1000-Number(entry.attributes.last_report_epoch||0);v.meeting.classList.toggle('pv2-active',v.name==='Ana'&&connection()&&entry.state==='on'&&age>=-5&&age<40);}
     function render(){
-      var active=activeView();
+      syncDialog();var active=activeView();
       for(var i=0;i<cards.length;i++){if(cards[i].view===active){drawCard(cards[i]);}}
       var entry=get(cfg.weather),t=entry.attributes.temperature,valid=C.available(entry)&&t!==null&&t!==undefined&&t!==''&&isFinite(Number(t));
       var weatherName=entry.state==='sunny'?'sun':entry.state==='clear-night'?'moon':(/rain|pouring|hail|snow/.test(entry.state)?'rain':'cloud');

@@ -30,6 +30,24 @@
     var value=Math.max(0,Math.min(100,Math.round(Number(b)/255*100)));
     return {value:value,label:value+'%'};
   };
+  api.lightTint = function(e){
+    var a=e.attributes||{},rgb=a.rgb_color;
+    if(e.state!=='on'||a.color_mode==='color_temp'||!rgb||rgb.length!==3){return null;}
+    for(var i=0;i<3;i++){if(rgb[i]===null||!isFinite(Number(rgb[i]))||Number(rgb[i])<0||Number(rgb[i])>255){return null;}}
+    function mix(base,ratio){var v=[];for(var j=0;j<3;j++){v.push(Math.round(base[j]*(1-ratio)+Number(rgb[j])*ratio));}return 'rgb('+v.join(',')+')';}
+    return {background:mix([37,47,62],0.22),border:mix([60,72,90],0.55),foreground:mix([255,255,255],0.7)};
+  };
+  api.presetSelected = function(e,p){
+    if(e.state!=='on'){return false;}var a=e.attributes||{};
+    if(p.kelvin){if(a.color_mode&&a.color_mode!=='color_temp'){return false;}var k=a.color_temp_kelvin||(a.color_temp?1000000/a.color_temp:null);return k!==null&&Math.abs(k-p.kelvin)<=150;}
+    if(a.color_mode==='color_temp'||!a.rgb_color){return false;}var distance=0;for(var i=0;i<3;i++){if(!isFinite(a.rgb_color[i])){return false;}distance+=Math.pow(a.rgb_color[i]-p.rgb[i],2);}return distance<=3600;
+  };
+  api.defaultLightData = function(e,profile){
+    if(!profile){return null;}var cap=api.capabilities(e);
+    if(cap.temperature&&isFinite(Number(profile.color_temp_kelvin))&&Number(profile.color_temp_kelvin)>0){return {color_temp_kelvin:Math.round(Math.max(cap.min,Math.min(cap.max,Number(profile.color_temp_kelvin))))};}
+    if(cap.rgb&&profile.rgb_color&&profile.rgb_color.length===3){var rgb=[];for(var i=0;i<3;i++){var value=profile.rgb_color[i];if(value===null||!isFinite(Number(value))){return null;}rgb.push(Math.round(Math.max(0,Math.min(255,Number(value)))));}return {rgb_color:rgb};}
+    return null;
+  };
   api.robot = function (e) {
     if (!api.available(e)) { return {label: 'Robot', detail: 'Bağlantı yok', service: null}; }
     if (e.state === 'cleaning' || e.state === 'paused') { return {label: 'Temizliği Durdur', detail: 'İstasyona gönder', service: 'return_to_base'}; }
@@ -70,7 +88,7 @@
     el.addEventListener('mousedown', start, false);
     el.addEventListener('touchstart', start, false);
     el.addEventListener('touchmove', function (ev) { var p = ev.touches[0]; if (!p || Math.abs(p.clientX - startX) > 12 || Math.abs(p.clientY - startY) > 12) { cancel(); held = true; } }, false);
-    el.addEventListener('touchend', function(ev){cancel();touchAt=scheduler.now();suppressClickUntil=touchAt+800;ev.preventDefault();var act=started&&!held;started=false;held=false;if(act){shortPress();}},false);
+    el.addEventListener('touchend', function(ev){cancel();if(!started&&!held){return;}touchAt=scheduler.now();suppressClickUntil=touchAt+800;ev.preventDefault();var act=started&&!held;started=false;held=false;if(act){shortPress();}},false);
     el.addEventListener('touchcancel', function () { cancel();touchAt=scheduler.now();suppressClickUntil=touchAt+800;held=false;started=false; }, false);
     el.addEventListener('mouseup', cancel, false);
     el.addEventListener('mouseleave', cancel, false);
