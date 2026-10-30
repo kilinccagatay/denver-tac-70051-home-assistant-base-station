@@ -65,3 +65,16 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 .pv2-dialog-hint { margin:8px 0 0; color:#bac7d9; font-size:14px; line-height:20px; }
 .pv2-card:focus,.pv2-preset:focus,.pv2-close:focus,#pv2-countdown:focus { outline:2px solid #a9d8ee; outline-offset:2px; }
 @media (max-width:700px) { .pv2-clock { font-size:102px; } .pv2-card-label { font-size:17px; } .pv2-card svg { width:23px; margin-right:7px; } }
+/* Android's temporarily exposed system bar can reduce the WebView height. */
+@media (max-height:440px) {
+  #panel-v2 { top:8px; bottom:88px; }
+  .pv2-clock { font-size:104px; line-height:121px; }
+  .pv2-date { font-size:19px; line-height:23px; }
+  .pv2-weather { margin-top:6px; min-height:72px; }
+  .pv2-temperature { font-size:44px; line-height:49px; }
+  .pv2-condition { font-size:19px; line-height:24px; }
+  .pv2-meeting { margin-top:3px; height:21px; }
+  .pv2-card { padding:6px 10px; }
+  .pv2-card-label { font-size:17px; line-height:19px; }
+  .pv2-card-state { font-size:12px; line-height:14px; margin-top:3px; }
+}
