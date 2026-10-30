@@ -220,3 +220,16 @@ restart only the HoaryDash add-on to discard old connection handlers, let the
 tablet reconnect, then save a harmless YAML comment to request a rebuild/reload.
 Confirm the new layout on the physical tablet before reopening test dashboards.
 Home Assistant and native WallPanel helpers do not need to be restarted or changed.
+
+## First tap is lost after waiting (rooted Android 4.1)
+
+On the tested Denver ROM, this was traced to Android’s `hidden nav` input consumer,
+created by `SYSTEM_UI_FLAG_HIDE_NAVIGATION`, rather than the dashboard touch handler.
+WallPanel **0.8.4 Build 8** keeps SystemBar visibility under the existing root helper
+without requesting that touch-consuming flag on API 16–18. The first tap and the
+battery long-press/auto-hide behavior were verified after the update; application
+preferences were preserved. Clock/date/audio remain in HoaryDash in this build.
+
+See the [native fix and installation/validation notes](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/first-touch-fix.md).
+Use an APK with the same signing certificate and an in-place update; do not clear
+app data. The root-helper path is firmware-specific, not a generic Android fix.

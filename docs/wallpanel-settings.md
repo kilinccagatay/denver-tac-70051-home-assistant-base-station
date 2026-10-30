@@ -53,3 +53,12 @@ The current watchdog recovers missing/non-foreground dashboards and only perform
 Use SettingsProvider (`content query` / `content update`) for deliberate brightness diagnostics. Direct database writes can leave caches inconsistent, and external brightness changes do not reset the app's inactivity timer. Normal testing should use WallPanel's touch or power-key paths.
 
 For a spinner, disable Browser Refresh, check the HoaryDash address and service, and keep custom JavaScript compatible with the old browser. For missing motion, distinguish camera frame delivery from detection sensitivity before changing FPS or display scripts.
+
+### Rooted Jelly Bean first-touch fix
+
+WallPanel 0.8.4 Build 8 removes the Android `hidden nav` input consumer when the
+existing root SystemBar helper is installed on API 16–18. This fixes the observed
+first-tap loss while preserving the battery long press and its 12-second auto-hide.
+The tested in-place update retained the existing preference fingerprint. The
+[application-side notes](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/first-touch-fix.md)
+describe the flags and validation. No native clock/date/audio migration is included.
