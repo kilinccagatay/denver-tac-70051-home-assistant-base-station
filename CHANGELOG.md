@@ -1,5 +1,13 @@
 # Project updates
 
+## Local apparent-temperature source — 2026-11-02
+
+- Add an HA template using existing Met.no temperature, humidity and wind; no extra weather account or API request.
+- Validate wind units, zero/negative values, missing data and source freshness; keep calculation and source timestamps distinct.
+- Both deployed panel profiles now read the local sensor and retain their existing layout. Actual device captures confirm the reading.
+- Keep the former Open-Meteo example for rollback; a live HTTP503 motivated migration. General final acceptance remains pending.
+
+
 ## 2026-11-01 — Home Assistant Legacy Panels
 
 The repository was renamed from `denver-tac-70051-home-assistant-base-station` to

@@ -1,5 +1,42 @@
 # Outside apparent temperature on both panel profiles
 
+## Recommended local source — 2026-11-02
+
+The deployed panels now use a Home Assistant template calculated from the existing
+Met.no weather entity. A direct request from HA confirmed HTTP503 from Open-Meteo
+when the old sensor became unavailable. This removes that extra provider/API
+rather than displaying a stale value as current.
+
+Merge [the local template](../examples/weather/met-no-feels-like.yaml) into the
+existing `template:` list and use its sensor as `outdoorFeelsLike` in each profile.
+The example creates `sensor.panel_outdoor_feels_like_local`. Replace the weather
+entity with your actual Met.no entity. Keep backups of the old REST include and
+private mappings before retiring that dedicated poller. Do not replace other REST
+sources or other templates.
+
+The calculation is the shade apparent-temperature approximation:
+`T + 0.33 × e − 0.70 × wind_m/s − 4`, where
+`e = RH/100 × 6.105 × exp(17.27 × T/(237.7+T))`.
+It is a locally derived estimate, not Met.no's published feels-like reading and
+not a physical temperature measurement. Sun exposure and individual comfort can
+differ. See the [ECMWF implementation and references](https://github.com/ecmwf/thermofeel/blob/main/thermofeel/thermofeel.py).
+
+Temperature must be °C; m/s, km/h, mph and knots are converted explicitly. Zero
+and negative values are valid. Missing/invalid inputs or a weather report older
+than two hours make the sensor unavailable. `time` records calculation time;
+`source_time` records the actual weather report time, which is checked separately.
+This avoids mistaking the normal hourly upstream update for an expired 30-minute
+Open-Meteo sample. Neither tablet computes the formula or calls a weather API.
+
+Targeted validation: real HA templates cover signed/zero values, equivalent wind
+units, missing/invalid inputs and expiry. The live source produced3.9°C from
+7.4°C /90% RH /13km/h. Actual Denver and Samsung captures both confirm3.9° in the existing layout.
+The complete general regression gate remains pending; no APK or display-helper
+change was required for this weather update.
+
+## Previous Open-Meteo source (optional / rollback)
+
+
 The optional secondary outside value comes from Open-Meteo's current
 `apparent_temperature`, read by Home Assistant's REST integration. The main
 outside temperature and conditions retain the existing weather entity, so two
