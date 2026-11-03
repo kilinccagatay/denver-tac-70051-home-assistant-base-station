@@ -7,7 +7,10 @@ Rollback: private original SSH app options and Denver watchdog were saved before
 
 The server test used a temporary nonexistent health URL, not a real print/light/robot
 command. It observed two failed checks, one successful HoaryDash-only restart request,
-and recovery to HTTP 200 for both real dashboard paths. Test configuration was restored
+and recovery to HTTP 200 for both real dashboard paths. Final health URLs use
+the encoded static-file route after a live review found that normal dashboard
+requests activate HoaryDash's WebSocket-prewarming middleware. Encoded real paths
+returned 200; an encoded missing directory returned 404, without a redirect. Test configuration was restored
 automatically. Restarting only the SSH app demonstrated its startup command relaunches
 one guard instance. The deployed guard SHA-256 is
 `b4c0bc766ea149ab7dd67dac60fc8b4fb45438185297c23b1a738e24fec70a45`.

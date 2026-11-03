@@ -29,7 +29,7 @@ class GuardTest(unittest.TestCase):
     def test_real_http(self):
         class Handler(BaseHTTPRequestHandler):
             def do_HEAD(self):
-                self.send_response(200 if self.path=='/ok/' else 404);self.end_headers()
+                self.send_response(200 if self.path in ('/ok/','/ok%2f') else 404);self.end_headers()
             def log_message(self,*args): pass
         server=HTTPServer(('127.0.0.1',0),Handler)
         thread=Thread(target=server.serve_forever,daemon=True);thread.start()
@@ -37,6 +37,8 @@ class GuardTest(unittest.TestCase):
             base='http://127.0.0.1:'+str(server.server_port)
             self.assertEqual(g.status(base+'/ok/'),200)
             self.assertEqual(g.status(base+'/broken/'),404)
+            self.assertEqual(g.status(base+'/ok%2f'),200)
+            self.assertEqual(g.status(base+'/broken%2f'),404)
         finally: server.shutdown();server.server_close();thread.join()
 
 unittest.main()

@@ -14,7 +14,7 @@ SSH & Web Terminal app. It exposes no listener and uses that app's existing
 Home Assistant token, permission, cloud service or firmware is required.
 
 Copy the script and a private copy of `config.example.json` to
-`/config/hoarydash-recovery/`. Set the actual app slug and dashboard URLs. Back up
+`/config/hoarydash-recovery/`. Set the actual app slug and static-file probe URLs. Back up
 SSH app options before adding this entry to its existing `init_commands` list:
 
 ```sh
@@ -25,7 +25,15 @@ Preserve every other option. The SSH app must start automatically. Start the sam
 command in its terminal for immediate activation without rebooting Home Assistant.
 The script requires Python 3 and runs only within this Supervisor app environment.
 
-Every 30 seconds the guard checks dashboard HTTP status using HEAD requests.
+Every 30 seconds the guard checks generated dashboard HTML using HEAD requests.
+For tested HoaryDash 0.13.0, use `/dash%2f` and `/office%2f` (an encoded trailing
+slash), **not** the normal dashboard routes and not `index.html`. Go's ServeMux
+routes these to the existing public static file handler without the dashboard's
+WebSocket-prewarming middleware. A missing dashboard still returns 404. Normal
+`/dash/` health probes would accumulate unused warming connections and could
+supply old initial states to a later browser. Verify both healthy and missing
+static paths when upgrading HoaryDash; this routing behavior is version-specific.
+These are health URLs only; the browser launch URLs stay unchanged.
 After a failure, it verifies the authenticated Core API is ready. Two consecutive
 failed checks while Core is ready permit a restart of **only the configured
 HoaryDash app**. It never restarts Core, the host, SSH or Android.
@@ -50,7 +58,7 @@ before the watchdog loop:
 
 Invoke `http_recovery_tick` once per existing 30-second loop, after `NOW` and
 `FOCUS` have been read. Install the script as `/system/xbin/wallpanel-http-recovery`
-and put the dashboard URL (no token) in the root-owned mode-600 file
+and put the static-file probe URL (no token, encoded trailing slash as above) in the root-owned mode-600 file
 `/data/local/tmp/wallpanel-recovery-url`.
 
 A confirmed HTTP 404 arms recovery immediately; transport failures require two failed probes. After two successful probes, the watchdog
