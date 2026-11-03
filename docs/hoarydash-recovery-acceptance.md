@@ -30,7 +30,7 @@ No Android build is needed for this sourced-shell change.
 | Check | Status | Evidence / remaining work |
 | --- | --- | --- |
 | D01 | PENDING | Complete applicable physical/general regression has not been repeated on this installed change. |
-| D02 | PENDING | Complete applicable physical/general regression has not been repeated on this installed change. |
+| D02 | PASS | User covered the camera, waited 35 seconds and confirmed the screen darkened on the installed revision. |
 | D03 | PENDING | Complete applicable physical/general regression has not been repeated on this installed change. |
 | D04 | PENDING | Complete applicable physical/general regression has not been repeated on this installed change. |
 | D05 | PENDING | Complete applicable physical/general regression has not been repeated on this installed change. |
@@ -68,3 +68,12 @@ No Android build is needed for this sourced-shell change.
 | E04 | PENDING | Guides and rollback documented; publication/remote commit verification recorded separately. |
 
 Overall: recovery mechanism verified; **full acceptance PENDING**, not a claim of zero future failures or an overnight reliability result. Samsung received no native/root-helper change.
+
+## User physical confirmation
+
+After the final installed change, the user confirmed the Denver panel looks normal,
+the light turns off after the requested covered-camera wait, motion wakes it, and
+the first tap works. D02 is PASS. This also supplies partial positive evidence for
+D03, D04, D08 and U01–U03, but it does not establish the required three wake cycles,
+dim-room/two-minute checks, all tabs, sound, power keys or cold boot. Those complete
+rows remain PENDING. No additional runtime change followed this observation.
