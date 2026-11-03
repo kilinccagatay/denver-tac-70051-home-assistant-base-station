@@ -1,0 +1,7 @@
+{
+  "addon": "YOUR_HOARYDASH_APP_SLUG",
+  "urls": [
+    "http://homeassistant.local:4567/dash/",
+    "http://homeassistant.local:4567/office/"
+  ]
+}
