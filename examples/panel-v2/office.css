@@ -179,7 +179,11 @@
 .pv2-agenda-event { border-top-color:#3b516d; }
 .pv2-agenda-time { color:#aad7ff; }
 .pv2-agenda-title { color:#f0f5fc; }
-.pv2-agenda-current { background:#29433d; border-left-color:#a6ddc5; border-radius:4px; }
+/* Divider strokes must not join the active row's rounded right corners.
+   Keep the existing row box/padding; reserve the transparent top border so
+   selection never moves times or titles. The next row must not redraw its edge. */
+.pv2-agenda-current { background:#29433d; border-top-color:transparent; border-left-color:#a6ddc5; border-radius:8px; background-clip:padding-box; }
+.pv2-agenda-current + .pv2-agenda-event { border-top-color:transparent; }
 
 /* Telemetry icons occupy equal boxes; inline SVG baselines cannot shift them. */
 .pv2-printer-reading { padding:6px 7px; -webkit-justify-content:flex-start; justify-content:flex-start; line-height:20px; }
