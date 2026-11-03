@@ -71,6 +71,17 @@ single failures do not arm recovery. The current implementation uses BusyBox
 This Denver helper is not a Samsung deployment recipe. Samsung has a separate
 package and supervisor; do not copy Denver's watchdog or package IDs to it.
 
+## Samsung browser recovery
+
+Samsung now has its own independent recovery worker and Magisk boot supervisor:
+see the fork's [Samsung HTTP recovery guide](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/samsung-http-recovery.md).
+It probes the encoded office static path, reloads only the Samsung package after
+confirmed recovery, and defers while Android is asleep or another window is
+foreground. It preserves the Mac-linked sleep/display helper and 45% brightness.
+Do not reuse Denver's watchdog or package IDs. Its installed recovery and worker
+supervision were exercised; full cold-boot and physical regression remain PENDING.
+The server guard in this document already monitors both panels.
+
 ## Rollback and verification
 
 Remove only the guard's added startup entry, stop its process, and restore the
