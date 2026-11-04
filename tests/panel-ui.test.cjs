@@ -37,8 +37,8 @@ function close(){d.querySelector('.pv2-close').click();}
    assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,String(value).replace('.',',')+'°','feels-like preserves negative and zero values');
    assert.equal(d.querySelector('#panel-v2 .pv2-temperature').textContent,String(value).replace('.',',')+'°','outside temperature preserves negative and zero values');
   }
-  feed(cfg.outdoorFeelsLike,'4',{time:Date.now()/1000-1900});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'—','stale apparent temperature must not linger');
-  feed(cfg.outdoorFeelsLike,'unavailable',{time:Date.now()/1000});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'—','missing apparent temperature is not zero');
+  feed(cfg.outdoorFeelsLike,'4',{time:Date.now()/1000-1900});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'8,1°','stale response retains today’s newer known temperature');
+  feed(cfg.outdoorFeelsLike,'unavailable',{time:Date.now()/1000});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'8,1°','missing apparent temperature uses today’s last known value');
   const dining=button('Yemek Masası');
   await hold(dining);
   assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),true,'Fast must open within 290 ms including migration');

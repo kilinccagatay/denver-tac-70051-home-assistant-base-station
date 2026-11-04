@@ -5,7 +5,7 @@
 The deployed panels now use a Home Assistant template calculated from the existing
 Met.no weather entity. A direct request from HA confirmed HTTP503 from Open-Meteo
 when the old sensor became unavailable. This removes that extra provider/API
-rather than displaying a stale value as current.
+as the only live provider; bounded browser fallback is described below.
 
 Merge [the local template](../examples/weather/met-no-feels-like.yaml) into the
 existing `template:` list and use its sensor as `outdoorFeelsLike` in each profile.
@@ -69,11 +69,11 @@ is centered under the weather/house symbol. Primary symbols have zero side
 margin; the previous inherited 7 px right margin displaced their visual axis.
 There are no positive/negative-specific offsets or invisible sign placeholders.
 
-Negative values and zero are valid for both temperature readings. Missing,
-unavailable, nonnumeric, disconnected or stale apparent data displays `—`, never
-an invented zero. The REST sensor polls every 10 minutes with a 15-second timeout
-and rejects invalid/future/older-than-30-minute sample timestamps. The panel also
-checks the sample time before rendering. No JavaScript weather formula is used.
+Negative values and zero are valid for both temperature readings. Invalid values
+never become a fabricated zero. The panel normally treats a sample as live for
+30 minutes; [weather fallback](weather-fallback.md) then retains today's last
+known value, and can use a matching daily forecast for outside temperature.
+The HA sensor calculation and its availability rules remain unchanged.
 
 ## Validation and limitations
 

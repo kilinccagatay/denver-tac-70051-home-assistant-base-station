@@ -86,6 +86,23 @@
     }
     return result;
   };
+  // A cached observation is never re-dated when read. Forecast highs are
+  // explicitly estimates, never observations or invented apparent temperatures.
+  api.weatherReading = function (live, last, forecast, forecastAt, now, feels) {
+    function numeric(v){return v!==null&&v!==undefined&&v!==''&&typeof v!=='boolean'&&isFinite(Number(v));}
+    function sameDay(at){var a=new Date(at),b=new Date(now);return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+    function valid(s){return s&&numeric(s.value)&&numeric(s.at)&&s.at>0&&s.at<=now+300000&&sameDay(s.at);}
+    function result(s,source){return {value:Number(s.value),condition:typeof s.condition==='string'?s.condition:'',at:Number(s.at),source:source};}
+    if(valid(live)&&now-live.at<=1800000&&(!valid(last)||live.at>=last.at)){ return result(live,'live');}
+    if(valid(last)){return result(last,'last');}
+    if(forecastAt>0&&forecastAt<=now+300000&&now-forecastAt<=604800000&&Object.prototype.toString.call(forecast)==='[object Array]'){
+      for(var i=0;i<forecast.length;i++){var row=forecast[i];if(!row||!sameDay(Date.parse(row.datetime))){continue;}
+        var value=feels?row.apparent_temperature:row.temperature;
+        if(numeric(value)){return result({value:value,condition:row.condition,at:forecastAt},'forecast');}
+      }
+    }
+    return {value:null,condition:'',at:0,source:'none'};
+  };
   api.bindPress = function (el, shortPress, longPress, scheduler, holdDelay, pressStart) {
     var timer = null, held = false, startX = 0, startY = 0, touchAt = 0, started = false, suppressClickUntil = 0;
     scheduler = scheduler || {set: function (fn, ms) { return setTimeout(fn, ms); }, clear: function (id) { clearTimeout(id); }, now: function () { return new Date().getTime(); }};

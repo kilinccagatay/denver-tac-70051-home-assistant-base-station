@@ -23,7 +23,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  tick();tick();assert.equal(reads,baseline+1,'one request per minute');
  for(const value of ['0','-3.1']){now+=60000;api={entity_id:cfg.outdoorFeelsLike,state:value,attributes:{time:now/1000}};tick();await sleep(25);assert.equal(d.querySelector('.pv2-feels-value').textContent,value.replace('.',',')+'°');}
  now+=60000;api={entity_id:cfg.outdoorFeelsLike,state:'99',attributes:{time:now/1000-300}};tick();await sleep(25);assert.equal(d.querySelector('.pv2-feels-value').textContent,'-3,1°','older sample cannot replace a newer cached sample');
- now+=60000;api={entity_id:cfg.outdoorFeelsLike,state:'unavailable',attributes:{}};tick();await sleep(25);assert.equal(d.querySelector('.pv2-feels-value').textContent,'—','fresh unavailable response clears the old value');
- const beforeDisconnect=reads;w.haSocketReady=false;now+=60000;tick();await sleep(25);assert.equal(reads,beforeDisconnect);assert.equal(d.querySelector('.pv2-feels-value').textContent,'—');
+ now+=60000;api={entity_id:cfg.outdoorFeelsLike,state:'unavailable',attributes:{}};tick();await sleep(25);assert.equal(d.querySelector('.pv2-feels-value').textContent,'-3,1°','unavailable retains today’s last known value');
+ const beforeDisconnect=reads;w.haSocketReady=false;now+=60000;tick();await sleep(25);assert.equal(reads,beforeDisconnect);assert.equal(d.querySelector('.pv2-feels-value').textContent,'-3,1°');
  console.log('Feels-like recovery: missed event, minute throttle, zero/negative, stale response and disconnect passed.');
 }finally{w.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

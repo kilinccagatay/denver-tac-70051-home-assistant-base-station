@@ -239,6 +239,20 @@
     }
     var agendaBox=null,agendaHeading=null,agendaList=null,agendaSignature=null,agendaSelected=0,agendaBaseDay=null,agendaManual=false;
     var forecastBox=null,forecastList=null,forecastNote=null,forecastRows=[],forecastAt=0,forecastAttempt=0,forecastPending=false,forecastSignature='';
+    var weatherStoreKey=preferencePrefix+'weather-cache-v1:'+cfg.weather+':'+(cfg.outdoorFeelsLike||''),weatherMemory={weather:null,feels:null},weatherSeen={},weatherDay='';
+    function saveWeather(){try{localStorage.setItem(weatherStoreKey,JSON.stringify({version:1,weather:weatherMemory.weather,feels:weatherMemory.feels,forecast:forecastRows,forecastAt:forecastAt}));}catch(ignore){}}
+    try{var storedWeather=JSON.parse(localStorage.getItem(weatherStoreKey)||'null');if(storedWeather&&storedWeather.version===1){weatherMemory={weather:storedWeather.weather,feels:storedWeather.feels};if(Object.prototype.toString.call(storedWeather.forecast)==='[object Array]'&&storedWeather.forecast.length<=14){forecastRows=storedWeather.forecast;forecastAt=Number(storedWeather.forecastAt)||0;}}}catch(ignore){}
+    function weatherObservation(entry,kind,now){
+      if(!connection()||!C.available(entry)){return null;}
+      var value=kind==='weather'?entry.attributes.temperature:entry.state;
+      if(value===null||value===undefined||value===''||!isFinite(Number(value))){return null;}
+      if(weatherSeen[kind]&&weatherSeen[kind].entry===entry){return weatherSeen[kind].sample;}
+      var stamp=Number(entry.attributes.time),sample={value:Number(value),condition:kind==='weather'?entry.state:'',at:isFinite(stamp)&&stamp>0?stamp*1000:now};
+      weatherSeen[kind]={entry:entry,sample:sample};
+      if(C.weatherReading(sample,null,[],0,now,kind==='feels').source==='live'&&(!weatherMemory[kind]||sample.at>=weatherMemory[kind].at)){weatherMemory[kind]=sample;saveWeather();}
+      return sample;
+    }
+
     var room=cfg.roomLights||{};
     var controls=makeView('Ana',officeProfile?'ÇALIŞMA ODAM':'EVİM');
     var corridorIds=[cfg.lights.front,cfg.lights.rear];if(room.entrance){corridorIds.push(room.entrance);}
@@ -568,9 +582,9 @@
     }
     function renderForecast(){
       if(!forecastBox){return;}
-      var now=new Date().getTime(),fresh=connection()&&forecastAt>0&&now-forecastAt<3600000,rows=C.forecastDays(fresh?forecastRows:[],now,cfg.forecastDays),count=0;
+      var now=new Date().getTime(),fresh=connection()&&forecastAt>0&&now-forecastAt<3600000,usable=forecastAt>0&&forecastAt<=now+300000&&now-forecastAt<=604800000,rows=C.forecastDays(usable?forecastRows:[],now,cfg.forecastDays),count=0;
       for(var i=0;i<rows.length;i++){if(rows[i].high!==null){count++;}}
-      var note=!connection()?'Bağlantı yok':!fresh?(forecastPending?'Yükleniyor…':'Tahmin alınamadı'):count<rows.length?'Eksik günler: —':'En yüksek / en düşük';
+      var note=usable&&!fresh?'En yüksek / en düşük':!connection()?'Bağlantı yok':!fresh?(forecastPending?'Yükleniyor…':'Tahmin alınamadı'):count<rows.length?'Eksik günler: —':'En yüksek / en düşük';
       var signature=JSON.stringify([fresh,rows,note]);if(signature===forecastSignature){return;}forecastSignature=signature;setText(forecastNote,note);
       while(forecastList.firstChild){forecastList.removeChild(forecastList.firstChild);}
       var labels=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
@@ -581,11 +595,11 @@
       }
     }
     function requestForecast(){
-      if(!forecastBox||forecastPending||!connection()||document.hidden||activeView()!=='Ana'){return;}
-      var now=new Date().getTime();if(now-forecastAttempt<60000||forecastAt&&now-forecastAt<1800000){return;}
+      if(!cfg.weather||forecastPending||!connection()||document.hidden||activeView()!=='Ana'){return;}
+      var now=new Date().getTime();if(now-forecastAttempt<60000||forecastAt&&now>=forecastAt&&now-forecastAt<1800000){return;}
       forecastAttempt=now;forecastPending=true;renderForecast();
       var xhr=new XMLHttpRequest(),finished=false;
-      function finish(ok){if(finished){return;}finished=true;forecastPending=false;if(ok){try{var body=JSON.parse(xhr.responseText),entry=body.service_response&&body.service_response[cfg.weather];if(entry&&Object.prototype.toString.call(entry.forecast)==='[object Array]'&&entry.forecast.length){forecastRows=entry.forecast;forecastAt=new Date().getTime();}}catch(ignore){}}renderForecast();}
+      function finish(ok){if(finished){return;}finished=true;forecastPending=false;if(ok){try{var body=JSON.parse(xhr.responseText),entry=body.service_response&&body.service_response[cfg.weather];if(entry&&Object.prototype.toString.call(entry.forecast)==='[object Array]'&&entry.forecast.length){forecastRows=entry.forecast.slice(0,14).map(function(row){return {datetime:row.datetime,condition:row.condition,temperature:row.temperature,templow:row.templow,apparent_temperature:row.apparent_temperature};});forecastAt=new Date().getTime();saveWeather();}}catch(ignore){}}renderForecast();scheduleRender();}
       xhr.open('POST','/api/proxy/api/services/weather/get_forecasts?return_response',true);xhr.setRequestHeader('Content-Type','application/json');xhr.timeout=15000;
       xhr.onload=function(){finish(xhr.status>=200&&xhr.status<300);};xhr.onerror=xhr.ontimeout=xhr.onabort=function(){finish(false);};xhr.send(JSON.stringify({entity_id:cfg.weather,type:'daily'}));
     }
@@ -609,14 +623,17 @@
     function render(){
       renderAgenda();renderForecast();syncDialog();syncPowerDialog();syncPrinterCamera();renderPrinterDetails();var active=activeView();
       for(var i=0;i<cards.length;i++){if(cards[i].view===active){drawCard(cards[i]);}}
-      var entry=get(cfg.weather),t=entry.attributes.temperature,valid=C.available(entry)&&t!==null&&t!==undefined&&t!==''&&isFinite(Number(t));
-      var weatherName=entry.state==='sunny'?'sun':entry.state==='clear-night'?'moon':(/rain|pouring|hail|snow/.test(entry.state)?'rain':'cloud');
+      var nowWeather=new Date().getTime(),entry=get(cfg.weather),currentWeather=weatherObservation(entry,'weather',nowWeather),currentFeels=weatherObservation(get(cfg.outdoorFeelsLike),'feels',nowWeather);
+      var shownWeather=C.weatherReading(currentWeather,weatherMemory.weather,forecastRows,forecastAt,nowWeather,false),shownFeels=C.weatherReading(currentFeels,weatherMemory.feels,forecastRows,forecastAt,nowWeather,true),t=shownWeather.value,valid=t!==null;
+      var weatherName=shownWeather.condition==='sunny'?'sun':shownWeather.condition==='clear-night'?'moon':(/rain|pouring|hail|snow/.test(shownWeather.condition)?'rain':'cloud');
       for(var vi=0;vi<views.length;vi++){var v=views[vi];if(v.name!==active){continue;}
         setText(v.status,connection()?'● Home Assistant':'○ Bağlantı yok');v.status.title=connection()?'Home Assistant bağlantısı açık':'Home Assistant bağlantısı kesildi';v.status.setAttribute('aria-label',v.status.title);v.status.style.color=connection()?'#9fd8c2':'#ffb4b4';
         if(v.indoor){var inside=get(cfg.indoorTemperature),insideValue=inside.state,insideValid=connection()&&C.available(inside)&&insideValue!==''&&isFinite(Number(insideValue));setQuantity(v.indoor,insideValid?String(Math.round(Number(insideValue)*10)/10).replace('.',','):'—','°');v.indoor.parentNode.setAttribute('aria-label',(cfg.indoorLabel||'Ev içi sıcaklık')+': '+(insideValid?insideValue+' '+(inside.attributes.unit_of_measurement||'°C'):'veri yok'));}
         if(v.humidity){var humidityEntry=get(cfg.indoorHumidity),humidityNumber=Number(humidityEntry.state),humidityValid=connection()&&C.available(humidityEntry)&&humidityEntry.state!==''&&isFinite(humidityNumber)&&humidityNumber>=0&&humidityNumber<=100;setQuantity(v.humidity,humidityValid?String(Math.round(humidityNumber*10)/10).replace('.',','):'—','%',v.humidityIcon);v.humidity.parentNode.setAttribute('aria-label','Ev içi nem: '+(humidityValid?humidityNumber+'%':'veri yok'));}
-        if(v.feels){var felt=get(cfg.outdoorFeelsLike),feltTime=Number(felt.attributes.time),feltAge=new Date().getTime()/1000-feltTime,feltValid=connection()&&C.available(felt)&&isFinite(Number(felt.state))&&(!feltTime||(feltAge>=-300&&feltAge<=1800));setQuantity(v.feels,feltValid?String(Math.round(Number(felt.state)*10)/10).replace('.',','):'—',feltValid?'°':'',v.feelsIcon);v.feels.parentNode.setAttribute('aria-label','Dışarı hissedilen sıcaklık: '+(feltValid?felt.state+' '+(felt.attributes.unit_of_measurement||'°C'):'veri yok'));}
-        setQuantity(v.temperature,valid?String(Math.round(Number(t)*10)/10).replace('.',','):'--','°');setText(v.condition,!connection()?'Bağlantı yok':(C.available(entry)?conditions[entry.state]||'Hava durumu':'Veri yok'));
+        if(v.feels){var feltValid=shownFeels.value!==null;setQuantity(v.feels,feltValid?String(Math.round(shownFeels.value*10)/10).replace('.',','):'—',feltValid?'°':'',v.feelsIcon);v.feels.parentNode.setAttribute('aria-label','Dışarı hissedilen sıcaklık: '+(feltValid?shownFeels.value+' °C':'veri yok')+(shownFeels.source==='last'?' · Son bilinen':shownFeels.source==='forecast'?' · Günlük tahmin':''));v.feels.parentNode.title=shownFeels.source==='last'?'Bugünün son bilinen hissedilen sıcaklığı':shownFeels.source==='forecast'?'Bugünün tahmini hissedilen sıcaklığı':'Dışarı hissedilen sıcaklık';}
+        setQuantity(v.temperature,valid?String(Math.round(Number(t)*10)/10).replace('.',','):'--','°');setText(v.condition,valid?(conditions[shownWeather.condition]||'Hava durumu'):!connection()?'Bağlantı yok':'Veri yok');
+        v.temperature.parentNode.title=shownWeather.source==='forecast'?'Bugünün tahmini en yüksek sıcaklığı':shownWeather.source==='last'?'Bugünün son bilinen sıcaklığı':'Dış sıcaklık';
+
         if(weatherName!==v.previousWeatherIcon){v.weatherIcon.innerHTML=icon(weatherName);v.previousWeatherIcon=weatherName;}
         updateMeeting(v);
       }
@@ -656,7 +673,7 @@
       })(eid,listeners[eid]);
     }}
     var days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
-    function clockTick(){requestPrinterFailureState();requestFeelsLike();renderAgenda();renderForecast();requestForecast();var now=new Date(),active=activeView();function pad(n){return ('0'+n).slice(-2);}for(var vi=0;vi<views.length;vi++){var v=views[vi];if(v.name!==active){continue;}setText(v.clock,pad(now.getHours())+':'+pad(now.getMinutes()));setText(v.date,pad(now.getDate())+'.'+pad(now.getMonth()+1)+'.'+now.getFullYear());setText(v.weekday,days[now.getDay()]);updateMeeting(v);}if(get(cfg.countdown).state==='on'){for(var ci=0;ci<cards.length;ci++){if(cards[ci].view===active&&cards[ci].options.kind==='alloff'){drawCard(cards[ci]);}}}if(lastConnection!==connection()){lastConnection=connection();scheduleRender();}}
+    function clockTick(){var weatherMinute=Math.floor(new Date().getTime()/60000);if(weatherDay!==weatherMinute){weatherDay=weatherMinute;scheduleRender();}requestPrinterFailureState();requestFeelsLike();renderAgenda();renderForecast();requestForecast();var now=new Date(),active=activeView();function pad(n){return ('0'+n).slice(-2);}for(var vi=0;vi<views.length;vi++){var v=views[vi];if(v.name!==active){continue;}setText(v.clock,pad(now.getHours())+':'+pad(now.getMinutes()));setText(v.date,pad(now.getDate())+'.'+pad(now.getMonth()+1)+'.'+now.getFullYear());setText(v.weekday,days[now.getDay()]);updateMeeting(v);}if(get(cfg.countdown).state==='on'){for(var ci=0;ci<cards.length;ci++){if(cards[ci].view===active&&cards[ci].options.kind==='alloff'){drawCard(cards[ci]);}}}if(lastConnection!==connection()){lastConnection=connection();scheduleRender();}}
     function navigated(){for(var pi=0;pi<cards.length;pi++){if(cards[pi].tapTimer!==null){clearTimeout(cards[pi].tapTimer);cards[pi].tapTimer=null;}}closeDialog();clockTick();render();}
     window.addEventListener('hashchange',navigated,false);
     window.addEventListener('screen-navigate',navigated,false);

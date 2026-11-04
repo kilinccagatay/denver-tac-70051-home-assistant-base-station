@@ -23,9 +23,9 @@ async function fixture(office,days){
   requests[0].status=200;requests[0].responseText=JSON.stringify({service_response:{[cfg.weather]:{forecast}}});requests[0].onload();
   assert.equal(d.querySelector('.pv2-forecast-high').textContent,'0°');assert.equal(d.querySelector('.pv2-forecast-low').textContent,'-2°');assert.equal(d.querySelectorAll('.pv2-forecast-day')[1].querySelector('.pv2-forecast-high').textContent,'—');assert.match(d.querySelector('.pv2-forecast-note').textContent,/Eksik/);
   for(const type of ['touchstart','selectstart','contextmenu']){let ev=new w.Event(type,{bubbles:true,cancelable:true});d.querySelector('.pv2-forecast').dispatchEvent(ev);assert(ev.defaultPrevented);}
-  await sleep(1100);assert.equal(requests.length,1,'no per-second requests');w.haSocketReady=false;await sleep(1100);assert.match(d.querySelector('.pv2-forecast-note').textContent,/Bağlantı yok/);assert.equal(d.querySelector('.pv2-forecast-high').textContent,'—');
+  await sleep(1100);assert.equal(requests.length,1,'no per-second requests');w.haSocketReady=false;await sleep(1100);assert.equal(d.querySelector('.pv2-forecast-high').textContent,'0°');assert.match(d.querySelector('.pv2-forecast-note').textContent,/En yüksek/);
  }finally{f.dom.window.close();}
  const five=await fixture(true,5);try{assert.equal(five.d.querySelectorAll('.pv2-forecast-day').length,5);assert.equal(five.d.querySelector('.pv2-forecast-weekday').textContent,'Bugün');assert.match(five.d.querySelector('.pv2-forecast-header').textContent,/5 GÜNLÜK/);}finally{five.dom.window.close();}
- const denver=await fixture(false);try{assert.equal(denver.d.querySelector('.pv2-forecast'),null);assert.equal(denver.requests.length,0);}finally{denver.dom.window.close();}
+ const denver=await fixture(false);try{assert.equal(denver.d.querySelector('.pv2-forecast'),null);assert.equal(denver.requests.length,1,'Denver also stores forecasts for weather fallback');}finally{denver.dom.window.close();}
  console.log('Forecast: seven calendar days, zero/negative/missing values, read-only API, throttling, offline state, selection guard and Denver isolation passed.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
