@@ -237,7 +237,7 @@
       body.appendChild(overview);body.appendChild(controls);root.appendChild(body);screen.appendChild(root);
       views.push({name:name,status:status,indoor:indoorValue,humidity:humidityValue,humidityIcon:humidityIcon,feels:feelsValue,feelsIcon:feelsIcon,clock:clock,date:date,weekday:weekday,temperature:temperature,condition:condition,weatherIcon:weatherIcon,previousWeatherIcon:'',meeting:meeting});return controls;
     }
-    var agendaBox=null,agendaHeading=null,agendaList=null,agendaSignature=null,agendaSelected=0,agendaBaseDay=null;
+    var agendaBox=null,agendaHeading=null,agendaList=null,agendaSignature=null,agendaSelected=0,agendaBaseDay=null,agendaManual=false;
     var forecastBox=null,forecastList=null,forecastNote=null,forecastRows=[],forecastAt=0,forecastAttempt=0,forecastPending=false,forecastSignature='';
     var room=cfg.roomLights||{};
     var controls=makeView('Ana',officeProfile?'ÇALIŞMA ODAM':'EVİM');
@@ -520,18 +520,27 @@
       b.setAttribute('aria-label',label+' · '+detail+(o.kind==='printer'&&b.getAttribute('data-printer-progress')?' · Baskı '+b.getAttribute('data-printer-progress')+'%':'')+(o.kind==='printer'&&b.getAttribute('data-printer-remaining')?' · Kalan süre '+b.getAttribute('data-printer-remaining'):''));if(o.ids){b.setAttribute('aria-pressed',on?'true':'false');b.title=o.kind==='roomoff'?'Dokun: oda ışıklarını kapat':'Dokun: aç/kapat · Uzun bas: lamba ayarları';}
     }
     var conditions={'clear-night':'Açık gece','cloudy':'Bulutlu','exceptional':'Olağan dışı','fog':'Sisli','hail':'Dolu','lightning':'Şimşekli','lightning-rainy':'Gök gürültülü','partlycloudy':'Parçalı bulutlu','pouring':'Sağanak','rainy':'Yağmurlu','snowy':'Karlı','snowy-rainy':'Karla karışık','sunny':'Güneşli','windy':'Rüzgârlı','windy-variant':'Rüzgârlı'};
+    function upcomingAgendaEvents(day,now){
+      var all=day&&Object.prototype.toString.call(day.events)==='[object Array]'?day.events:[],items=[];
+      for(var i=0;i<all.length;i++){var e=all[i];if(e&&typeof e.title==='string'&&isFinite(e.start)&&isFinite(e.end)&&Number(e.end)>now&&Number(e.start)<Number(e.end)){items.push(e);}}
+      items.sort(function(x,y){return Number(x.start)-Number(y.start);});return items;
+    }
+    function automaticAgendaDay(days,now){
+      for(var i=0;i<days.length;i++){if(upcomingAgendaEvents(days[i],now).length){return i;}}
+      return 0;
+    }
     function renderAgenda(){
       if(!agendaBox){return;}
       var now=new Date().getTime()/1000,entry=get(cfg.agenda),a=entry.attributes||{},fresh=connection()&&C.available(entry)&&Number(a.valid_until)>now&&Number(a.valid_until)<=now+100;
       var supplied=Object.prototype.toString.call(a.days)==='[object Array]'?a.days:[],days=supplied.length===3?supplied:[{day_start:a.day_start,events:a.events}],base=Number(a.day_start);
-      if(agendaBaseDay!==base){agendaBaseDay=base;agendaSelected=0;}
-      if(agendaSelected>=days.length){agendaSelected=0;}
-      var selected=days[agendaSelected]||{},all=Object.prototype.toString.call(selected.events)==='[object Array]'?selected.events:[],items=[],day=Number(selected.day_start),d=new Date(day*1000),weekdays=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'],today=new Date(),sameDay=d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate();
-      if(fresh){for(var ai=0;ai<all.length;ai++){var e=all[ai];if(e&&typeof e.title==='string'&&isFinite(e.start)&&isFinite(e.end)&&Number(e.end)>now&&Number(e.start)<Number(e.end)){items.push(e);}}items.sort(function(x,y){return Number(x.start)-Number(y.start);});}
+      if(agendaBaseDay!==base){agendaBaseDay=base;agendaSelected=0;agendaManual=false;}
+      if(agendaSelected>=days.length){agendaSelected=0;agendaManual=false;}
+      if(fresh&&!agendaManual){agendaSelected=automaticAgendaDay(days,now);}
+      var selected=days[agendaSelected]||{},items=fresh?upcomingAgendaEvents(selected,now):[],day=Number(selected.day_start),d=new Date(day*1000),weekdays=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'],today=new Date(),sameDay=d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate();
       var signature=JSON.stringify([fresh,days.map(function(v){return v.day_start;}),agendaSelected,items.map(function(e){return [e.title,e.start,e.end,Number(e.start)<=now];})]);if(signature===agendaSignature){return;}agendaSignature=signature;
       while(agendaHeading.firstChild){agendaHeading.removeChild(agendaHeading.firstChild);}
       for(var di=0;di<days.length;di++){
-        (function(index){var date=new Date(Number(days[index].day_start)*1000),isToday=date.getFullYear()===today.getFullYear()&&date.getMonth()===today.getMonth()&&date.getDate()===today.getDate(),label=isToday?'Bugün':weekdays[date.getDay()]||'Takvim',tab=node('button','pv2-agenda-day',label);tab.type='button';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',index===agendaSelected?'true':'false');tab.setAttribute('aria-controls','pv2-agenda-events');tab.disabled=!fresh;C.bindPress(tab,function(){if(!fresh){return;}agendaSelected=index;agendaSignature=null;renderAgenda();},null);agendaHeading.appendChild(tab);})(di);
+        (function(index){var date=new Date(Number(days[index].day_start)*1000),isToday=date.getFullYear()===today.getFullYear()&&date.getMonth()===today.getMonth()&&date.getDate()===today.getDate(),label=isToday?'Bugün':weekdays[date.getDay()]||'Takvim',tab=node('button','pv2-agenda-day',label);tab.type='button';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',index===agendaSelected?'true':'false');tab.setAttribute('aria-controls','pv2-agenda-events');tab.disabled=!fresh;C.bindPress(tab,function(){if(!fresh){return;}agendaSelected=index;agendaManual=true;agendaSignature=null;renderAgenda();},null);agendaHeading.appendChild(tab);})(di);
       }
       agendaList.id='pv2-agenda-events';agendaList.setAttribute('role','tabpanel');agendaList.setAttribute('aria-label',fresh?(sameDay?'Bugün':weekdays[d.getDay()]):'Takvim');
       while(agendaList.firstChild){agendaList.removeChild(agendaList.firstChild);}
@@ -651,7 +660,7 @@
     function navigated(){for(var pi=0;pi<cards.length;pi++){if(cards[pi].tapTimer!==null){clearTimeout(cards[pi].tapTimer);cards[pi].tapTimer=null;}}closeDialog();clockTick();render();}
     window.addEventListener('hashchange',navigated,false);
     window.addEventListener('screen-navigate',navigated,false);
-    function resetAgendaDay(){agendaSelected=0;agendaSignature=null;renderAgenda();}
+    function resetAgendaDay(){agendaSelected=0;agendaManual=false;agendaSignature=null;renderAgenda();}
     window.addEventListener('panel-display-dark',function(){
       resetAgendaDay();
       if(officeProfile){closeDialog();if(activeView()!=='Ana'){navigateScreen('Ana');}syncPrinterCamera();}

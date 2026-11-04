@@ -225,8 +225,18 @@ workday, or Monday on weekends; the next two workdays skip Saturday/Sunday.
 The selected tab has a filled, outlined accent treatment. Tapping a day filters
 its meetings without changing lights or meeting status. An empty day explicitly
 says there are no meetings; expired/disconnected data says it cannot update.
-Ordinary calendar heartbeats retain the selection. A new base workday, document
-hiding or native `panel-display-dark` event restores the first calendar day.
+The three day tabs stay in their original chronological order. In automatic
+mode, the selected tab is the first displayed day with a valid meeting that has
+not ended (including one currently in progress). If today is finished/empty,
+selection moves to the next displayed day with a meeting; if all three days are
+empty, it stays on the first tab. New invitations and meeting end times update
+automatic selection without waiting for an additional user action.
+
+A manual day selection survives ordinary calendar heartbeats and clock ticks.
+A new base workday, document hiding or native `panel-display-dark` event clears
+the manual choice and applies the same automatic rule, rather than always
+selecting today. Expired/disconnected data never drives a new inferred selection;
+the existing unavailable message remains. Legacy single-day reports still work.
 On Samsung, the native dark event also closes dialogs and returns the dashboard
 to Odam, stopping Printer-view camera requests. It does not use a separate web
 idle timer or change Android timeout/motion/power policy. Brightness-only
@@ -291,3 +301,5 @@ Immediate camera wake after a manual power press remains an
 [explicitly deferred TODO](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/samsung-display-todo.md).
 The isolated heartbeat off/on cycle passed; real Mac sleep/shutdown, phone reboot
 and the complete general-feature acceptance gate remain pending.
+
+See the [automatic agenda-day validation record](agenda-auto-day-review.md) for the installed test scope.
