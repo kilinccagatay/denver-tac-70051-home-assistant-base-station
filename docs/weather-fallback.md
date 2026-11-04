@@ -91,3 +91,12 @@ that orientation was not changed. No APK/helper replacement was made.
 
 Overall: targeted weather implementation and automated checks PASS; full general
 acceptance PENDING. Do not treat this as an overnight/boot reliability claim.
+
+### Physical confirmation — 2026-11-04
+
+The user confirmed both devices show the weather fields normally and pass the
+requested camera-covered 35-second darkening, uncover-to-wake and first-touch
+check on deployed revision `c3e6451`. These targeted D02/D03/D04/D08 observations
+are PASS for one cycle per device. They do not establish the required three-cycle,
+dim-room, two-minute, reboot or overnight cases; those and the remaining general
+regression rows stay PENDING. No new code or deployment accompanied this record.
