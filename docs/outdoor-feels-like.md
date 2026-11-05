@@ -1,8 +1,15 @@
 # Outside apparent temperature on both panel profiles
 
-## Recommended local source — 2026-11-02
+## Current provider — 2026-11-05
 
-The deployed panels now use a Home Assistant template calculated from the existing
+Both deployed profiles now use **SMHI** for temperature, condition and forecasts.
+The local apparent-temperature sensor reads SMHI temperature, humidity and wind;
+its entity identity and calculation are retained. Met.no remains installed for
+manual rollback. See [SMHI setup and migration](smhi-weather.md).
+
+## Previous local source — 2026-11-02
+
+The earlier deployment used a Home Assistant template calculated from the existing
 Met.no weather entity. A direct request from HA confirmed HTTP503 from Open-Meteo
 when the old sensor became unavailable. This removes that extra provider/API
 as the only live provider; bounded browser fallback is described below.
