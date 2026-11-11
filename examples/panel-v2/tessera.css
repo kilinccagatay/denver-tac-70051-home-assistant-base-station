@@ -196,6 +196,19 @@ body.panel-v2.pv2-tessera.panel-v2-office .pv2-settings-trigger { background: tr
 .pv2-tessera .pv2-card.pv2-light-level { background:#343e47; }
 .pv2-tessera .pv2-light-fill { background:#30281b; }
 
+/* Place the larger icon beside the title to leave room for print progress. */
+.pv2-tessera.panel-v2-office .pv2-with-agenda .pv2-printer-summary.pv2-has-summary-footer {
+  -webkit-flex-direction: row;
+  flex-direction: row;
+}
+.pv2-tessera.panel-v2-office .pv2-with-agenda .pv2-printer-summary.pv2-has-summary-footer > svg {
+  width: 29px;
+  height: 29px;
+  min-height: 29px;
+  padding: 5px;
+  margin: 0 7px 0 0;
+}
+
 .pv2-tessera .pv2-light-dialog .pv2-light-settings {
   margin:0 0 10px;
   padding:12px;
