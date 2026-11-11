@@ -2,6 +2,7 @@
 (function (root) {
   function create(core, config, ha, io) {
     var pending = Object.create(null);
+    var dimming = Object.create(null);
 
     function isBusy(key) {
       return !!pending[key];
@@ -65,9 +66,86 @@
       if (targets.length) { perform(ids.join(','), 'light', 'turn_off', targets); }
     }
 
+    function clearBrightness(id, edit) {
+      io.clearTimeout(edit.timer);
+      delete dimming[id];
+      io.changed();
+    }
+
+    function brightnessMatches(id, edit) {
+      var entry = ha.get(id);
+      if (ha.version(id) === edit.version || !core.available(entry)) { return false; }
+      if (edit.value === 0) { return entry.state === 'off'; }
+      var brightness = core.brightness(entry);
+      return entry.state === 'on' && brightness.label !== '—' && brightness.value === edit.value;
+    }
+
+    function brightnessChanged(id) {
+      var edit = dimming[id];
+      if (edit && edit.awaiting && brightnessMatches(id, edit)) { clearBrightness(id, edit); }
+    }
+
+    function sendBrightness(id, edit) {
+      if (!ha.connected() || ha.generation() !== edit.generation || !core.available(ha.get(id))) {
+        clearBrightness(id, edit);
+        io.notice('commandFailed');
+        return;
+      }
+      var value = edit.value;
+      edit.version = ha.version(id);
+      ha.call('light', value === 0 ? 'turn_off' : 'turn_on', id,
+        value === 0 ? undefined : {brightness_pct: value}).then(function () {
+        // Give rapid input events a short window to coalesce into the latest value.
+        edit.timer = io.setTimeout(function () {
+          if (edit.value !== value) {
+            sendBrightness(id, edit);
+          } else if (brightnessMatches(id, edit)) {
+            clearBrightness(id, edit);
+          } else {
+            edit.awaiting = true;
+            edit.timer = io.setTimeout(function () { clearBrightness(id, edit); }, 2500);
+          }
+        }, 125);
+      }, function () {
+        clearBrightness(id, edit);
+        io.notice('commandFailed');
+      });
+    }
+
     function setBrightness(id, value) {
-      perform('dim:' + id, 'light', value === 0 ? 'turn_off' : 'turn_on',
-        id, value === 0 ? undefined : {brightness_pct: value});
+      var edit = dimming[id];
+      if (edit) {
+        if (edit.value === value) { return; }
+        edit.value = value;
+        if (edit.awaiting) {
+          io.clearTimeout(edit.timer);
+          edit.awaiting = false;
+          sendBrightness(id, edit);
+        }
+      } else {
+        var entry = ha.get(id);
+        var brightness = core.brightness(entry);
+        if (brightness.label !== '—' && brightness.value === value &&
+            (value === 0 ? entry.state === 'off' : entry.state === 'on')) { return; }
+        edit = dimming[id] = {value: value, generation: ha.generation(), timer: null, awaiting: false};
+        sendBrightness(id, edit);
+      }
+      io.changed();
+    }
+
+    function dimmableLights(ids) {
+      return availableLights(ids).filter(function (id) { return core.capabilities(ha.get(id)).dim; });
+    }
+
+    function groupBrightness(ids) {
+      var levels = ids.map(function (id) { return lightSettings(id).brightness; })
+        .filter(function (level) { return level.label !== '—'; });
+      if (!levels.length) { return 0; }
+      return Math.round(levels.reduce(function (sum, level) { return sum + level.value; }, 0) / levels.length);
+    }
+
+    function setGroupBrightness(ids, value) {
+      dimmableLights(ids).forEach(function (id) { setBrightness(id, value); });
     }
 
     function setColor(id, data, onSuccess) {
@@ -76,9 +154,10 @@
 
     function lightSettings(id) {
       var entry = ha.get(id);
+      var edit = dimming[id];
       return {
         available: core.available(entry), name: entry.attributes.friendly_name,
-        capabilities: core.capabilities(entry), brightness: core.brightness(entry),
+        capabilities: core.capabilities(entry), brightness: edit ? {value: edit.value, label: edit.value + '%'} : core.brightness(entry),
         selected: function (preset) { return core.presetSelected(entry, preset); }
       };
     }
@@ -111,6 +190,8 @@
     return {
       perform: perform, isBusy: isBusy, lightGroup: lightGroup, lightSettings: lightSettings,
       toggleLights: toggleLights, turnLightsOff: turnLightsOff, setBrightness: setBrightness,
+      brightnessChanged: brightnessChanged, dimmableLights: dimmableLights,
+      groupBrightness: groupBrightness, setGroupBrightness: setGroupBrightness,
       setColor: setColor, robot: robot, controlRobot: controlRobot,
       countdown: countdown, toggleCountdown: toggleCountdown
     };

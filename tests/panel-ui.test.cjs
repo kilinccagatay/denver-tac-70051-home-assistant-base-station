@@ -23,7 +23,7 @@ for(const file of ['core.js','home-assistant.js','controls.js','weather.js','den
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function feed(id,state,attributes){Object.assign(states[id],{state,attributes:{...states[id].attributes,...attributes}});for(const cb of w.entityListeners[id]){cb(state,attributes);}}
 function mouse(el,type){el.dispatchEvent(new w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:0,clientY:0}));}
-async function hold(el){mouse(el,'mousedown');await sleep(290);mouse(el,'mouseup');el.click();}
+function openLightMenu(el){el.click();el.click();}
 function button(text){return [...d.querySelectorAll('#panel-v2 .pv2-card')].find(e=>e.textContent.includes(text));}
 function close(){d.querySelector('.pv2-close').click();}
 (async()=>{
@@ -40,39 +40,99 @@ function close(){d.querySelector('.pv2-close').click();}
   feed(cfg.outdoorFeelsLike,'4',{time:Date.now()/1000-1900});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'8,1°','stale response retains today’s newer known temperature');
   feed(cfg.outdoorFeelsLike,'unavailable',{time:Date.now()/1000});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'8,1°','missing apparent temperature uses today’s last known value');
   const dining=button('Yemek Masası');
-  await hold(dining);
-  assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),true,'Fast must open within 290 ms including migration');
+  openLightMenu(dining);
+  assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),true,'double tap opens full light settings');
   assert.equal(commands.length,0,'opening settings must never turn on a lamp');
   let input=d.querySelector('.pv2-modal input[type=range]');const originalInput=input;
   assert.equal(input.value,'0');
   feed(cfg.lights.dining,'on',{brightness:128,color_mode:'xy',rgb_color:[255,95,170]});await sleep(25);
   assert.equal(input.value,'50','live state must update an open dimmer');
   assert.equal(d.querySelector('.pv2-modal output').textContent,'50%');
-  assert.equal(dining.style.backgroundColor,'rgb(85, 58, 86)','tile follows the actual color');
+  const fill=dining.querySelector('.pv2-light-fill');
+  assert.equal(fill.style.backgroundColor,'rgb(85, 58, 86)','fill follows the actual color');
+  assert.equal(fill.style.width,'50%','fill represents confirmed brightness');
+  assert.match(dining.textContent,/50%/);
   const pink=[...d.querySelectorAll('.pv2-preset')].find(e=>e.textContent==='Pembe');
   assert.equal(pink.getAttribute('aria-pressed'),'true','live preset ring follows actual HA state');
   mouse(input,'mousedown');input.value='70';feed(cfg.lights.dining,'on',{brightness:64});await sleep(25);
   assert.equal(input.value,'70','incoming state must not fight an active slider drag');
   input.dispatchEvent(new w.Event('touchcancel',{bubbles:true}));
   assert.equal(input.value,'25','canceled drag restores actual state');
-  close();await hold(dining);
+  close();openLightMenu(dining);
   input=d.querySelector('.pv2-modal input[type=range]');assert.equal(input,originalInput,'reopening reuses cached menu DOM');
   assert.equal(input.value,'25','cached menu refreshes values');
   const beforeClose=sounds;mouse(d.querySelector('.pv2-close'),'mousedown');mouse(d.querySelector('.pv2-close'),'mouseup');close();
   assert.equal(sounds,beforeClose+1,'close receives one shared feedback sound');
   const beforeBlank=sounds;mouse(d.body,'mousedown');assert.equal(sounds,beforeBlank,'blank background must not sound');
-  await hold(dining);
+  openLightMenu(dining);
   const blue=[...d.querySelectorAll('.pv2-preset')].find(e=>e.textContent==='Mavi');blue.click();await sleep(25);
   assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),false,'successful preset automatically closes');
   assert.deepEqual(JSON.parse(JSON.stringify(commands.at(-1).service_data)),{rgb_color:[65,135,255]});
-  await hold(dining);rejectCommand=true;
+  openLightMenu(dining);rejectCommand=true;
   [...d.querySelectorAll('.pv2-preset')].find(e=>e.textContent==='Pembe').click();await sleep(25);
   assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),true,'failed preset remains open');
   assert.match(d.getElementById('pv2-notice').textContent,/gerçekleştirilemedi/);
   rejectCommand=false;close();
   feed(cfg.lights.dining,'off',{brightness:null});await sleep(25);
-  mouse(dining,'mousedown');mouse(dining,'mouseup');dining.click();await sleep(25);
+  mouse(dining,'mousedown');mouse(dining,'mouseup');dining.click();await sleep(335);
   assert.deepEqual(JSON.parse(JSON.stringify(commands.at(-1).service_data)),{color_temp_kelvin:2700},'normal panel turn-on restores the configured white without changing brightness');
+  feed(cfg.lights.dining,'on',{brightness:255});await sleep(25);
+  openLightMenu(dining);
+  input=d.querySelector('.pv2-modal input[type=range]');
+  assert.equal(fill.style.width,'100%');
+  assert.doesNotMatch(dining.textContent,/100%/);
+  assert.equal(input.value,'100');
+  const beforeDrag=commands.length;
+  mouse(input,'mousedown');
+  for(const value of ['78','65','53']){
+   input.value=value;
+   input.dispatchEvent(new w.Event('input',{bubbles:true}));
+  }
+  assert.equal(commands[beforeDrag].service_data.brightness_pct,78,'first input reaches HA before release');
+  assert.equal(commands.length,beforeDrag+1,'rapid inputs are coalesced');
+  feed(cfg.lights.dining,'on',{brightness:199});await sleep(25);
+  assert.equal(input.value,'53');
+  mouse(input,'mouseup');
+  input.dispatchEvent(new w.Event('change',{bubbles:true}));
+  await sleep(145);
+  assert.equal(commands.length,beforeDrag+2);
+  assert.equal(commands.at(-1).service_data.brightness_pct,53,'latest input is sent exactly once');
+  feed(cfg.lights.dining,'on',{brightness:255});await sleep(25);
+  assert.equal(input.value,'53','stale HA state cannot reset the released slider');
+  feed(cfg.lights.dining,'on',{brightness:135});await sleep(150);
+  assert.equal(input.value,'53');
+  assert.equal(fill.style.width,'53%');
+  close();
+  const beforeDouble=commands.length;
+  openLightMenu(dining);await sleep(335);
+  assert.equal(commands.length,beforeDouble,'double tap opens settings without changing brightness');
+  assert(d.querySelector('.pv2-modal').classList.contains('pv2-open'));
+  close();
+
+  const kitchen=button('Mutfak');
+  feed(cfg.lights.counter,'on',{brightness:102});
+  feed(cfg.lights.sink,'on',{brightness:153});
+  await sleep(25);
+  function touch(type,x,touches=1){
+   const ev=new w.Event(type,{bubbles:true,cancelable:true});
+   Object.defineProperty(ev,'touches',{value:touches?[{clientX:x,clientY:80}]:[]});
+   kitchen.dispatchEvent(ev);
+  }
+  const beforeHold=commands.length;
+  touch('touchstart',150);
+  await sleep(290);
+  assert.equal(d.querySelector('.pv2-quick-dim-value').textContent,'50%','Fast hold opens at group average');
+  assert.equal(commands.length,beforeHold,'holding alone sends nothing');
+  touch('touchmove',210);
+  assert.equal(d.querySelector('.pv2-quick-dim-value').textContent,'70%');
+  const groupCommands=commands.slice(beforeHold);
+  assert.equal(groupCommands.length,2);
+  assert.deepEqual(groupCommands.map(c=>c.target.entity_id).sort(),[cfg.lights.counter,cfg.lights.sink].sort());
+  assert(groupCommands.every(c=>c.service_data.brightness_pct===70));
+  touch('touchend',210,0);
+  assert.equal(d.querySelector('.pv2-quick-dim'),null);
+  await sleep(335);
+  assert.equal(commands.length,beforeHold+2,'releasing the hold never toggles the group');
   d.querySelector('.pv2-settings-trigger').click();
   const audioHint=d.querySelector('.pv2-audio-status'),hintText=audioHint.textContent;
   const preferenceRow=audioHint.closest('.pv2-preference'),settingsNodes=preferenceRow.parentNode.childElementCount;

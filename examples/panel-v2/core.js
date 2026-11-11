@@ -104,32 +104,61 @@
     return {value:null,condition:'',at:0,source:'none'};
   };
   api.bindPress = function (el, shortPress, longPress, scheduler, holdDelay, pressStart) {
-    var timer = null, held = false, startX = 0, startY = 0, touchAt = 0, started = false, suppressClickUntil = 0;
+    var timer = null, held = false, drag = null, startX = 0, startY = 0, touchAt = 0, started = false, suppressClickUntil = 0;
     scheduler = scheduler || {set: function (fn, ms) { return setTimeout(fn, ms); }, clear: function (id) { clearTimeout(id); }, now: function () { return new Date().getTime(); }};
     function cancel() { if (timer !== null) { scheduler.clear(timer); timer = null; } }
+    function endDrag() {
+      if (!drag) { return; }
+      el.ownerDocument.removeEventListener('mousemove', moveMouse, true);
+      el.ownerDocument.removeEventListener('mouseup', endDrag, true);
+      drag.end();
+      drag = null;
+    }
+    function moveMouse(ev) {
+      if (drag) { drag.move(ev.clientX); }
+    }
     function start(ev) {
       if (ev.type === 'mousedown' && (scheduler.now() - touchAt < 800 || ev.button !== 0)) { return; }
-      if (ev.touches && ev.touches.length !== 1) { cancel(); held=true;started=false;return; }
+      if (ev.touches && ev.touches.length !== 1) { cancel();endDrag();held=true;started=false;return; }
       if (ev.touches) { touchAt = scheduler.now(); }
       // Our own touchend/timer handles these cards. Cancel native long-touch
       // selection before legacy Crosswalk enters its crashing context-menu path.
       if(ev.touches&&longPress){ev.preventDefault();}
+      endDrag();
       held = false;started = true;
       if(pressStart){pressStart();}
       var p = ev.touches ? ev.touches[0] : ev; startX = p.clientX; startY = p.clientY;
       cancel();
-      if (longPress) { timer = scheduler.set(function () { timer = null; held = true; longPress(); }, holdDelay ? holdDelay() : 650); }
+      if (longPress) {
+        timer = scheduler.set(function () {
+          timer = null;
+          held = true;
+          var movement = longPress(startX, startY);
+          drag = movement && typeof movement.move === 'function' && typeof movement.end === 'function' ? movement : null;
+          if (drag && !ev.touches) {
+            el.ownerDocument.addEventListener('mousemove', moveMouse, true);
+            el.ownerDocument.addEventListener('mouseup', endDrag, true);
+          }
+        }, holdDelay ? holdDelay() : 650);
+      }
     }
     el.addEventListener('mousedown', start, false);
     el.addEventListener('touchstart', start, false);
-    el.addEventListener('touchmove', function (ev) { var p = ev.touches[0]; if (!p || Math.abs(p.clientX - startX) > 12 || Math.abs(p.clientY - startY) > 12) { cancel(); held = true; } }, false);
-    el.addEventListener('touchend', function(ev){cancel();if(!started&&!held){return;}touchAt=scheduler.now();suppressClickUntil=touchAt+800;ev.preventDefault();var act=started&&!held;started=false;held=false;if(act){shortPress();}},false);
-    el.addEventListener('touchcancel', function () { cancel();touchAt=scheduler.now();suppressClickUntil=touchAt+800;held=false;started=false; }, false);
+    el.addEventListener('touchmove', function (ev) { var p = ev.touches[0];
+      if (drag) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (ev.touches.length === 1 && p) { drag.move(p.clientX); } else { endDrag(); }
+        return;
+      }
+      if (!p || Math.abs(p.clientX - startX) > 12 || Math.abs(p.clientY - startY) > 12) { cancel(); held = true; } }, false);
+    el.addEventListener('touchend', function(ev){cancel();if(drag){ev.stopPropagation();endDrag();}if(!started&&!held){return;}touchAt=scheduler.now();suppressClickUntil=touchAt+800;ev.preventDefault();var act=started&&!held;started=false;held=false;if(act){shortPress();}},false);
+    el.addEventListener('touchcancel', function () { cancel();endDrag();touchAt=scheduler.now();suppressClickUntil=touchAt+800;held=false;started=false; }, false);
     el.addEventListener('mouseup', cancel, false);
     el.addEventListener('mouseleave', cancel, false);
     el.addEventListener('contextmenu', function (ev) { ev.preventDefault(); }, false);
     el.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); cancel(); if(scheduler.now()<suppressClickUntil){return;} if (!held) { if(!started&&pressStart){pressStart();} shortPress(); } held = false;started = false; }, false);
-    el.addEventListener('keydown', function (ev) { if (ev.keyCode === 27) { cancel(); held = false; } }, false);
+    el.addEventListener('keydown', function (ev) { if (ev.keyCode === 27) { cancel(); endDrag(); held = false; } }, false);
   };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else { root.PanelV2Core = api; }
 })(this);

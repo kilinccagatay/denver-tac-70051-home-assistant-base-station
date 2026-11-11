@@ -50,10 +50,10 @@ inside the 22 px panel gutter, keeping every tab title clear of this native laye
 
 Their behaviors are:
 
-- Living room and dining table: tap to toggle; hold the configured delay for settings (normal: 500 ms).
+- Living room and dining table: tap to toggle; double tap for settings. Hold and drag to dim (normal hold: 500 ms).
 - Corridor: group the front corridor, rear corridor, and entrance lights. If any
   is on, turn all three off; otherwise turn all three on. Hold for individual settings.
-- Bedroom and office: tap to toggle; hold for settings.
+- Bedroom and office: tap to toggle; double tap for settings.
 - Kitchen: toggle **counter and sink only**, excluding the dining table. If either
   light is on, turn both off; otherwise turn both on. Hold for individual settings.
 - Robot: **Evi Temizle** when idle, **Temizliği Durdur** when cleaning (returns to
@@ -62,17 +62,25 @@ Their behaviors are:
   is displayed only on this Home button; there is no duplicate banner.
 
 The settings dialog only offers the capabilities the entity supports: brightness,
-three white-temperature presets within the device limits, and six large circular RGB presets.
-The brightness control has a large thumb and percentage readout. Off lamps open
+three white-temperature presets within the device limits, and six labeled RGB presets.
+The brightness control has a filled track and percentage readout. Off lamps open
 at 0% even if HA retains an old brightness attribute; missing brightness on an on
 lamp is shown as unknown rather than 100%. Opening the dialog sends no command. Its brightness and selected color follow live
-HA state without replacing a slider while it is being dragged. Single RGB lamp
-cards use a dark tint derived from their actual reported color; off/group cards
-retain their standard appearance. A preset closes the dialog after a successful HA service response; a failure
+HA state without replacing a slider while it is being dragged. A dimmable lamp
+card fills from left to right to its confirmed brightness. RGB lamps retain a
+fill tint based on their reported color. Off and group cards retain their
+standard appearance. A preset closes the dialog after a successful HA service response; a failure
 keeps it open with a notice. Sliders keep the dialog open. Menu DOM is cached per lamp/group and capability
 set, so repeated opens reuse controls while refreshing current values.
-Moving the slider to zero turns the lamp off; a positive value turns it on at the
-chosen level. Ordinary on/off taps preserve HA’s previous brightness. Optional `defaultLightStates`
+Slider changes are sent during dragging. Rapid inputs are coalesced, and the
+slider keeps the requested value while waiting for Home Assistant to report it.
+Zero turns the lamp off. Hold a light card and drag horizontally without
+lifting to adjust its brightness. On a group card, the gesture sends the same
+percentage to all available dimmable members, starting from their average.
+Holding without moving sends no command. Double tap a light card or use
+Shift+Space with keyboard focus to open its detailed settings. Single taps
+wait 300 ms for a possible second tap and preserve HA’s previous brightness.
+Optional `defaultLightStates`
 profiles supply each lamp’s normal color on the next **panel** turn-on, in the same
 command that lights it. A normal warm-white profile stays warm; no universal cold
 white is imposed. Off commands do not briefly turn lamps on to reset color.

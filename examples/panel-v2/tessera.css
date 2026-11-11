@@ -192,3 +192,50 @@ body.panel-v2.pv2-tessera.panel-v2-office .pv2-settings-trigger { background: tr
 .pv2-tessera .pv2-summary-percent,
 .pv2-tessera .pv2-summary-remaining,
 .pv2-tessera .pv2-card.pv2-printer-state-printing .pv2-card-state { color: #a7dbad; }
+
+.pv2-tessera .pv2-card.pv2-light-level { background:#343e47; }
+.pv2-tessera .pv2-light-fill { background:#30281b; }
+
+.pv2-tessera .pv2-light-dialog .pv2-light-settings {
+  margin:0 0 10px;
+  padding:12px;
+  border:1px solid #53636f;
+  border-radius:14px;
+  background:#2a323a;
+}
+.pv2-tessera .pv2-light-dialog .pv2-setting-row { margin:0 0 10px; }
+.pv2-tessera .pv2-light-dialog .pv2-setting-row output { margin-left:8px; color:#ffd276; }
+.pv2-tessera .pv2-light-dialog .pv2-presets { margin:0 -4px 6px; }
+.pv2-tessera .pv2-light-dialog .pv2-presets-title {
+  margin:0 0 8px;
+  color:#c0c9d0;
+}
+.pv2-tessera .pv2-light-dialog .pv2-preset {
+  display:-webkit-inline-flex;
+  display:inline-flex;
+  -webkit-align-items:center;
+  align-items:center;
+  -webkit-justify-content:center;
+  justify-content:center;
+  width:auto;
+  min-width:68px;
+  min-height:44px;
+  margin:0 4px 8px;
+  padding:6px 9px;
+  border:1px solid #596975;
+  border-radius:22px;
+  background:#343e47;
+  color:#f1f2f3;
+  font-size:12px;
+}
+.pv2-tessera .pv2-light-dialog .pv2-swatch {
+  width:16px;
+  height:16px;
+  margin:0 7px 0 0;
+  box-shadow:none;
+}
+.pv2-tessera .pv2-light-dialog .pv2-preset.pv2-selected { border-color:#c0def4; background:#273a49; }
+.pv2-tessera .pv2-light-dialog .pv2-preset.pv2-selected .pv2-swatch { outline-width:1px; outline-offset:2px; }
+
+.pv2-tessera.panel-v2-office .pv2-light-dialog .pv2-light-settings { padding:8px 12px; }
+.pv2-tessera.panel-v2-office .pv2-light-dialog .pv2-presets { margin-bottom:2px; }
