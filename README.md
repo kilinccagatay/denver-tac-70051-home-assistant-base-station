@@ -110,7 +110,7 @@ battery long press and display helpers remain unchanged.
 
 ## Dashboard screenshots
 
-The current Panel V2 interface is shown below. These are **800 × 480 browser
+The Denver Panel V2 interface is shown below. These are **800 × 480 browser
 captures of the deployed dashboard with live Home Assistant data**. WallPanel’s
 native battery badge is drawn by Android and is therefore absent from these images.
 
@@ -127,6 +127,18 @@ native battery badge is drawn by Android and is therefore absent from these imag
 | Brightness and color presets | Panel settings |
 | --- | --- |
 | ![Long-press light settings with brightness and color presets](photos/panel-v2/light-dialog-browser.png) | ![Sound, long-press timing, cleaning mode, and reload settings](photos/panel-v2/settings-browser.png) |
+
+### Samsung office panel — live printer view
+
+Actual **1280 × 720 Samsung device capture** during an H2D print: camera image,
+print progress, remaining time, nozzle/bed temperatures, and grouped AMS slots.
+AMS-HT is on the left; the active filament uses a rounded highlight with space
+around its color swatch and labels.
+
+![Samsung H2D printer view during a print, with camera image and rounded active filament highlight](docs/images/samsung-printer-live.png)
+
+See the [office profile guide](docs/office-profile.md#printer-camera-view) for
+camera prerequisites and printer controls.
 
 See the [Panel V2 guide](docs/panel-v2.md) for interaction behavior, configuration,
 and installation.
@@ -190,6 +202,8 @@ The YAML contains the actual layout strategy and old-browser fixes used by the r
 
 The basic dashboard does not require root. Current low-level display, power-button, kiosk, and recovery sources live in the [fork's `device-root/` directory](https://github.com/kilinccagatay/wallpanel-android-legacy/tree/lite-motion-core/device-root). This repository's [`android/`](android/README.md) files are an earlier backlight-only snapshot; do not combine them with the current APK.
 
+For automatic recovery from HoaryDash startup HTTP 404 errors, see the [bounded server and Denver browser recovery guide](docs/hoarydash-recovery.md).
+
 On the tested Denver kernel, real Android screen-off interrupted camera frames. The current continuously powered profile keeps Android, WallPanel, the LCD image, and the front camera active while closing only the backlight-enable gate on verified AXP20 GPIO1. Brightness/PWM zero alone left a low-light shimmer; the separate enable gate produced a user-confirmed stable dark state. An image visible under external light is expected. The previous LCD-off behavior remains selectable; see [display profiles](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/device-root/display-profiles.md). Neither mode proves system sleep. Camera and browser processing still consume power.
 
 The watchdog addresses a second limitation: Crosswalk was observed growing beyond roughly 200 MB on a tablet with only about 354 MB usable RAM. Android can kill the activity and leave the launcher visible while WallPanel's service restarts. The watchdog brings the activity back and can recycle it while the panel is dark.
@@ -241,3 +255,10 @@ This repository intentionally excludes live credentials, access tokens, Wi-Fi da
 - [HoaryDash](https://github.com/Skrubbadubba/HoaryDash)
 - [Home Assistant vacuum integration](https://www.home-assistant.io/integrations/vacuum/)
 - [linux-sunxi tools](https://github.com/linux-sunxi/sunxi-tools)
+
+Recent dashboard guides: [three-workday calendar](docs/office-profile.md#three-workday-agenda-selection) ·
+[outside apparent temperature](docs/outdoor-feels-like.md) ·
+[SMHI weather setup](docs/smhi-weather.md) ·
+[scoped validation and pending device checks](docs/three-day-agenda-review.md).
+
+Planned: [Denver voice reports to Codex](docs/denver-codex-voice-todo.md).

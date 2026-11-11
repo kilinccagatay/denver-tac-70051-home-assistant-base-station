@@ -50,10 +50,10 @@ inside the 22 px panel gutter, keeping every tab title clear of this native laye
 
 Their behaviors are:
 
-- Living room and dining table: tap to toggle; hold the configured delay for settings (normal: 500 ms).
+- Living room and dining table: tap to toggle; double tap for settings. Hold and drag to dim (normal hold: 500 ms).
 - Corridor: group the front corridor, rear corridor, and entrance lights. If any
   is on, turn all three off; otherwise turn all three on. Hold for individual settings.
-- Bedroom and office: tap to toggle; hold for settings.
+- Bedroom and office: tap to toggle; double tap for settings.
 - Kitchen: toggle **counter and sink only**, excluding the dining table. If either
   light is on, turn both off; otherwise turn both on. Hold for individual settings.
 - Robot: **Evi Temizle** when idle, **Temizliği Durdur** when cleaning (returns to
@@ -62,17 +62,25 @@ Their behaviors are:
   is displayed only on this Home button; there is no duplicate banner.
 
 The settings dialog only offers the capabilities the entity supports: brightness,
-three white-temperature presets within the device limits, and six large circular RGB presets.
-The brightness control has a large thumb and percentage readout. Off lamps open
+three white-temperature presets within the device limits, and six labeled RGB presets.
+The brightness control has a filled track and percentage readout. Off lamps open
 at 0% even if HA retains an old brightness attribute; missing brightness on an on
 lamp is shown as unknown rather than 100%. Opening the dialog sends no command. Its brightness and selected color follow live
-HA state without replacing a slider while it is being dragged. Single RGB lamp
-cards use a dark tint derived from their actual reported color; off/group cards
-retain their standard appearance. A preset closes the dialog after a successful HA service response; a failure
+HA state without replacing a slider while it is being dragged. A dimmable lamp
+card fills from left to right to its confirmed brightness. RGB lamps retain a
+fill tint based on their reported color. Off and group cards retain their
+standard appearance. A preset closes the dialog after a successful HA service response; a failure
 keeps it open with a notice. Sliders keep the dialog open. Menu DOM is cached per lamp/group and capability
 set, so repeated opens reuse controls while refreshing current values.
-Moving the slider to zero turns the lamp off; a positive value turns it on at the
-chosen level. Ordinary on/off taps preserve HA’s previous brightness. Optional `defaultLightStates`
+Slider changes are sent during dragging. Rapid inputs are coalesced, and the
+slider keeps the requested value while waiting for Home Assistant to report it.
+Zero turns the lamp off. Hold a light card and drag horizontally without
+lifting to adjust its brightness. On a group card, the gesture sends the same
+percentage to all available dimmable members, starting from their average.
+Holding without moving sends no command. Double tap a light card or use
+Shift+Space with keyboard focus to open its detailed settings. Single taps
+wait 300 ms for a possible second tap and preserve HA’s previous brightness.
+Optional `defaultLightStates`
 profiles supply each lamp’s normal color on the next **panel** turn-on, in the same
 command that lights it. A normal warm-white profile stays warm; no universal cold
 white is imposed. Off commands do not briefly turn lamps on to reset color.
@@ -190,6 +198,35 @@ A full Home Assistant restart or script reload stops a waiting script; the UI
 then clears its countdown. This is a short exit delay, not a persistent schedule.
 Cancellation cannot undo a turn-off service already dispatched at expiry.
 
+## Device layouts and offline previews
+
+The [Denver layout](../examples/panel-v2/denver-layout.js) owns Evim, Mutfak,
+Giriş, Odalar and Robot. The [Samsung layout](../examples/panel-v2/samsung-layout.js)
+owns Odam, Işıklar and Yazıcı. Each installed route loads its own layout.
+Use the shared components in `panel.js` to place cards and keep gestures,
+service targets, display handling and profile preferences consistent.
+
+Generate standalone previews from the repository root:
+
+```sh
+python3 tools/preview-panel-v2.py /tmp/panel-layout-previews
+```
+
+Open `denver.html` or `samsung.html` in a desktop browser. The frame uses the
+Denver 800 × 480 viewport or Samsung 640 × 360 logical viewport. Both pages
+offer the current design and the optional Tessera-inspired design with
+synthetic states. The preview shell supplies navigation and a mock battery
+badge. Device-specific browser and native rendering still require hardware
+verification. All preview commands run against the in-memory fixture.
+
+The optional [Tessera-inspired style](../examples/panel-v2/tessera.css) uses
+dark surfaces, rounded tiles and state-colored icon backgrounds. On Denver
+the clock and weather sit in a single tile beside the household controls.
+On Samsung the forecast, agenda and printer retain their distinct cards,
+with separate surfaces for camera, telemetry and AMS on the printer screen.
+The installer includes this stylesheet only for a mapping that sets
+`"themeStyle": "tessera"`. Existing mappings retain their current theme.
+
 ## Tests
 
 For the DOM interaction regression (no physical HA/device commands), install the
@@ -202,7 +239,11 @@ NODE_PATH=/tmp/denver-panel-ui-tests/node_modules node tests/panel-ui.test.cjs
 
 This checks live modal brightness/color, drag protection, cached menu reuse,
 250 ms Fast timing/migration, shared feedback, automatic close only after successful
-presets, failure notices, Home display naming, and tab activation from cached state.
+presets, failure notices, stable audio-feedback rows, sound preference persistence,
+Home display naming, and tab activation from cached state.
+
+The [2026-11-01 visual review](ui-review-2026-11-01.md) includes actual Denver/Samsung
+settings captures, agenda geometry and the complete PASS/FAIL/PENDING/N/A record.
 
 Run `node tests/panel-v2.test.cjs` for compact state merging, device capabilities,
 group behavior, robot state transitions, countdown timing, and touch/long-press
@@ -241,3 +282,7 @@ preferences were preserved. Clock/date/audio remain in HoaryDash in this build.
 See the [native fix and installation/validation notes](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/first-touch-fix.md).
 Use an APK with the same signing certificate and an in-place update; do not clear
 app data. The root-helper path is firmware-specific, not a generic Android fix.
+
+The [outside apparent-temperature guide](outdoor-feels-like.md) covers the optional
+Open-Meteo REST sensor, regional location privacy, negative/zero values and the
+matching three-row inside/outside layout.

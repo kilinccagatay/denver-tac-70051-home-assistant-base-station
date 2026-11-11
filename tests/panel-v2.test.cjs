@@ -49,7 +49,9 @@ handlers.mousedown(ev('mousedown'));handlers.mouseup(ev('mouseup'));handlers.cli
 assert.equal(short,1);assert.equal(long,0);
 handlers.mousedown(ev('mousedown'));pending();handlers.mouseup(ev('mouseup'));handlers.click(ev('click'));
 assert.equal(short,1,'long press must not also toggle');assert.equal(long,1);
-handlers.touchstart(ev('touchstart',{touches:[{clientX:0,clientY:0}]}));
+let nativeSelectionCancelled=false;
+handlers.touchstart(ev('touchstart',{touches:[{clientX:0,clientY:0}],preventDefault(){nativeSelectionCancelled=true;}}));
+assert(nativeSelectionCancelled,'long-press cards cancel native selection at touch-down before Crosswalk opens its context menu');
 handlers.touchmove(ev('touchmove',{touches:[{clientX:25,clientY:0}]}));handlers.touchend(ev('touchend'));handlers.click(ev('click'));
 assert.equal(short,1,'drag must not toggle or open dialog');assert.equal(long,1);
 const features=8192|4|16;

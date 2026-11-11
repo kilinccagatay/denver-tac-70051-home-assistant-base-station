@@ -68,6 +68,7 @@ brightness setting of zero, or a desktop preview alone is not acceptance.
 | H08 | All-lights-off countdown runs 60 seconds, appears only on its button, second tap cancels. The allowlist includes household lighting only; printer/server power and unrelated switches are excluded. Verify targets before any live execution. |
 | H09 | Meeting indicator appears only on Evim for fresh meeting state, disappears on meeting end and becomes inactive when its heartbeat expires. The ordinary/Denver meeting channel transmits no meeting titles, participants or company data. An explicitly enabled office calendar channel may show titles and times only; test its independent expiry, next-workday selection and new-event synchronization. |
 | H10 | Disconnect/reconnect HA: unavailable controls cannot send misleading actions; reconnection updates actual state and never leaves a stale meeting indicator or stuck pending dialog. |
+| H11 | Office printer: power-off overrides retained running/progress readings on Home and Printer views. Percentage text/ARIA/fills clear, live telemetry is unavailable, camera requests stop, and cached AMS slots lose active highlighting. Test delayed switch acknowledgement, startup, failures and navigation without interrupting a real print. |
 
 ## Engineering and publication
 

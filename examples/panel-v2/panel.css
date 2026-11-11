@@ -22,7 +22,7 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 .pv2-meeting.pv2-active { visibility:visible; }
 .pv2-meeting-dot { display:inline-block; width:12px; height:12px; margin-right:7px; border-radius:50%; background:#ff575f; }
 .pv2-controls { width:60%; display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; -webkit-align-content:stretch; align-content:stretch; margin:-4px; }
-.pv2-card { width:calc(50% - 8px); height:calc(25% - 8px); margin:4px; padding:9px 12px; border:1px solid #3c485a; border-radius:13px; background:#252f3e; color:#f3f5fa; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; text-align:left; font-family:Arial,sans-serif; cursor:pointer; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+.pv2-card { width:calc(50% - 8px); height:calc(25% - 8px); margin:4px; padding:8px 12px; border:1px solid #3c485a; border-radius:13px; background:#252f3e; color:#f3f5fa; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; text-align:left; font-family:Arial,sans-serif; cursor:pointer; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
 .pv2-card:active { background:#3b485b; }
 .pv2-card.pv2-on { background:#44392b; border-color:#927549; }
 .pv2-card svg { width:27px; height:27px; -webkit-flex-shrink:0; flex-shrink:0; margin-right:11px; color:#acbbce; }
@@ -50,7 +50,7 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 .pv2-dialog { width:620px; max-width:94vw; max-height:94vh; padding:18px 22px; border:1px solid #536278; border-radius:18px; background:#202b3a; box-shadow:0 12px 36px rgba(0,0,0,.4); overflow-y:auto; }
 .pv2-dialog-header { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:space-between; justify-content:space-between; margin-bottom:12px; }
 .pv2-dialog h2 { font:700 24px Arial,sans-serif; margin:0; }
-.pv2-close { width:46px; min-width:46px; min-height:46px; padding:0; border:1px solid #64758b; border-radius:10px; background:#34465c; color:white; font:32px Arial,sans-serif; }
+.pv2-close { width:46px; min-width:46px; min-height:46px; padding:0; border:1px solid #64758b; border-radius:10px; background:#34465c; color:white; font:32px/1 Arial,sans-serif; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center; }
 .pv2-light-settings { border-top:1px solid #3e4d61; margin-top:9px; padding-top:10px; }
 .pv2-light-settings h3 { margin:0 0 6px; font-size:17px; color:#cbd7e5; }
 .pv2-setting-row { display:-webkit-flex; display:flex; -webkit-flex-wrap:wrap; flex-wrap:wrap; -webkit-align-items:center; align-items:center; -webkit-justify-content:space-between; justify-content:space-between; margin:4px 0 12px; }
@@ -98,11 +98,11 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
   .pv2-card.pv2-action .pv2-card-state { line-height:14px; }
 }
 
-.pv2-settings-trigger { position:absolute; left:0; bottom:0; width:44px; height:44px; padding:10px; border:1px solid #465568; border-radius:13px; background:#25303f; color:#b7c7da; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.pv2-settings-trigger svg { width:22px; height:22px; }
+.pv2-settings-trigger { position:absolute; left:0; bottom:-10px; width:44px; height:44px; padding:10px; border:1px solid #465568; border-radius:13px; background:#25303f; color:#b7c7da; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.pv2-settings-trigger svg { display:block; width:22px; height:22px; }
 .pv2-settings-trigger:focus { outline:none; }
 .pv2-keyboard .pv2-settings-trigger:focus { outline:2px solid #a9d8ee; outline-offset:2px; }
-.pv2-preference { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; padding:18px 0 10px; border-top:1px solid #3e4d61; }
+.pv2-preference { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; padding:14px 0; border-top:1px solid #3e4d61; }
 .pv2-preference h3 { margin:0; font-size:20px; }
 .pv2-preference > div { -webkit-flex:1; flex:1; padding-right:24px; }
 .pv2-preference .pv2-sound { margin:0; min-width:110px; }
@@ -135,3 +135,151 @@ body.panel-v2 { background:#171d27; color:#f2f4f8; font-family:Arial,sans-serif;
 
 .pv2-card:active { box-shadow:inset 0 0 0 2px #a9c9de; }
 .pv2-preset:disabled { opacity:.5; }
+
+/* Shared card spacing; no viewport or control-grid changes. */
+.pv2-card > svg { -webkit-flex:none; flex:none; }
+.pv2-card-text { min-width:0; }
+/* Indoor/outdoor readings share the existing weather column below the clock. */
+.pv2-weather-pair { position:relative; left:-6px; min-height:99px; margin-top:1px; }
+.pv2-weather-pair .pv2-weather-main { width:100%; -webkit-align-items:flex-start; align-items:flex-start; }
+.pv2-weather-reading { width:50%; min-width:0; text-align:center; }
+.pv2-weather-reading-icon { display:block; height:22px; }
+.pv2-weather-pair .pv2-weather-main svg { width:22px; height:22px; margin:0; }
+.pv2-weather-pair .pv2-temperature { display:block; font-size:44px; line-height:50px; letter-spacing:-1px; white-space:nowrap; }
+.pv2-weather-pair .pv2-condition { font-size:18px; line-height:22px; }
+
+.pv2-indoor-caption { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center; white-space:nowrap; }
+.pv2-weather-pair .pv2-indoor-caption-label { font-size:14px; margin-right:6px; }
+.pv2-weather-pair .pv2-indoor-humidity { display:-webkit-inline-flex; display:inline-flex; -webkit-align-items:center; align-items:center; font-size:18px; line-height:22px; color:#c3d7e6; }
+.pv2-weather-pair .pv2-indoor-humidity > span:first-child { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
+.pv2-weather-pair .pv2-indoor-humidity svg { width:12px; height:12px; margin-right:3px; }
+
+/* Keep audio feedback from resizing/recentering the settings dialog on touch. */
+.pv2-audio-status { height:40px; min-height:40px; max-height:40px; overflow:hidden; }
+
+/* A compact, explicit secondary outside reading; negatives never lose their sign. */
+.pv2-feels-like { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center; font:14px/22px Arial,sans-serif; color:#bdd0df; white-space:nowrap; text-align:center; }
+.pv2-feels-value { font-size:18px; font-variant-numeric:tabular-nums; }
+
+.pv2-weather-pair.pv2-with-feels .pv2-temperature { line-height:44px; }
+.pv2-with-feels .pv2-weather-reading-icon { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center; height:20px; }
+.pv2-with-feels .pv2-weather-reading-icon svg { width:20px; height:20px; margin:0; }
+
+.pv2-feels-icon { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; }
+.pv2-with-feels .pv2-feels-like svg { width:13px; height:13px; margin:0 3px 0 0; }
+
+/* Matching outside/inside hierarchy: temperature, caption, secondary reading. */
+.pv2-with-feels .pv2-indoor-caption { -webkit-flex-direction:column; flex-direction:column; -webkit-justify-content:flex-start; justify-content:flex-start; }
+.pv2-with-feels .pv2-indoor-caption-label { margin:0; font-size:18px; line-height:22px; }
+.pv2-with-feels .pv2-indoor-humidity { font-size:18px; line-height:22px; }
+
+/* Center each complete visible reading beneath the weather/house symbol. */
+.pv2-quantity { display:-webkit-inline-flex; display:inline-flex; -webkit-align-items:baseline; align-items:baseline; white-space:nowrap; }
+.pv2-unit { position:static; line-height:inherit; }
+
+body.panel-v2:not(.panel-v2-office) .pv2-overview-with-feels .pv2-settings-trigger { bottom:-18px; }
+
+/* Symbols remain part of the visible centered group, regardless of sign. */
+.pv2-quantity-icon { position:static; display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-align-self:center; align-self:center; }
+
+/* Identical centered row stacks for the outside and indoor readings. */
+.pv2-with-feels .pv2-weather-reading { display:-webkit-flex; display:flex; -webkit-flex-direction:column; flex-direction:column; -webkit-align-items:center; align-items:center; }
+.pv2-with-feels .pv2-weather-reading > .pv2-temperature,.pv2-with-feels .pv2-weather-reading > .pv2-condition,.pv2-indoor-secondary,.pv2-with-feels .pv2-weather-reading-icon { width:100%; text-align:center; }
+.pv2-indoor-secondary { display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center; -webkit-justify-content:center; justify-content:center; }
+
+/* Keep the confirmed brightness fill behind the existing card contents. */
+.pv2-card.pv2-light-level { position:relative; overflow:hidden; background:#252f3e; }
+.pv2-light-fill { position:absolute; top:0; bottom:0; left:0; width:0; background:#44392b; pointer-events:none; }
+.pv2-card.pv2-light-level > svg,.pv2-card.pv2-light-level > .pv2-card-text { position:relative; }
+
+/* A held touch remains on the original card while the overlay follows it. */
+.pv2-quick-dim {
+  position:fixed;
+  z-index:900;
+  pointer-events:none;
+  box-sizing:border-box;
+  width:220px;
+  max-width:calc(100vw - 16px);
+  padding:10px 12px;
+  border:1px solid #627487;
+  border-radius:16px;
+  background:#343e47;
+  color:#f1f2f3;
+  box-shadow:0 6px 20px rgba(0,0,0,.35);
+}
+.pv2-quick-dim-heading {
+  display:-webkit-flex;
+  display:flex;
+  -webkit-justify-content:space-between;
+  justify-content:space-between;
+  margin-bottom:8px;
+  font-weight:bold;
+}
+.pv2-quick-dim-value { margin-left:8px; color:#ffd276; }
+.pv2-quick-dim-track,.pv2-slider-rail {
+  position:relative;
+  height:24px;
+  overflow:hidden;
+  border-radius:12px;
+  background:#20262c;
+}
+.pv2-quick-dim-fill,.pv2-slider-fill {
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  background:#e3af57;
+  border-radius:inherit;
+}
+/* Keep a 44 px touch target and center the narrower rail on the thumb. */
+.pv2-slider-track { position:relative; width:100%; height:44px; -webkit-order:2; order:2; }
+.pv2-slider-rail {
+  position:absolute;
+  top:16px;
+  left:13px;
+  right:13px;
+  height:12px;
+  border-radius:6px;
+  pointer-events:none;
+}
+.pv2-light-dialog .pv2-setting-row input[type=range] {
+  position:relative;
+  display:block;
+  height:44px;
+  margin:0;
+}
+.pv2-light-dialog .pv2-setting-row input[type=range]::-webkit-slider-runnable-track {
+  height:44px;
+  border:0;
+  background:transparent;
+}
+.pv2-light-dialog .pv2-setting-row input[type=range]::-webkit-slider-thumb {
+  box-sizing:border-box;
+  width:26px;
+  height:26px;
+  margin-top:9px;
+  border:2px solid #4d3a1c;
+}
+
+.pv2-light-tabs {
+  display:-webkit-flex;
+  display:flex;
+  -webkit-flex-wrap:wrap;
+  flex-wrap:wrap;
+  margin:0 -4px 8px;
+}
+.pv2-light-tab {
+  min-height:44px;
+  margin:0 4px 4px;
+  padding:6px 14px;
+  border:1px solid #596975;
+  border-radius:12px;
+  background:#343e47;
+  color:#f1f2f3;
+  font:700 14px Arial,sans-serif;
+}
+.pv2-light-tab[aria-selected="true"] {
+  border-color:#c0def4;
+  background:#273a49;
+  color:#c0def4;
+}

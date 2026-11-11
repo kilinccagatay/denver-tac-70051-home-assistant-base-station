@@ -25,3 +25,10 @@ to imply balanced padding for mixed font sizes. Check both line-box bounds and
 optical text/icon alignment, selected and unselected states, and adjacent cards.
 Verify on the installed device at its actual viewport before claiming visual
 acceptance. Missing screenshots or physical checks remain PENDING.
+
+For weather columns, use the weather/house symbol center as the vertical axis.
+Center each complete visible reading (sign, number, unit and any leading icon)
+on that axis. Do not add sign-specific offsets or hidden minus placeholders.
+Keep unit glyphs visible and preserve accessible meaning.
+Indoor/outdoor columns must retain matching row counts, baselines and secondary
+reading sizes in both profiles.

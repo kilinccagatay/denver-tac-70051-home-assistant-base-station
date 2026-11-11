@@ -1,0 +1,39 @@
+# Merge this item into your existing template: list. No new weather API is called.
+# Replace weather.forecast_home with your existing Met.no weather entity.
+- sensor:
+    - name: Panel Outdoor Feels Like Local
+      unique_id: panel_outdoor_feels_like_met_no
+      device_class: temperature
+      state_class: measurement
+      unit_of_measurement: °C
+      icon: mdi:thermometer
+      availability: >-
+        {% set w = states.weather.forecast_home %}
+        {% set t = state_attr('weather.forecast_home', 'temperature') %}
+        {% set h = state_attr('weather.forecast_home', 'humidity') %}
+        {% set v = state_attr('weather.forecast_home', 'wind_speed') %}
+        {% set age = as_timestamp(now()) - as_timestamp(w.last_reported if w is defined and w.last_reported is defined else w.last_updated, 0) %}
+        {{ w is defined and w.state not in ['unknown', 'unavailable'] and
+           t is number and -80 <= t <= 60 and h is number and 0 <= h <= 100 and
+           v is number and 0 <= v <= 500 and
+           state_attr('weather.forecast_home', 'temperature_unit') == '°C' and
+           state_attr('weather.forecast_home', 'wind_speed_unit') in ['m/s', 'km/h', 'mph', 'kn'] and
+           -300 <= age <= 7200 }}
+      state: >-
+        {% set t = state_attr('weather.forecast_home', 'temperature') %}
+        {% set h = state_attr('weather.forecast_home', 'humidity') %}
+        {% set v = state_attr('weather.forecast_home', 'wind_speed') %}
+        {% set unit = state_attr('weather.forecast_home', 'wind_speed_unit') %}
+        {% set factors = {'m/s': 1, 'km/h': 0.2777777777777778, 'mph': 0.44704, 'kn': 0.5144444444444445} %}
+        {% if t is number and -80 <= t <= 60 and h is number and 0 <= h <= 100 and v is number and v >= 0 and unit in factors %}
+          {% set vapour = h / 100 * 6.105 * (2.718281828459045 ** (17.27 * t / (237.7 + t))) %}
+          {{ (t + 0.33 * vapour - 0.70 * v * factors[unit] - 4.00) | round(1) }}
+        {% else %}{{ none }}{% endif %}
+      attributes:
+        # Time of this calculation, not a new outside observation. The source
+        # timestamp/age guard above prevents a cached weather value living forever.
+        time: "{{ as_timestamp(now()) | int }}"
+        source: Met.no weather; locally calculated apparent temperature in shade
+        source_time: >-
+          {% set w = states.weather.forecast_home %}
+          {{ as_timestamp(w.last_reported if w is defined and w.last_reported is defined else w.last_updated, 0) }}

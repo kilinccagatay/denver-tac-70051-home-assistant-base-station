@@ -71,30 +71,94 @@
     var start = Date.parse(e.attributes.last_triggered || '');
     return isFinite(start) ? Math.max(0, Math.min(60, Math.ceil((start + 60000 - now) / 1000))) : null;
   };
+  // Local calendar days avoid duplicated columns across daylight saving changes.
+  api.forecastDays = function (forecast, now, count) {
+    var rows=Object.prototype.toString.call(forecast)==='[object Array]'?forecast:[],result=[],date=new Date(now);
+    function key(d){return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();}
+    function value(v){return v!==null&&v!==undefined&&v!==''&&isFinite(Number(v))?Math.round(Number(v)):null;}
+    date.setHours(12,0,0,0);
+    count=count===5?5:7;
+    for(var i=0;i<count;i++){
+      var target=key(date),match=null;
+      for(var j=0;j<rows.length;j++){var row=rows[j];if(row&&key(new Date(row.datetime))===target){match=row;break;}}
+      result.push({day:date.getDay(),date:date.getTime(),condition:match&&typeof match.condition==='string'?match.condition:'',high:match?value(match.temperature):null,low:match?value(match.templow):null});
+      date.setDate(date.getDate()+1);
+    }
+    return result;
+  };
+  // A cached observation is never re-dated when read. Forecast highs are
+  // explicitly estimates, never observations or invented apparent temperatures.
+  api.weatherReading = function (live, last, forecast, forecastAt, now, feels) {
+    function numeric(v){return v!==null&&v!==undefined&&v!==''&&typeof v!=='boolean'&&isFinite(Number(v));}
+    function sameDay(at){var a=new Date(at),b=new Date(now);return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+    function valid(s){return s&&numeric(s.value)&&numeric(s.at)&&s.at>0&&s.at<=now+300000&&sameDay(s.at);}
+    function result(s,source){return {value:Number(s.value),condition:typeof s.condition==='string'?s.condition:'',at:Number(s.at),source:source};}
+    if(valid(live)&&now-live.at<=1800000&&(!valid(last)||live.at>=last.at)){ return result(live,'live');}
+    if(valid(last)){return result(last,'last');}
+    if(forecastAt>0&&forecastAt<=now+300000&&now-forecastAt<=604800000&&Object.prototype.toString.call(forecast)==='[object Array]'){
+      for(var i=0;i<forecast.length;i++){var row=forecast[i];if(!row||!sameDay(Date.parse(row.datetime))){continue;}
+        var value=feels?row.apparent_temperature:row.temperature;
+        if(numeric(value)){return result({value:value,condition:row.condition,at:forecastAt},'forecast');}
+      }
+    }
+    return {value:null,condition:'',at:0,source:'none'};
+  };
   api.bindPress = function (el, shortPress, longPress, scheduler, holdDelay, pressStart) {
-    var timer = null, held = false, startX = 0, startY = 0, touchAt = 0, started = false, suppressClickUntil = 0;
+    var timer = null, held = false, drag = null, startX = 0, startY = 0, touchAt = 0, started = false, suppressClickUntil = 0;
     scheduler = scheduler || {set: function (fn, ms) { return setTimeout(fn, ms); }, clear: function (id) { clearTimeout(id); }, now: function () { return new Date().getTime(); }};
     function cancel() { if (timer !== null) { scheduler.clear(timer); timer = null; } }
+    function endDrag() {
+      if (!drag) { return; }
+      el.ownerDocument.removeEventListener('mousemove', moveMouse, true);
+      el.ownerDocument.removeEventListener('mouseup', endDrag, true);
+      drag.end();
+      drag = null;
+    }
+    function moveMouse(ev) {
+      if (drag) { drag.move(ev.clientX); }
+    }
     function start(ev) {
       if (ev.type === 'mousedown' && (scheduler.now() - touchAt < 800 || ev.button !== 0)) { return; }
-      if (ev.touches && ev.touches.length !== 1) { cancel(); held=true;started=false;return; }
+      if (ev.touches && ev.touches.length !== 1) { cancel();endDrag();held=true;started=false;return; }
       if (ev.touches) { touchAt = scheduler.now(); }
+      // Our own touchend/timer handles these cards. Cancel native long-touch
+      // selection before legacy Crosswalk enters its crashing context-menu path.
+      if(ev.touches&&longPress){ev.preventDefault();}
+      endDrag();
       held = false;started = true;
       if(pressStart){pressStart();}
       var p = ev.touches ? ev.touches[0] : ev; startX = p.clientX; startY = p.clientY;
       cancel();
-      if (longPress) { timer = scheduler.set(function () { timer = null; held = true; longPress(); }, holdDelay ? holdDelay() : 650); }
+      if (longPress) {
+        timer = scheduler.set(function () {
+          timer = null;
+          held = true;
+          var movement = longPress(startX, startY);
+          drag = movement && typeof movement.move === 'function' && typeof movement.end === 'function' ? movement : null;
+          if (drag && !ev.touches) {
+            el.ownerDocument.addEventListener('mousemove', moveMouse, true);
+            el.ownerDocument.addEventListener('mouseup', endDrag, true);
+          }
+        }, holdDelay ? holdDelay() : 650);
+      }
     }
     el.addEventListener('mousedown', start, false);
     el.addEventListener('touchstart', start, false);
-    el.addEventListener('touchmove', function (ev) { var p = ev.touches[0]; if (!p || Math.abs(p.clientX - startX) > 12 || Math.abs(p.clientY - startY) > 12) { cancel(); held = true; } }, false);
-    el.addEventListener('touchend', function(ev){cancel();if(!started&&!held){return;}touchAt=scheduler.now();suppressClickUntil=touchAt+800;ev.preventDefault();var act=started&&!held;started=false;held=false;if(act){shortPress();}},false);
-    el.addEventListener('touchcancel', function () { cancel();touchAt=scheduler.now();suppressClickUntil=touchAt+800;held=false;started=false; }, false);
+    el.addEventListener('touchmove', function (ev) { var p = ev.touches[0];
+      if (drag) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (ev.touches.length === 1 && p) { drag.move(p.clientX); } else { endDrag(); }
+        return;
+      }
+      if (!p || Math.abs(p.clientX - startX) > 12 || Math.abs(p.clientY - startY) > 12) { cancel(); held = true; } }, false);
+    el.addEventListener('touchend', function(ev){cancel();if(drag){ev.stopPropagation();endDrag();}if(!started&&!held){return;}touchAt=scheduler.now();suppressClickUntil=touchAt+800;ev.preventDefault();var act=started&&!held;started=false;held=false;if(act){shortPress();}},false);
+    el.addEventListener('touchcancel', function () { cancel();endDrag();touchAt=scheduler.now();suppressClickUntil=touchAt+800;held=false;started=false; }, false);
     el.addEventListener('mouseup', cancel, false);
     el.addEventListener('mouseleave', cancel, false);
     el.addEventListener('contextmenu', function (ev) { ev.preventDefault(); }, false);
     el.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); cancel(); if(scheduler.now()<suppressClickUntil){return;} if (!held) { if(!started&&pressStart){pressStart();} shortPress(); } held = false;started = false; }, false);
-    el.addEventListener('keydown', function (ev) { if (ev.keyCode === 27) { cancel(); held = false; } }, false);
+    el.addEventListener('keydown', function (ev) { if (ev.keyCode === 27) { cancel(); endDrag(); held = false; } }, false);
   };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else { root.PanelV2Core = api; }
 })(this);

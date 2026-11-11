@@ -1,0 +1,25 @@
+# Include this list under rest: !include open-meteo-feels-like.yaml
+# Only rounded regional coordinates are sent; no API key is required.
+- resource_template: >-
+    https://api.open-meteo.com/v1/forecast?latitude={{ state_attr('zone.home', 'latitude') | float | round(1) }}&longitude={{ state_attr('zone.home', 'longitude') | float | round(1) }}&current=apparent_temperature&temperature_unit=celsius&timeformat=unixtime&forecast_days=1
+  scan_interval: 600
+  timeout: 15
+  sensor:
+    - name: Panel Outdoor Feels Like
+      unique_id: panel_outdoor_feels_like_open_meteo
+      device_class: temperature
+      state_class: measurement
+      unit_of_measurement: °C
+      icon: mdi:thermometer
+      availability: >-
+        {{ value_json is mapping and value_json.current is mapping
+           and value_json.current.apparent_temperature is number
+           and value_json.current.time is number
+           and -300 <= as_timestamp(now()) - value_json.current.time <= 1800 }}
+      value_template: >-
+        {{ value_json.current.apparent_temperature
+           if value_json is mapping and value_json.current is mapping
+           and value_json.current.apparent_temperature is number else none }}
+      json_attributes_path: $.current
+      json_attributes:
+        - time

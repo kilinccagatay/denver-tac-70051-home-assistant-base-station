@@ -6,23 +6,24 @@ const path=require('node:path');
 const {JSDOM}=require('jsdom');
 const root=path.resolve(__dirname,'..');
 const cfg=JSON.parse(fs.readFileSync(path.join(root,'examples/panel-v2/config.example.json')));
+cfg.outdoorFeelsLike='sensor.example_feels_like';cfg.indoorTemperature='sensor.example_indoor';cfg.indoorHumidity='sensor.example_humidity';
 const dom=new JSDOM('<!doctype html><body>'+['Ana','Mutfak','Giriş','Odalar','Robot'].map(n=>'<main id="screen-'+n+'" class="screen"></main>').join('')+'<nav><div class="navbar-item"><span class="navbar-label">Ana</span></div></nav></body>',{url:'http://panel.test:4567/dash/#screen-Ana',runScripts:'outside-only'});
 const w=dom.window,d=w.document,commands=[];
 let sounds=0,rejectCommand=false;
 w.HTMLMediaElement.prototype.play=function(){sounds++;return Promise.resolve();};
 w.localStorage.setItem('panel-v2-hold-ms','450'); // Migrates the old Fast preference to 250 ms.
 w.PANEL_V2_CONFIG=cfg;w.entityListeners={};w.onHaReady=[];w.haSocketReady=true;
-const states={};
+const states={};states[cfg.indoorTemperature]={entity_id:cfg.indoorTemperature,state:'22.3',attributes:{}};states[cfg.indoorHumidity]={entity_id:cfg.indoorHumidity,state:'37',attributes:{}};states[cfg.outdoorFeelsLike]={entity_id:cfg.outdoorFeelsLike,state:'-3.4',attributes:{time:Date.now()/1000,unit_of_measurement:'°C'}};
 for(const id of cfg.allLights){states[id]={entity_id:id,state:'off',attributes:{brightness:null,supported_color_modes:['xy','color_temp'],color_mode:'xy',rgb_color:[255,95,170]}};}
 for(const id of [cfg.weather,cfg.meeting,cfg.vacuum,cfg.countdown]){states[id]={entity_id:id,state:'off',attributes:{}};}
 Object.values(states).forEach(e=>w.entityListeners[e.entity_id]=[]);
 w.goFetch=(url,cb)=>cb(null,states[decodeURIComponent(url.split('/states/')[1].split('?')[0])]);
 w.haSend=msg=>{commands.push(msg);return rejectCommand?Promise.reject(new Error('test failure')):Promise.resolve({});};
-for(const file of ['core.js','panel.js']){w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',file),'utf8'));}
+for(const file of ['core.js','home-assistant.js','controls.js','weather.js','denver-layout.js','samsung-layout.js','panel.js']){w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',file),'utf8'));}
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function feed(id,state,attributes){Object.assign(states[id],{state,attributes:{...states[id].attributes,...attributes}});for(const cb of w.entityListeners[id]){cb(state,attributes);}}
 function mouse(el,type){el.dispatchEvent(new w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:0,clientY:0}));}
-async function hold(el){mouse(el,'mousedown');await sleep(290);mouse(el,'mouseup');el.click();}
+function openLightMenu(el){el.click();el.click();}
 function button(text){return [...d.querySelectorAll('#panel-v2 .pv2-card')].find(e=>e.textContent.includes(text));}
 function close(){d.querySelector('.pv2-close').click();}
 (async()=>{
@@ -30,40 +31,121 @@ function close(){d.querySelector('.pv2-close').click();}
   d.dispatchEvent(new w.Event('DOMContentLoaded'));await sleep(25);
   for(const e of Object.values(states)){feed(e.entity_id,e.state,e.attributes);}await sleep(25);
   assert.equal(d.querySelector('.navbar-label').textContent,'EVİM','visible Home name changes without changing the Ana route');
+  feed(cfg.indoorHumidity,'42.3',{});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-indoor-humidity-value').textContent,'42,3%','humidity keeps its value and unit after symbol layout changes');
+  for(const value of [-12.5,0,8.1]){
+   feed(cfg.outdoorFeelsLike,String(value),{time:Date.now()/1000});feed(cfg.weather,'cloudy',{temperature:value});await sleep(25);
+   assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,String(value).replace('.',',')+'°','feels-like preserves negative and zero values');
+   assert.equal(d.querySelector('#panel-v2 .pv2-temperature').textContent,String(value).replace('.',',')+'°','outside temperature preserves negative and zero values');
+  }
+  feed(cfg.outdoorFeelsLike,'4',{time:Date.now()/1000-1900});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'8,1°','stale response retains today’s newer known temperature');
+  feed(cfg.outdoorFeelsLike,'unavailable',{time:Date.now()/1000});await sleep(25);assert.equal(d.querySelector('#panel-v2 .pv2-feels-value').textContent,'8,1°','missing apparent temperature uses today’s last known value');
   const dining=button('Yemek Masası');
-  await hold(dining);
-  assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),true,'Fast must open within 290 ms including migration');
+  openLightMenu(dining);
+  assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),true,'double tap opens full light settings');
   assert.equal(commands.length,0,'opening settings must never turn on a lamp');
   let input=d.querySelector('.pv2-modal input[type=range]');const originalInput=input;
   assert.equal(input.value,'0');
   feed(cfg.lights.dining,'on',{brightness:128,color_mode:'xy',rgb_color:[255,95,170]});await sleep(25);
   assert.equal(input.value,'50','live state must update an open dimmer');
   assert.equal(d.querySelector('.pv2-modal output').textContent,'50%');
-  assert.equal(dining.style.backgroundColor,'rgb(85, 58, 86)','tile follows the actual color');
+  const fill=dining.querySelector('.pv2-light-fill');
+  assert.equal(fill.style.backgroundColor,'rgb(85, 58, 86)','fill follows the actual color');
+  assert.equal(fill.style.width,'50%','fill represents confirmed brightness');
+  assert.match(dining.textContent,/50%/);
   const pink=[...d.querySelectorAll('.pv2-preset')].find(e=>e.textContent==='Pembe');
   assert.equal(pink.getAttribute('aria-pressed'),'true','live preset ring follows actual HA state');
   mouse(input,'mousedown');input.value='70';feed(cfg.lights.dining,'on',{brightness:64});await sleep(25);
   assert.equal(input.value,'70','incoming state must not fight an active slider drag');
   input.dispatchEvent(new w.Event('touchcancel',{bubbles:true}));
   assert.equal(input.value,'25','canceled drag restores actual state');
-  close();await hold(dining);
+  close();openLightMenu(dining);
   input=d.querySelector('.pv2-modal input[type=range]');assert.equal(input,originalInput,'reopening reuses cached menu DOM');
   assert.equal(input.value,'25','cached menu refreshes values');
   const beforeClose=sounds;mouse(d.querySelector('.pv2-close'),'mousedown');mouse(d.querySelector('.pv2-close'),'mouseup');close();
   assert.equal(sounds,beforeClose+1,'close receives one shared feedback sound');
   const beforeBlank=sounds;mouse(d.body,'mousedown');assert.equal(sounds,beforeBlank,'blank background must not sound');
-  await hold(dining);
+  openLightMenu(dining);
   const blue=[...d.querySelectorAll('.pv2-preset')].find(e=>e.textContent==='Mavi');blue.click();await sleep(25);
   assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),false,'successful preset automatically closes');
   assert.deepEqual(JSON.parse(JSON.stringify(commands.at(-1).service_data)),{rgb_color:[65,135,255]});
-  await hold(dining);rejectCommand=true;
+  openLightMenu(dining);rejectCommand=true;
   [...d.querySelectorAll('.pv2-preset')].find(e=>e.textContent==='Pembe').click();await sleep(25);
   assert.equal(d.querySelector('.pv2-modal').classList.contains('pv2-open'),true,'failed preset remains open');
   assert.match(d.getElementById('pv2-notice').textContent,/gerçekleştirilemedi/);
   rejectCommand=false;close();
   feed(cfg.lights.dining,'off',{brightness:null});await sleep(25);
-  mouse(dining,'mousedown');mouse(dining,'mouseup');dining.click();await sleep(25);
+  mouse(dining,'mousedown');mouse(dining,'mouseup');dining.click();await sleep(335);
   assert.deepEqual(JSON.parse(JSON.stringify(commands.at(-1).service_data)),{color_temp_kelvin:2700},'normal panel turn-on restores the configured white without changing brightness');
+  feed(cfg.lights.dining,'on',{brightness:255});await sleep(25);
+  openLightMenu(dining);
+  input=d.querySelector('.pv2-modal input[type=range]');
+  assert.equal(fill.style.width,'100%');
+  assert.doesNotMatch(dining.textContent,/100%/);
+  assert.equal(input.value,'100');
+  const beforeDrag=commands.length;
+  mouse(input,'mousedown');
+  for(const value of ['78','65','53']){
+   input.value=value;
+   input.dispatchEvent(new w.Event('input',{bubbles:true}));
+  }
+  assert.equal(commands[beforeDrag].service_data.brightness_pct,78,'first input reaches HA before release');
+  assert.equal(commands.length,beforeDrag+1,'rapid inputs are coalesced');
+  feed(cfg.lights.dining,'on',{brightness:199});await sleep(25);
+  assert.equal(input.value,'53');
+  mouse(input,'mouseup');
+  input.dispatchEvent(new w.Event('change',{bubbles:true}));
+  await sleep(145);
+  assert.equal(commands.length,beforeDrag+2);
+  assert.equal(commands.at(-1).service_data.brightness_pct,53,'latest input is sent exactly once');
+  feed(cfg.lights.dining,'on',{brightness:255});await sleep(25);
+  assert.equal(input.value,'53','stale HA state cannot reset the released slider');
+  feed(cfg.lights.dining,'on',{brightness:135});await sleep(150);
+  assert.equal(input.value,'53');
+  assert.equal(fill.style.width,'53%');
+  close();
+  const beforeDouble=commands.length;
+  openLightMenu(dining);await sleep(335);
+  assert.equal(commands.length,beforeDouble,'double tap opens settings without changing brightness');
+  assert(d.querySelector('.pv2-modal').classList.contains('pv2-open'));
+  close();
+
+  const kitchen=button('Mutfak');
+  feed(cfg.lights.counter,'on',{brightness:102});
+  feed(cfg.lights.sink,'on',{brightness:153});
+  await sleep(25);
+  function touch(type,x,touches=1){
+   const ev=new w.Event(type,{bubbles:true,cancelable:true});
+   Object.defineProperty(ev,'touches',{value:touches?[{clientX:x,clientY:80}]:[]});
+   kitchen.dispatchEvent(ev);
+  }
+  const beforeHold=commands.length;
+  touch('touchstart',150);
+  await sleep(290);
+  assert.equal(d.querySelector('.pv2-quick-dim-value').textContent,'50%','Fast hold opens at group average');
+  assert.equal(commands.length,beforeHold,'holding alone sends nothing');
+  touch('touchmove',210);
+  assert.equal(d.querySelector('.pv2-quick-dim-value').textContent,'70%');
+  const groupCommands=commands.slice(beforeHold);
+  assert.equal(groupCommands.length,2);
+  assert.deepEqual(groupCommands.map(c=>c.target.entity_id).sort(),[cfg.lights.counter,cfg.lights.sink].sort());
+  assert(groupCommands.every(c=>c.service_data.brightness_pct===70));
+  touch('touchend',210,0);
+  assert.equal(d.querySelector('.pv2-quick-dim'),null);
+  await sleep(335);
+  assert.equal(commands.length,beforeHold+2,'releasing the hold never toggles the group');
+  d.querySelector('.pv2-settings-trigger').click();
+  const audioHint=d.querySelector('.pv2-audio-status'),hintText=audioHint.textContent;
+  const preferenceRow=audioHint.closest('.pv2-preference'),settingsNodes=preferenceRow.parentNode.childElementCount;
+  const soundToggle=preferenceRow.querySelector('.pv2-sound');
+  mouse(soundToggle,'mousedown');w.document.querySelector('audio').dispatchEvent(new w.Event('playing'));
+  assert.equal(audioHint.textContent,hintText,'ordinary feedback must not replace the settings description');
+  soundToggle.click();assert.equal(w.localStorage.getItem('panel-v2-click-sound'),'off');
+  soundToggle.click();assert.equal(w.localStorage.getItem('panel-v2-click-sound'),'on');
+  d.querySelector('.pv2-sound-test').click();d.querySelector('audio').dispatchEvent(new w.Event('playing'));
+  assert.match(audioHint.textContent,/Ses denemesi/,'explicit audio test reports in the existing description');
+  assert.equal(preferenceRow.parentNode.childElementCount,settingsNodes,'audio feedback must not insert a row that shifts controls');
+  assert.equal(audioHint.closest('.pv2-preference'),preferenceRow,'feedback retains the same preference row');
+  close();
   // Only the active view is populated, and navigating populates it from the cache.
   assert.equal(d.querySelector('#panel-v2-Giriş .pv2-clock').textContent,'');
   w.location.hash='#screen-Giri%C5%9F';await sleep(25);

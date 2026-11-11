@@ -23,19 +23,64 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     assert set(lights.values()).issubset(mapping['allLights'])
     assert all(e in mapping['allLights'] for e in mapping.get('roomLights', {}).values()), 'Room lights must be subscribed household lights'
     assert mapping['countdown'].startswith('script.') and mapping['vacuum'].startswith('vacuum.')
+    if mapping.get('weeklyForecast'):
+        assert mapping.get('profile') == 'office' and mapping.get('agenda') and mapping['weather'].startswith('weather.'), 'Weekly forecast requires the office agenda layout and an explicit weather entity'
+    if mapping.get('agenda'):
+        assert mapping.get('profile') == 'office' and mapping['agenda'].startswith('sensor.'), 'Agenda is an office-only explicit sensor'
+    if mapping.get('indoorTemperature'):
+        assert mapping['indoorTemperature'].startswith('sensor.')
+    if mapping.get('outdoorFeelsLike'):
+        assert mapping['outdoorFeelsLike'].startswith('sensor.')
+    if mapping.get('indoorHumidity'):
+        assert mapping['indoorHumidity'].startswith('sensor.')
+    printer_entities = [mapping['printer'][key] for key in ('status', 'progress', 'remaining')] if mapping.get('printer') else []
+    assert all(entity.startswith('sensor.') for entity in printer_entities)
+    if mapping.get('printer', {}).get('power'):
+        assert mapping['printer']['power'].startswith('switch.'), 'Printer power must be an explicit switch'
+        printer_entities.append(mapping['printer']['power'])
+    if mapping.get('printer', {}).get('camera'):
+        assert mapping['printer']['camera'].startswith('camera.'), 'Printer camera must be an explicit camera entity'
+        printer_entities.append(mapping['printer']['camera'])
+    for key in ('nozzle', 'bed'):
+        if mapping.get('printer', {}).get(key):
+            assert mapping['printer'][key].startswith('sensor.')
+            printer_entities.append(mapping['printer'][key])
+    for key, domain in [('stage', 'sensor.'), ('printError', 'binary_sensor.'), ('hmsErrors', 'binary_sensor.')]:
+        if mapping.get('printer', {}).get(key):
+            assert mapping['printer'][key].startswith(domain), 'Printer fault/stage entity has wrong domain'
+            printer_entities.append(mapping['printer'][key])
+    for slot in mapping.get('printer', {}).get('filaments', []):
+        assert isinstance(slot, dict) and slot['entity'].startswith('sensor.') and isinstance(slot['label'], str)
+        printer_entities.append(slot['entity'])
     result = copy.deepcopy(original)
     panel = result['dashboards'][dashboard]
     assert any(screen['name'] == 'Ana' for screen in panel['screens']), 'Ana screen is required'
     removed = mapping.get('removedScreens', [])
     assert isinstance(removed, list) and 'Ana' not in removed, 'Ana cannot be removed'
     panel['screens'] = [s for s in panel['screens'] if s['name'] not in removed]
+    if mapping.get('robotEnabled', True) is False:
+        panel['screens'] = [s for s in panel['screens'] if s['name'] != 'Robot']
     if not any(s['name'] == 'Odalar' for s in panel['screens']) and 'Odalar' not in removed:
         rooms = {'name': 'Odalar', 'icon': 'floor-plan', 'layout': 'tiled', 'dateclock': {'enabled': False}}
         index = next((i for i, s in enumerate(panel['screens']) if s['name'] == 'Robot'), len(panel['screens']))
         panel['screens'].insert(index, rooms)
     custom = panel['theme'].get('custom', '').split(BEGIN)[0].rstrip()
     css = (assets / 'panel.css').read_text()
-    js = (assets / 'core.js').read_text() + '\n' + (assets / 'panel.js').read_text()
+    if mapping.get('profile') == 'office':
+        css += '\n' + (assets / 'office.css').read_text()
+    if mapping.get('themeStyle') == 'tessera':
+        css += '\n' + (assets / 'tessera.css').read_text()
+    for control in mapping.get('otherControls', []):
+        assert control['kind'] in ('power', 'sensor')
+        assert control['entity'].startswith('switch.' if control['kind'] == 'power' else 'sensor.')
+    scripts = ['core.js', 'home-assistant.js', 'controls.js', 'weather.js']
+    if mapping.get('agenda'):
+        scripts.append('agenda.js')
+    if mapping.get('printer'):
+        scripts.extend(['printer.js', 'printer-camera.js'])
+    scripts.append('samsung-layout.js' if mapping.get('profile') == 'office' else 'denver-layout.js')
+    scripts.append('panel.js')
+    js = '\n'.join((assets / name).read_text() for name in scripts)
     config = json.dumps(mapping, ensure_ascii=False).replace('<', '\\u003c')
     loading = ("<script>(function(){var d=document.documentElement;d.classList.add('pv2-loading');"
                "window.panelV2LoadingTimer=setTimeout(function(){d.classList.remove('pv2-loading');},8000);})();</script>")
@@ -47,7 +92,7 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     home = next(s for s in panel['screens'] if s['name'] == 'Ana')
     cards = home.setdefault('sensors', {}).setdefault('cards', [])
     needed = list(mapping['allLights']) + mapping.get('extraLights', []) + [
-        mapping['weather'], mapping['vacuum'], mapping['countdown'], mapping['meeting']]
+        mapping['weather'], mapping['countdown'], mapping['meeting']] + ([mapping['agenda']] if mapping.get('agenda') else []) + ([mapping['indoorTemperature']] if mapping.get('indoorTemperature') else []) + ([mapping['indoorHumidity']] if mapping.get('indoorHumidity') else []) + ([mapping['outdoorFeelsLike']] if mapping.get('outdoorFeelsLike') else []) + ([mapping['vacuum']] if mapping.get('robotEnabled', True) else []) + [c['entity'] for c in mapping.get('otherControls', [])] + printer_entities
 
     def entity_ids(value):
         found = set()
