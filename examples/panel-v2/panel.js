@@ -572,6 +572,9 @@
         b.classList.toggle('pv2-has-summary-footer',showPercent||showRemaining);
         b.classList.toggle('pv2-has-percent',showPercent);
         var accent=summary.accent;
+        var fillProgress=officeProfile&&accent==='printing'&&validProgress;
+        b.style.backgroundImage=fillProgress?
+          'linear-gradient(to right, #345845 '+value+'%, transparent '+value+'%)':'';
         ['off','offline','ready','starting','printing','paused','error','done'].forEach(function(name){b.classList.toggle('pv2-printer-state-'+name,accent===name);});
         b.setAttribute('data-printer-progress',showPercent?String(Math.round(value)):'');
       }
