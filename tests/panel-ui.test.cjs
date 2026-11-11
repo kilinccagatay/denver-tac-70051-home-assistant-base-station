@@ -19,7 +19,7 @@ for(const id of [cfg.weather,cfg.meeting,cfg.vacuum,cfg.countdown]){states[id]={
 Object.values(states).forEach(e=>w.entityListeners[e.entity_id]=[]);
 w.goFetch=(url,cb)=>cb(null,states[decodeURIComponent(url.split('/states/')[1].split('?')[0])]);
 w.haSend=msg=>{commands.push(msg);return rejectCommand?Promise.reject(new Error('test failure')):Promise.resolve({});};
-for(const file of ['core.js','panel.js']){w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',file),'utf8'));}
+for(const file of ['core.js','home-assistant.js','controls.js','weather.js','denver-layout.js','samsung-layout.js','panel.js']){w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',file),'utf8'));}
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function feed(id,state,attributes){Object.assign(states[id],{state,attributes:{...states[id].attributes,...attributes}});for(const cb of w.entityListeners[id]){cb(state,attributes);}}
 function mouse(el,type){el.dispatchEvent(new w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:0,clientY:0}));}

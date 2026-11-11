@@ -68,10 +68,19 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     css = (assets / 'panel.css').read_text()
     if mapping.get('profile') == 'office':
         css += '\n' + (assets / 'office.css').read_text()
+    if mapping.get('themeStyle') == 'tessera':
+        css += '\n' + (assets / 'tessera.css').read_text()
     for control in mapping.get('otherControls', []):
         assert control['kind'] in ('power', 'sensor')
         assert control['entity'].startswith('switch.' if control['kind'] == 'power' else 'sensor.')
-    js = (assets / 'core.js').read_text() + '\n' + (assets / 'panel.js').read_text()
+    scripts = ['core.js', 'home-assistant.js', 'controls.js', 'weather.js']
+    if mapping.get('agenda'):
+        scripts.append('agenda.js')
+    if mapping.get('printer'):
+        scripts.extend(['printer.js', 'printer-camera.js'])
+    scripts.append('samsung-layout.js' if mapping.get('profile') == 'office' else 'denver-layout.js')
+    scripts.append('panel.js')
+    js = '\n'.join((assets / name).read_text() for name in scripts)
     config = json.dumps(mapping, ensure_ascii=False).replace('<', '\\u003c')
     loading = ("<script>(function(){var d=document.documentElement;d.classList.add('pv2-loading');"
                "window.panelV2LoadingTimer=setTimeout(function(){d.classList.remove('pv2-loading');},8000);})();</script>")

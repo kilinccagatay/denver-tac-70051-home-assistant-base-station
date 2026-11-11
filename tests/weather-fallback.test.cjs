@@ -31,7 +31,7 @@ async function fixture(office,storage,failStorage=false){
  w.goFetch=(url,cb)=>cb(null,{entity_id:decodeURIComponent(url.split('/states/')[1]||'').split('?')[0],state:'unavailable',attributes:{}});
  w.haSend=()=>{throw Error('Weather never actuates household controls');};
  w.XMLHttpRequest=function(){this.open=()=>{};this.setRequestHeader=()=>{};this.send=()=>{};};
- for(const f of ['core.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
+ for(const f of ['core.js','home-assistant.js','controls.js','weather.js','agenda.js','denver-layout.js','samsung-layout.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
  w.document.dispatchEvent(new w.Event('DOMContentLoaded'));await sleep(40);for(const cb of w.entityListeners[cfg.weather])cb('unavailable',{});await sleep(40);
  return {w,d:w.document,key,emit(id,state,attrs){for(const cb of w.entityListeners[id]||[])cb(state,attrs);},cfg,advance(ms){time+=ms;tick();}};
 }

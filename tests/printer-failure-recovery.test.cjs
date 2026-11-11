@@ -9,7 +9,7 @@ const RealDate=Date;w.Date=class extends RealDate{constructor(...a){super(...(a.
 w.setInterval=fn=>{tick=fn;return 1;};w.HTMLMediaElement.prototype.play=()=>Promise.resolve();w.PANEL_V2_CONFIG=cfg;w.entityListeners={};w.onHaReady=[];w.haSocketReady=true;
 const states={};for(const [key,state] of Object.entries({status:'failed',stage:'idle',printError:'on',hmsErrors:'off',power:'on',progress:'70',remaining:'12'})){const id=cfg.printer[key];states[id]={entity_id:id,state,attributes:{}};w.entityListeners[id]=[];}
 w.goFetch=(url,cb)=>{const id=decodeURIComponent(url.split('/states/')[1].split('?')[0]);if(url.includes('panel_failure')){reads++;if(queued){queued.push(()=>cb(null,structuredClone(states[id])));return;}}cb(null,structuredClone(states[id]));};w.haSend=()=>{throw Error('No household actuation permitted');};
-for(const f of ['core.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
+for(const f of ['core.js','home-assistant.js','controls.js','weather.js','printer.js','printer-camera.js','denver-layout.js','samsung-layout.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function event(key,state){const id=cfg.printer[key];for(const cb of w.entityListeners[id])cb(state,{});}
 (async()=>{try{

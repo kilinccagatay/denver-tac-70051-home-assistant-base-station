@@ -1,0 +1,194 @@
+/* Optional dark panel theme inspired by Tessera's device tiles. */
+body.panel-v2.pv2-tessera {
+  background: #20262c;
+  color: #f1f2f3;
+}
+body.panel-v2.pv2-tessera:before { background-color: #20262c; }
+.pv2-tessera .pv2-brand {
+  color: #f1f2f3;
+  font-size: 17px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.pv2-tessera .pv2-connection {
+  color: #a7dbad !important;
+  font-weight: bold;
+}
+.pv2-tessera .pv2-connection[aria-label="Home Assistant bağlantısı kesildi"] {
+  color: #f3a39b !important;
+}
+.pv2-tessera .pv2-body { padding-top: 3px; }
+.pv2-tessera .pv2-overview {
+  left: 0;
+  width: 38%;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  padding: 0 12px 0 0;
+}
+.pv2-tessera .pv2-overview:before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 12px;
+  bottom: 0;
+  left: 0;
+  background: #343e47;
+  border-radius: 18px;
+}
+.pv2-tessera .pv2-overview > * { position: relative; }
+/* The grid has negative edge margins. Let it fill the remaining space so
+   the visible outer tiles align with the panel edges. */
+.pv2-tessera .pv2-panel:not(.pv2-printer-page) .pv2-controls {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+.pv2-tessera .pv2-weather-pair { left: 0; }
+.pv2-tessera .pv2-clock {
+  color: #f1f2f3;
+  font-size: 101px;
+  line-height: 111px;
+  letter-spacing: -5px;
+}
+.pv2-tessera .pv2-date,
+.pv2-tessera .pv2-condition,
+.pv2-tessera .pv2-feels-like,
+.pv2-tessera .pv2-meeting {
+  color: #c0c9d0;
+}
+.pv2-tessera .pv2-temperature { color: #f1f2f3; }
+.pv2-tessera .pv2-weather-pair .pv2-indoor-humidity { color: #c0c9d0; }
+.pv2-tessera .pv2-weather-main svg,
+.pv2-tessera .pv2-weather svg { color: #9cc8eb; }
+body.panel-v2.pv2-tessera .pv2-overview .pv2-settings-trigger {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  background: #414c57;
+  border-color: #728493;
+  color: #e0e5e8;
+}
+.pv2-tessera .pv2-card {
+  background: #343e47;
+  border: 1px solid #343e47;
+  border-radius: 15px;
+  color: #f1f2f3;
+}
+.pv2-tessera .pv2-card > svg,
+.pv2-tessera .pv2-card-icon > svg {
+  box-sizing: border-box;
+  width: 37px;
+  height: 37px;
+  padding: 8px;
+  border-radius: 50%;
+  background: #23394b;
+  color: #acd6f4;
+}
+.pv2-tessera .pv2-card .pv2-card-state { color: #c0c9d0; }
+.pv2-tessera .pv2-card.pv2-on { background: #30281b; border-color: #6a5427; }
+.pv2-tessera .pv2-card.pv2-on > svg { background: #57421b; color: #ffd276; }
+.pv2-tessera .pv2-card.pv2-action > svg { background: #392d4b; color: #d3b8f8; }
+.pv2-tessera .pv2-card.pv2-counting { background: #38251c; border-color: #8c5532; }
+.pv2-tessera .pv2-card.pv2-unavailable { background: #2a323a; border-color: #8296a5; color: #aab0b5; }
+.pv2-tessera .pv2-card.pv2-unavailable svg { background: #333638; color: #aab0b5; }
+.pv2-tessera .pv2-card:active { border-color: #7ca2bf; }
+.pv2-tessera .navbar-container > nav {
+  background: #262d34 !important;
+  border-color: #53636f !important;
+}
+.pv2-tessera .navbar-item { opacity: 1; }
+.pv2-tessera .navbar-item.active { background: #273a49 !important; }
+.pv2-tessera .navbar-item .navbar-label,
+.pv2-tessera .navbar-item .navbar-icon { color: #b7bfc6 !important; }
+.pv2-tessera .navbar-item.active .navbar-label,
+.pv2-tessera .navbar-item.active .navbar-icon { color: #c0def4 !important; }
+.pv2-tessera .pv2-dialog {
+  background: #343e47;
+  border-color: #42474c;
+  color: #f1f2f3;
+}
+.pv2-tessera .pv2-dialog-hint { color: #c0c9d0; }
+.pv2-tessera .pv2-close,
+.pv2-tessera .pv2-sound,
+.pv2-tessera .pv2-delay,
+.pv2-tessera .pv2-office-group,
+.pv2-tessera .pv2-settings-actions button {
+  background: #414c57;
+  color: #e1e6ea;
+  border-color: #4a5056;
+}
+.pv2-tessera .pv2-delay[aria-pressed="true"],
+.pv2-tessera .pv2-office-group[aria-selected="true"] {
+  background: #273a49;
+  color: #c0def4;
+  border-color: #587995;
+}
+.pv2-tessera .pv2-robot-summary { color: #c4d4e1; }
+
+.pv2-tessera.panel-v2-office .pv2-overview { width: 35%; padding: 0 8px 12px 0; }
+.pv2-tessera.panel-v2-office .pv2-overview:before { right: 8px; border-radius: 12px; }
+.pv2-tessera.panel-v2-office .pv2-panel:not(.pv2-printer-page) .pv2-controls { width: auto; }
+.pv2-tessera.panel-v2-office .pv2-clock {
+  font-size: 65px;
+  line-height: 78px;
+  letter-spacing: -4px;
+}
+.pv2-tessera.panel-v2-office .pv2-card { border-radius: 12px; }
+.pv2-tessera.panel-v2-office .pv2-card > svg,
+.pv2-tessera.panel-v2-office .pv2-card-icon > svg {
+  width: 29px;
+  height: 29px;
+  padding: 6px;
+}
+.pv2-tessera.panel-v2-office .pv2-agenda,
+.pv2-tessera.panel-v2-office .pv2-forecast,
+.pv2-tessera.panel-v2-office .pv2-printer-camera,
+.pv2-tessera.panel-v2-office .pv2-printer-telemetry,
+.pv2-tessera.panel-v2-office .pv2-printer-filaments {
+  background: #343e47;
+  border-color: #343e47;
+  color: #f1f2f3;
+}
+.pv2-tessera .pv2-agenda-day,
+.pv2-tessera .pv2-agenda-title,
+.pv2-tessera .pv2-agenda-empty,
+.pv2-tessera .pv2-forecast-header h2,
+.pv2-tessera .pv2-forecast-weekday,
+.pv2-tessera .pv2-forecast-high,
+.pv2-tessera .pv2-forecast-low,
+.pv2-tessera .pv2-forecast-note,
+.pv2-tessera .pv2-camera-header,
+.pv2-tessera .pv2-filament-device-title,
+.pv2-tessera .pv2-filament-type,
+.pv2-tessera .pv2-filament-slot,
+.pv2-tessera .pv2-printer-reading-value {
+  color: #e1e6ea;
+}
+.pv2-tessera .pv2-agenda-time { color: #acd6f4; }
+.pv2-tessera .pv2-agenda-day[aria-selected="true"],
+.pv2-tessera .pv2-forecast-today {
+  background: #253b4d;
+  color: #c0def4;
+  border-color: #526e82;
+}
+.pv2-tessera .pv2-card.pv2-printer-state-ready { background: #1f3528; border-color: #3d694b; }
+.pv2-tessera .pv2-card.pv2-printer-state-printing { background: #213a2c; border-color: #5a8868; }
+.pv2-tessera .pv2-card.pv2-printer-state-ready > svg,
+.pv2-tessera .pv2-card.pv2-printer-state-printing > svg { background: #2e5039; color: #b3e2b8; }
+.pv2-tessera .pv2-card.pv2-printer-state-error { background: #3b2525; border-color: #9b5551; }
+.pv2-tessera .pv2-camera-viewport { background: #414c57; }
+.pv2-tessera .pv2-camera-status { color: #c0c9d0; }
+.pv2-tessera .pv2-filament-active { background: #1f3528; }
+
+body.panel-v2.pv2-tessera.panel-v2-office .pv2-settings-trigger { background: transparent; }
+.pv2-tessera.panel-v2-office .pv2-settings-trigger:before {
+  background: #414c57;
+  border-color: #4a5056;
+}
+.pv2-tessera .pv2-camera-toggle svg,
+.pv2-tessera .pv2-printer-reading-icon svg { color: #acd6f4; }
+.pv2-tessera .pv2-summary-percent,
+.pv2-tessera .pv2-summary-remaining,
+.pv2-tessera .pv2-card.pv2-printer-state-printing .pv2-card-state { color: #a7dbad; }

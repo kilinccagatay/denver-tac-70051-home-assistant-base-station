@@ -30,6 +30,11 @@ class InstallationTests(unittest.TestCase):
         self.assertIn('Odalar', by_name)
         custom = result['dashboards']['dash']['theme']['custom']
         self.assertEqual(custom.count(install.BEGIN), 1)
+        self.assertIn('root.PanelV2DenverLayout', custom)
+        self.assertNotIn('root.PanelV2SamsungLayout', custom)
+        self.assertNotIn('Optional dark panel theme', custom)
+        for marker in ('root.PanelV2Agenda', 'root.PanelV2Printer', 'root.PanelV2PrinterCamera'):
+            self.assertNotIn(marker, custom)
         self.assertTrue(custom.startswith(original['dashboards']['dash']['theme']['custom'].rstrip()))
         self.assertEqual(yaml.safe_load(yaml.safe_dump(result, allow_unicode=True)), result)
         cards = result['dashboards']['dash']['screens'][0]['sensors']['cards']
@@ -39,6 +44,17 @@ class InstallationTests(unittest.TestCase):
         self.assertIn(mapping['vacuum'], subscribed)
         self.assertNotIn('Yazıcı', by_name)
         self.assertNotIn('light.example_printer_chamber', mapping['allLights'])
+
+    def test_tessera_styles_are_opt_in_for_the_target_route(self):
+        original = yaml.safe_load((ROOT / 'examples/hoarydash.example.yaml').read_text())
+        original['dashboards']['office'] = copy.deepcopy(original['dashboards']['dash'])
+        mapping = json.loads((ROOT / 'examples/panel-v2/config.example.json').read_text())
+        mapping.update(profile='office', themeStyle='tessera')
+        result = install.build_configuration(original, mapping, ROOT / 'examples/panel-v2', 'office')
+        self.assertEqual(result['dashboards']['dash'], original['dashboards']['dash'])
+        custom = result['dashboards']['office']['theme']['custom']
+        self.assertIn('body.panel-v2.pv2-tessera', custom)
+        self.assertIn('"themeStyle": "tessera"', custom)
 
     def test_removed_tab_is_not_a_swipe_destination_and_home_is_protected(self):
         original = yaml.safe_load((ROOT / 'examples/hoarydash.example.yaml').read_text())
@@ -63,7 +79,10 @@ class InstallationTests(unittest.TestCase):
         mapping['otherControls'] = [{'entity': 'sensor.example_printer_status', 'label': 'Printer', 'kind': 'sensor'}]
         result = install.build_configuration(original, mapping, ROOT / 'examples/panel-v2', 'office')
         self.assertEqual(result['dashboards']['dash'], original['dashboards']['dash'])
-        self.assertIn('panel-v2-office', result['dashboards']['office']['theme']['custom'])
+        office_assets = result['dashboards']['office']['theme']['custom']
+        self.assertIn('panel-v2-office', office_assets)
+        self.assertIn('root.PanelV2SamsungLayout', office_assets)
+        self.assertNotIn('root.PanelV2DenverLayout', office_assets)
         cards = result['dashboards']['office']['screens'][0]['sensors']['cards']
         self.assertIn('sensor.example_printer_status', {c['entity_id'] for c in cards})
         self.assertIn('sensor.example_indoor', {c['entity_id'] for c in cards})
@@ -88,6 +107,8 @@ class InstallationTests(unittest.TestCase):
         result = install.build_configuration(original, mapping, ROOT / 'examples/panel-v2', 'office')
         cards = result['dashboards']['office']['screens'][0]['sensors']['cards']
         self.assertTrue(set(mapping['printer'].values()).issubset({c['entity_id'] for c in cards}))
+        for marker in ('root.PanelV2Printer', 'root.PanelV2PrinterCamera'):
+            self.assertIn(marker, result['dashboards']['office']['theme']['custom'])
         self.assertEqual(result['dashboards']['dash'], original['dashboards']['dash'])
         mapping['printer']['printError'] = 'light.invalid_error'
         with self.assertRaises(AssertionError):
@@ -106,6 +127,7 @@ class InstallationTests(unittest.TestCase):
         self.assertNotIn(mapping['agenda'], result['dashboards']['dash']['theme']['custom'])
         cards = result['dashboards']['office']['screens'][0]['sensors']['cards']
         self.assertIn(mapping['agenda'], {c['entity_id'] for c in cards})
+        self.assertIn('root.PanelV2Agenda', result['dashboards']['office']['theme']['custom'])
         mapping['agenda'] = 'light.example_wrong_domain'
         with self.assertRaises(AssertionError):
             install.build_configuration(original, mapping, ROOT / 'examples/panel-v2', 'office')

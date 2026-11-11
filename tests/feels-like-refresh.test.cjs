@@ -10,7 +10,7 @@ w.setInterval=fn=>{tick=fn;return 1;};w.HTMLMediaElement.prototype.play=()=>Prom
 w.PANEL_V2_CONFIG=cfg;w.entityListeners={[cfg.outdoorFeelsLike]:[]};w.onHaReady=[];w.haSocketReady=true;
 let api={entity_id:cfg.outdoorFeelsLike,state:'1.3',attributes:{time:now/1000-1900}};
 w.goFetch=(url,cb)=>{reads++;cb(null,api);};w.haSend=()=>{throw Error('No household actions permitted');};
-for(const f of ['core.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
+for(const f of ['core.js','home-assistant.js','controls.js','weather.js','denver-layout.js','samsung-layout.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{try{
  d.dispatchEvent(new w.Event('DOMContentLoaded'));await sleep(25);

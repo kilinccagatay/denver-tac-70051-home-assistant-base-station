@@ -11,7 +11,7 @@ async function fixture(office,days){
  w.HTMLMediaElement.prototype.play=()=>Promise.resolve();w.PANEL_V2_CONFIG=cfg;w.entityListeners={[cfg.weather]:[]};w.onHaReady=[];w.haSocketReady=true;
  w.goFetch=(url,cb)=>cb(null,{entity_id:cfg.weather,state:'cloudy',attributes:{temperature:10}});w.haSend=()=>{throw Error('read-only widget must not actuate anything');};
  w.XMLHttpRequest=function(){requests.push(this);this.open=(method,url)=>{this.method=method;this.url=url;};this.setRequestHeader=()=>{};this.send=body=>{this.body=JSON.parse(body);};};
- for(const f of ['core.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
+ for(const f of ['core.js','home-assistant.js','controls.js','weather.js','agenda.js','denver-layout.js','samsung-layout.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',f),'utf8'));
  d.dispatchEvent(new w.Event('DOMContentLoaded'));await sleep(40);
  return {dom,w,d,cfg,requests};
 }

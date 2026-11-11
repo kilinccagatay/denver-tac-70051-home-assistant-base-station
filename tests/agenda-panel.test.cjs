@@ -11,7 +11,7 @@ w.Date=class extends RealDate{constructor(...args){super(...(args.length?args:[f
 w.setInterval=(fn,ms,...args)=>{if(ms===1000)clockTick=fn;return realInterval(fn,ms,...args);};
 states[cfg.agenda]={entity_id:cfg.agenda,state:'ready',attributes:{valid_until:now+90,day_start:day.getTime()/1000,events:[{title:'<img src=x onerror=alert(1)>',start:now+60,end:now+120},{title:'Synthetic next',start:now+300,end:now+600},{title:'Later example',start:now+1200,end:now+1800}]}};
 w.goFetch=(url,cb)=>cb(null,states[decodeURIComponent(url.split('/states/')[1].split('?')[0])]);w.haSend=()=>Promise.reject(Error('read-only fixture'));
-for(const file of ['core.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',file),'utf8'));
+for(const file of ['core.js','home-assistant.js','controls.js','weather.js','agenda.js','denver-layout.js','samsung-layout.js','panel.js'])w.eval(fs.readFileSync(path.join(root,'examples/panel-v2',file),'utf8'));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{try{
  d.dispatchEvent(new w.Event('DOMContentLoaded'));await sleep(30);
