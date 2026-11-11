@@ -260,3 +260,5 @@ Recent dashboard guides: [three-workday calendar](docs/office-profile.md#three-w
 [outside apparent temperature](docs/outdoor-feels-like.md) ·
 [SMHI weather setup](docs/smhi-weather.md) ·
 [scoped validation and pending device checks](docs/three-day-agenda-review.md).
+
+Planned: [Denver voice reports to Codex](docs/denver-codex-voice-todo.md).
