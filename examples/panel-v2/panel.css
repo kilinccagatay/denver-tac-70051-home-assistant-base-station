@@ -218,47 +218,63 @@ body.panel-v2:not(.panel-v2-office) .pv2-overview-with-feels .pv2-settings-trigg
 .pv2-quick-dim-value { margin-left:8px; color:#ffd276; }
 .pv2-quick-dim-track,.pv2-slider-rail {
   position:relative;
-  height:24px;
+  height:32px;
   overflow:hidden;
-  border-radius:12px;
-  background:#20262c;
+  border-radius:11px;
+  background:#59432e;
 }
 .pv2-quick-dim-fill,.pv2-slider-fill {
   position:absolute;
   top:0;
   bottom:0;
   left:0;
-  background:#e3af57;
+  background:#ffb66b;
   border-radius:inherit;
 }
-/* Keep a 44 px touch target and center the narrower rail on the thumb. */
-.pv2-slider-track { position:relative; width:100%; height:44px; -webkit-order:2; order:2; }
+.pv2-quick-dim-grip {
+  position:absolute;
+  top:8px;
+  width:4px;
+  height:16px;
+  margin-left:-2px;
+  border-radius:2px;
+  background:#fff7eb;
+}
+/* The native range remains the full-size input, with a small visual grip. */
+.pv2-slider-track { position:relative; width:100%; height:48px; -webkit-order:2; order:2; }
 .pv2-slider-rail {
   position:absolute;
-  top:16px;
-  left:13px;
-  right:13px;
-  height:12px;
-  border-radius:6px;
+  top:4px;
+  left:0;
+  right:0;
+  height:40px;
+  border-radius:13px;
   pointer-events:none;
 }
 .pv2-light-dialog .pv2-setting-row input[type=range] {
   position:relative;
   display:block;
-  height:44px;
+  height:48px;
   margin:0;
 }
+body:not(.pv2-keyboard) .pv2-light-dialog .pv2-setting-row input[type=range]:focus { outline:none; }
 .pv2-light-dialog .pv2-setting-row input[type=range]::-webkit-slider-runnable-track {
-  height:44px;
+  height:48px;
   border:0;
   background:transparent;
 }
 .pv2-light-dialog .pv2-setting-row input[type=range]::-webkit-slider-thumb {
   box-sizing:border-box;
-  width:26px;
-  height:26px;
-  margin-top:9px;
-  border:2px solid #4d3a1c;
+  width:18px;
+  height:20px;
+  margin-top:14px;
+  border:0;
+  border-left:1px solid transparent;
+  border-right:13px solid transparent;
+  border-radius:4px;
+  background:#fff7eb;
+  background-clip:padding-box;
+  box-shadow:none;
 }
 
 .pv2-light-tabs {

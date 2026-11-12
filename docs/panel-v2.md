@@ -89,8 +89,8 @@ lamps, RGB for RGB-only lamps. Off-state null attributes are not usable calibrat
 Example values are illustrative; replace them with your own observed defaults.
 Other HA controls/automations are not intercepted by this frontend setting. An optional
 **Ses: Kapalı / Açık** preference in **Panel Ayarları** enables a quiet
-click. Open these separate panel settings using the settings icon below the clock/date
-at the lower left; sound controls are not part of individual lamp dialogs. The
+click. Open Panel Ayarları using the settings icon at the lower left of the clock
+tile, or beside the screen title on Denver's secondary Tessera screens. The
 preference is saved in this browser only and defaults on unless explicitly disabled.
 For low-latency feedback, a tiny PCM sample is decoded into a Web Audio buffer
 once and started on touch-down. Unsupported/failed Web Audio engines retain the
@@ -220,10 +220,12 @@ badge. Device-specific browser and native rendering still require hardware
 verification. All preview commands run against the in-memory fixture.
 
 The optional [Tessera-inspired style](../examples/panel-v2/tessera.css) uses
-dark surfaces, rounded tiles and state-colored icon backgrounds. On Denver
-the clock and weather sit in a single tile beside the household controls.
-On Samsung the forecast, agenda and printer retain their distinct cards,
-with separate surfaces for camera, telemetry and AMS on the printer screen.
+dark surfaces, rounded tiles and state-colored icon backgrounds. Denver's Evim
+screen has a clock and weather tile beside the household controls. The secondary
+screens use a header clock and expand the controls to the same outer margins.
+Samsung uses segmented selectors for lighting groups and agenda days. The printer
+screen shows a percentage during an active print and groups the three telemetry
+readings in evenly spaced columns beside the camera.
 The installer includes this stylesheet only for a mapping that sets
 `"themeStyle": "tessera"`. Existing mappings retain their current theme.
 

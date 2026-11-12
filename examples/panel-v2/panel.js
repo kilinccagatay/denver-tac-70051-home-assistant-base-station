@@ -146,9 +146,11 @@
       var output = node('span','pv2-quick-dim-value');
       var track = node('div','pv2-quick-dim-track');
       var fill = node('div','pv2-quick-dim-fill');
+      var grip = node('span','pv2-quick-dim-grip');
       heading.appendChild(node('span','',title));
       heading.appendChild(output);
       track.appendChild(fill);
+      track.appendChild(grip);
       popup.appendChild(heading);
       popup.appendChild(track);
       popup.setAttribute('aria-hidden','true');
@@ -158,9 +160,13 @@
       var startTrack = track.getBoundingClientRect(), startPopup = popup.getBoundingClientRect();
       var anchor = startTrack.left-startPopup.left+startTrack.width*initial/100;
       popup.style.left = Math.max(8, Math.min(window.innerWidth-width-8, x-anchor))+'px';
-      popup.style.top = Math.max(8, Math.min(window.innerHeight-height-8, y-height+22))+'px';
+      popup.style.top = Math.max(8, Math.min(window.innerHeight-height-8, y-height+27))+'px';
       var trackBounds = track.getBoundingClientRect();
-      function draw() { fill.style.width=value+'%';setText(output,value+'%'); }
+      function draw() {
+        fill.style.width=value+'%';
+        grip.style.left=Math.max(6,Math.min(trackBounds.width-6,trackBounds.width*value/100-6))+'px';
+        setText(output,value+'%');
+      }
       draw();
       return {
         move:function(currentX){
@@ -263,6 +269,11 @@
       overview.appendChild(weather);
       var meeting=node('div','pv2-meeting');meeting.innerHTML='<span class="pv2-meeting-dot"></span>Toplantı';overview.appendChild(meeting);
       var trigger=node('button','pv2-settings-trigger');trigger.type='button';trigger.innerHTML=icon('settings');trigger.setAttribute('aria-label','Panel Ayarları');trigger.title='Panel Ayarları';trigger.addEventListener('click',function(){openPanelSettings();},false);overview.appendChild(trigger);
+      if(!officeProfile&&cfg.themeStyle==='tessera'&&name!=='Ana'){
+        root.classList.add('pv2-compact-overview');
+        top.insertBefore(trigger,status);
+        top.insertBefore(clock,status);
+      }
       body.appendChild(overview);body.appendChild(controls);root.appendChild(body);screen.appendChild(root);
       views.push({name:name,status:status,indoor:indoorValue,humidity:humidityValue,humidityIcon:humidityIcon,feels:feelsValue,feelsIcon:feelsIcon,clock:clock,date:date,weekday:weekday,temperature:temperature,condition:condition,weatherIcon:weatherIcon,previousWeatherIcon:'',meeting:meeting});return controls;
     }
@@ -302,7 +313,8 @@
       summary.appendChild(robotStatus);
       screen.appendChild(summary);
       ['start','pause','dock'].forEach(function(kind){
-        addCard(screen,{label:'Robot',icon:'robot',kind:'vacuum-'+kind,action:true});
+        var card=addCard(screen,{label:'Robot',icon:'robot',kind:'vacuum-'+kind,action:true});
+        if(kind==='start'){card.button.classList.add('pv2-robot-start');}
       });
     }
     function addAgenda(controls){
@@ -586,7 +598,7 @@
       else if(o.kind==='power'||o.kind==='sensor'){
         var device=get(o.entity);unavailable=!C.available(device);if(o.kind==='sensor'&&cfg.printer&&printerModel.telemetry(o.entity)&&(!printerModel.ready()||o.entity===cfg.printer.progress&&!printerModel.jobActive())){unavailable=true;}key='power:'+o.entity;on=device.state==='on';
         if(unavailable){detail=cfg.printer&&printerModel.telemetry(o.entity)?'—':'Veri yok';}else if(o.kind==='power'){detail=on?'Güç açık':'Güç kapalı';}else{var statusNames={offline:'Çevrimdışı',idle:'Hazır',running:'Yazdırılıyor',pause:'Duraklatıldı',finish:'Tamamlandı',failed:'Hata'};detail=statusNames[device.state]||device.state;var unit=device.attributes.unit_of_measurement;if(unit){detail+=' '+({min:'dk',h:'sa',s:'sn'}[unit]||unit);}}
-        if(cfg.printer&&o.entity===cfg.printer.progress){var fill=b.querySelector('.pv2-card-progress-fill'),percent=Number(device.state),validPercent=!unavailable&&device.state!==''&&isFinite(percent)&&percent>=0&&percent<=100;if(fill){fill.style.width=(validPercent?percent:0)+'%';}if(validPercent){b.setAttribute('aria-valuenow',String(percent));}else{b.removeAttribute('aria-valuenow');}}
+        if(cfg.printer&&o.entity===cfg.printer.progress){var fill=b.querySelector('.pv2-card-progress-fill'),percent=Number(device.state),validPercent=!unavailable&&device.state!==''&&isFinite(percent)&&percent>=0&&percent<=100;if(fill){fill.style.width=(validPercent?percent:0)+'%';}if(validPercent){detail=Math.round(percent)+'%';b.setAttribute('aria-valuenow',String(percent));}else{b.removeAttribute('aria-valuenow');}}
         disabled=disabled||unavailable||o.kind==='sensor';
       }
       else if(o.kind&&o.kind.indexOf('vacuum-')===0){var action=controlsModel.robot(o.kind.slice(7));label=action.label;detail=action.detail;disabled=disabled||!action.service||controlsModel.isBusy('robot');unavailable=!action.available;key='vacuum';}
