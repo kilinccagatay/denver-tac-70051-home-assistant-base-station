@@ -252,3 +252,67 @@ body.panel-v2.pv2-tessera.panel-v2-office .pv2-settings-trigger { background: tr
 
 .pv2-tessera.panel-v2-office .pv2-light-dialog .pv2-light-settings { padding:8px 12px; }
 .pv2-tessera.panel-v2-office .pv2-light-dialog .pv2-presets { margin-bottom:2px; }
+
+/* Secondary Denver screens share the home grid edges and use a header clock. */
+.pv2-tessera .pv2-compact-overview .pv2-overview { display: none; }
+.pv2-tessera .pv2-compact-overview .pv2-top .pv2-clock {
+  margin-left: auto;
+  margin-right: 16px;
+  font-size: 17px;
+  line-height: 20px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.pv2-tessera .pv2-compact-overview .pv2-top .pv2-settings-trigger {
+  position: static;
+  width: 44px;
+  height: 25px;
+  padding: 2px 12px 3px;
+  color: #c0c9d0;
+  margin: 0 0 0 8px;
+  border-color: transparent;
+  background: transparent;
+}
+.pv2-tessera .pv2-compact-overview .pv2-settings-trigger svg { width: 18px; height: 18px; }
+
+.pv2-tessera .pv2-card[aria-pressed="true"].pv2-on:not(.pv2-light-level) {
+  background: #3e3f3d;
+  border-color: #63583e;
+}
+.pv2-tessera .pv2-card.pv2-light-level { border-color: #63583e; }
+.pv2-tessera .pv2-light-fill { background: #44413b; }
+
+.pv2-tessera .pv2-robot-start:not(:disabled) {
+  background: #41344f;
+  border-color: #776389;
+}
+
+.pv2-tessera .pv2-office-groups,
+.pv2-tessera .pv2-agenda-heading {
+  padding: 4px;
+  border-radius: 14px;
+  background: #262f38;
+}
+.pv2-tessera .pv2-office-groups { height: 44px; margin: 0 0 4px; }
+.pv2-tessera .pv2-office-group,
+.pv2-tessera .pv2-agenda-day {
+  margin-right: 4px;
+  min-height: 0;
+  border-color: transparent;
+  border-radius: 10px;
+  background: transparent;
+}
+.pv2-tessera .pv2-office-group:last-child,
+.pv2-tessera .pv2-agenda-day:last-child { margin-right: 0; }
+.pv2-tessera .pv2-agenda-day { height: 24px; padding: 2px 3px; }
+.pv2-tessera .pv2-office-group[aria-selected="true"],
+.pv2-tessera .pv2-agenda-day[aria-selected="true"] {
+  background: #324b5e;
+  border-color: #587995;
+}
+.pv2-tessera .pv2-printer-reading {
+  -webkit-justify-content: center;
+  justify-content: center;
+  padding: 6px 4px;
+}
+.pv2-tessera .pv2-printer-reading-value { -webkit-flex: none; flex: none; }
