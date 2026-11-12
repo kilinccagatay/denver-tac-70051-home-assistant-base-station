@@ -84,6 +84,19 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     config = json.dumps(mapping, ensure_ascii=False).replace('<', '\\u003c')
     loading = ("<script>(function(){var d=document.documentElement;d.classList.add('pv2-loading');"
                "window.panelV2LoadingTimer=setTimeout(function(){d.classList.remove('pv2-loading');},8000);})();</script>")
+    if mapping.get('profile') != 'office':
+        loading = (
+            "<style>#pv2-loading-retry{display:none}.pv2-loading #pv2-loading-retry{"
+            "display:block;position:fixed;z-index:1000;top:60%;left:40%;width:20%;min-height:44px;"
+            "border:1px solid #728493;border-radius:10px;background:#343e47;color:#f1f2f3;}</style>"
+            "<script>(function(){var d=document.documentElement;d.classList.add('pv2-loading');"
+            "function showRetry(){if(!d.classList.contains('pv2-loading')){return;}"
+            "var b=document.createElement('button');b.id='pv2-loading-retry';b.type='button';"
+            "b.textContent='Yeniden yükle';b.onclick=function(){window.location.reload();};"
+            "document.body.appendChild(b);}"
+            "window.panelV2LoadingTimer=setTimeout(function(){if(document.body){showRetry();}"
+            "else{document.addEventListener('DOMContentLoaded',showRetry,false);}},8000);})();</script>"
+        )
     panel['theme']['custom'] = (custom + '\n' + BEGIN + '\n</style>\n' + loading + '\n<style>' + css
                                + '</style>\n<script>window.PANEL_V2_CONFIG=' + config + ';\n'
                                + js + '\n</script>\n<style>\n')
