@@ -708,3 +708,22 @@ body.panel-v2.pv2-tessera.panel-v2-office .pv2-overview .pv2-settings-trigger { 
   background:#263f67; color:#f5f7ff; border:1px solid #8da9d0;
 }
 @media (max-width:450px) { .pv2-tessera #pv2-notice { white-space:normal; } }
+/* Active all-lights countdown: readable text on an unmistakable warm surface. */
+.pv2-tessera .pv2-card.pv2-counting {
+  background:#ffd18b; border-color:#ffe4bb; color:#172337;
+  -webkit-flex-direction:row; flex-direction:row;
+  -webkit-align-items:center; align-items:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+}
+.pv2-tessera .pv2-card.pv2-counting > svg {
+  width:32px; height:32px; padding:0; margin:0 12px 0 0;
+  background:transparent; color:#623600;
+}
+.pv2-tessera .pv2-card.pv2-counting .pv2-card-text { min-width:0; }
+.pv2-tessera .pv2-card.pv2-counting .pv2-card-label {
+  color:#172337; font-size:28px; line-height:30px; font-weight:700;
+  text-shadow:none; font-variant-numeric:tabular-nums;
+}
+.pv2-tessera .pv2-card.pv2-counting .pv2-card-state {
+  color:#493516; font-size:13px; line-height:16px; margin-top:2px; text-shadow:none;
+}

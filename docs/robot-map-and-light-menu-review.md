@@ -110,6 +110,20 @@ room dialog on the installed version. This does not establish physical cleaning,
 cancellation, delayed-response behavior or the remaining full-device regression;
 those retain their separately recorded validation scope.
 
+## Countdown contrast — 2026-11-13
+
+CSS-only correction on both profiles: active all-lights countdown now has a solid
+warm amber surface (#ffd18b), dark timer (#172337), dark cancellation hint (#493516),
+and a 28px tabular timer beside the icon. Card bounds and inactive appearance are
+preserved. Timer/cancel logic and household targets were not changed.
+
+PASS: synthetic Denver/Samsung start/cancel previews; text stays inside both cards;
+timer contrast 11.07:1, hint contrast 8.17:1; deployed CSS identity matches both
+routes and applications were reloaded. Existing scripts/configuration preserved.
+PENDING: live active-countdown physical appearance and complete hardware regression.
+No real countdown was started, no lights switched and no robot command was sent.
+Local previews are under artifacts/robot-map-light-menu, outside this repository.
+
 
 ## Publication verification — 2026-11-13
 
