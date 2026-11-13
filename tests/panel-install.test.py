@@ -54,6 +54,8 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(result['dashboards']['dash'], original['dashboards']['dash'])
         custom = result['dashboards']['office']['theme']['custom']
         self.assertIn('body.panel-v2.pv2-tessera', custom)
+        for selector in ('.pv2-quick-dim {', '.pv2-slider-track {', '.pv2-light-tabs {'):
+            self.assertIn(selector, custom, 'Base gesture/menu CSS must survive theme installation')
         self.assertIn('"themeStyle": "tessera"', custom)
 
     def test_removed_tab_is_not_a_swipe_destination_and_home_is_protected(self):

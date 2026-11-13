@@ -34,6 +34,8 @@ def profile_config(profile):
     for key, filename, mime in [('clickSoundUrl', 'panel-click.mp3', 'audio/mpeg'),
                                  ('clickSoundWavUrl', 'panel-click.wav', 'audio/wav')]:
         cfg[key] = f'data:{mime};base64,' + base64.b64encode((ASSETS / filename).read_bytes()).decode()
+    if profile == 'denver':
+        cfg.update(robotMap='image.preview_robot_map', robotProgress='sensor.preview_robot_progress', robotMapFlag=0, robotRooms=[{'id':23,'name':'Salon','confirm':'Salonu temizlemeye başlayacak.','color':[88,185,152]},{'id':16,'name':'Koridor','confirm':'Koridoru temizlemeye başlayacak.','color':[151,117,189]}])
     if profile == 'samsung':
         cfg.update(profile='office', nativeBatteryBadge=False, robotEnabled=False,
                    agenda='sensor.preview_agenda', weeklyForecast=True, forecastDays=5)
@@ -58,7 +60,7 @@ def panel_document(profile):
     scripts = ['core.js', 'home-assistant.js', 'controls.js', 'weather.js']
     if office:
         scripts += ['agenda.js', 'printer.js', 'printer-camera.js']
-    scripts += [profile + '-layout.js']
+    scripts += [profile + '-layout.js', 'robot-map.js']
     bundle = '\n'.join((ASSETS / name).read_text() for name in scripts)
     css = (ASSETS / 'panel.css').read_text()
     if office:
@@ -66,8 +68,19 @@ def panel_document(profile):
     css += '\n' + (ASSETS / 'tessera.css').read_text()
     screens = SCREENS[profile]
     sections = ''.join(f'<main class="screen" id="screen-{name}" hidden></main>' for name in screens)
-    tabs = ''.join(f'<button class="navbar-item" type="button"><span class="navbar-label">{name}</span></button>'
-                   for name in screens)
+    # Match the deployed navigation glyphs in offline visual reviews.
+    paths = {
+        'Ana': 'M12 3 2 11h3v10h5v-6h4v6h5V11h3Z',
+        'Mutfak': 'M3 2h2v6h1V2h2v6h1V2h2v7l-3 3v10H6V12L3 9Zm13 0h3v20h-2v-9h-3V6Z',
+        'Giriş': 'M4 2h16v20h-2V4H6v18H4Zm4 4h8v16H8Zm5 7v2h2v-2Z',
+        'Odalar': 'M2 3h20v18H2Zm2 2v6h7V5Zm9 0v6h7V5ZM4 13v6h7v-6Zm9 0v6h7v-6Z',
+        'Robot': 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-4 7h8v2H8Zm2 5h4v2h-4Z',
+        'Işıklar': 'M12 2a7 7 0 0 0-5 12l2 3h6l2-3A7 7 0 0 0 12 2ZM9 19h6v2H9Z',
+        'Diğer': 'M3 7h18v11h-4v4H7v-4H3Zm4-5h10v4H7Zm2 13v5h6v-5Z',
+    }
+    tabs = ''.join('<button class="navbar-item" type="button"><span class="navbar-icon">'
+                   '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="' + paths[name] + '"/></svg>'
+                   '</span><span class="navbar-label">' + name + '</span></button>' for name in screens)
     return ('<!doctype html><html lang="tr"><meta charset="utf-8"><title>Panel önizleme</title>'
             '<style>' + (FIXTURES / 'shell.css').read_text() + '\n' + css + '</style>'
             + sections + '<div class="navbar-container navbar-bottom"><nav>' + tabs + '</nav></div>'
@@ -99,7 +112,7 @@ iframe {{border:1px solid #45556c;display:block;background:#171d27}}
 <main>
 <header>
   <h1>{title} · {physical}</h1>
-  <label>Tasarım <select id="theme"><option value="current">Mevcut</option><option value="tessera">Tessera · Koyu</option></select></label>
+  <label>Tasarım <select id="theme"><option value="current">Mevcut</option><option value="tessera">iOS · Cam</option></select></label>
   <label>Test verisi <select id="scenario">{choices}</select></label>
 </header>
 <iframe id="panel" title="{title} paneli" width="{width}" height="{height}"></iframe>
