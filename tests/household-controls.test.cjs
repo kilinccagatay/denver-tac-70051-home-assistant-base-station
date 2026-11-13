@@ -72,3 +72,26 @@ test('household actions keep their targets and fresh socket state wins over snap
     target: {entity_id: light}, service_data: {color_temp_kelvin: 2700}
   });
 });
+
+test('room clean uses allowlisted segment only, rejects busy/offline states and deduplicates',async()=>{
+ const host=vm.createContext({});vm.runInContext(fs.readFileSync(path.join(__dirname,'../examples/panel-v2/controls.js'),'utf8'),host);
+ let state='docked',connected=true;const calls=[];
+ const controls=host.PanelV2Controls.create({}, {vacuum:'vacuum.example',robotRooms:[{id:23}]}, {get:()=>({state}),connected:()=>connected,call:(...args)=>{calls.push(args);return Promise.resolve();}}, {changed:()=>{},notice:()=>{}});
+ controls.cleanRobotRoom(99);assert.equal(calls.length,0);
+ for(state of ['cleaning','paused','returning','unknown','unavailable'])controls.cleanRobotRoom(23);
+ assert.equal(calls.length,0);state='docked';connected=false;controls.cleanRobotRoom(23);assert.equal(calls.length,0);
+ connected=true;controls.cleanRobotRoom(23);controls.cleanRobotRoom(23);assert.equal(calls.length,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),['vacuum','send_command','vacuum.example',{command:'app_segment_clean',params:[{segments:[23],repeat:1}]}]);
+ await new Promise(setImmediate);
+});
+
+test('mop preparation remains cancellable when vacuum still reports docked',async()=>{
+ const host=vm.createContext({});for(const f of ['core.js','controls.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../examples/panel-v2',f),'utf8'),host);
+ let active='on';const calls=[];const states={vacuum:{state:'docked',attributes:{supported_features:30524}},phase:{state:'washing_the_mop',attributes:{}}};
+ const ha={get:id=>id==='active'?{state:active,attributes:{}}:states[id],connected:()=>true,call:(...args)=>{calls.push(args);return Promise.resolve();}};
+ const model=host.PanelV2Controls.create(host.PanelV2Core,{vacuum:'vacuum',robotActive:'active',robotStatus:'phase',robotRooms:[{id:23}]},ha,{changed:()=>{},notice:()=>{}});
+ assert.equal(model.robot('dock').service,'return_to_base');assert.equal(model.robot('start').service,null);assert.equal(model.robot().active,true);assert.equal(model.robot().phase,'washing_the_mop');
+ model.cleanRobotRoom(23);assert.equal(calls.length,0);
+ model.controlRobot('dock');assert.equal(calls[0][1],'return_to_base');await new Promise(setImmediate);
+ active='off';assert.equal(model.robot('dock').service,null);assert.equal(model.robot('start').service,'start');
+});

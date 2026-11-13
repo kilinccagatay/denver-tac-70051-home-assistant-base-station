@@ -46,6 +46,20 @@
       xhr.send(JSON.stringify({entity_id: id, type: 'daily'}));
     }
 
+    function fetchRobotRooms(done) {
+      var xhr=new host.XMLHttpRequest(),finished=false;
+      function finish(value){if(!finished){finished=true;done(value);}}
+      xhr.open('POST','/api/proxy/api/services/roborock/get_maps?return_response',true);
+      xhr.setRequestHeader('Content-Type','application/json');xhr.timeout=10000;
+      xhr.onload=function(){var rooms=null;try{if(xhr.status>=200&&xhr.status<300){var body=JSON.parse(xhr.responseText),maps=body.service_response[config.vacuum].maps;maps.forEach(function(map){if(maps.length===1&&map.flag===config.robotMapFlag){rooms=map.rooms;}});}}catch(ignore){}finish(rooms);};
+      xhr.onerror=xhr.ontimeout=xhr.onabort=function(){finish(null);};
+      xhr.send(JSON.stringify({entity_id:config.vacuum}));
+    }
+
+    function robotMapFrame(id, timestamp) {
+      return '/api/proxy/api/image_proxy/' + encodeURIComponent(id) + '?panel_map=' + timestamp;
+    }
+
     function cameraFrame(id, timestamp) {
       return '/api/proxy/api/camera_proxy/' + encodeURIComponent(id) + '?panel_frame=' + timestamp;
     }
@@ -74,7 +88,7 @@
     function snapshotIds() {
       var ids = config.allLights.concat(config.extraLights || []);
       ['weather', 'vacuum', 'countdown', 'meeting', 'agenda', 'indoorTemperature',
-        'indoorHumidity', 'outdoorFeelsLike'].forEach(function (field) { ids.push(config[field]); });
+        'indoorHumidity', 'outdoorFeelsLike', 'robotActive', 'robotStatus'].forEach(function (field) { ids.push(config[field]); });
       (config.otherControls || []).forEach(function (control) { ids.push(control.entity); });
       var printer = config.printer;
       if (printer) {
@@ -147,7 +161,7 @@
     return {
       start: start, get: get, update: update, version: version, connected: connected,
       generation: function () { return generation; },
-      call: call, fetchState: fetchState, fetchForecast: fetchForecast, cameraFrame: cameraFrame
+      call: call, fetchState: fetchState, fetchForecast: fetchForecast, cameraFrame: cameraFrame, robotMapFrame: robotMapFrame, fetchRobotRooms: fetchRobotRooms
     };
   }
   root.PanelV2HomeAssistant = {create: create};

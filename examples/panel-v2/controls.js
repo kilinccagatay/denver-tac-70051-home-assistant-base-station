@@ -164,16 +164,25 @@
 
     function robot(kind) {
       var entry = ha.get(config.vacuum);
-      var action = kind ? core.robotControl(entry, kind) : core.robot(entry);
+      var active=entry.state==='cleaning'||(config.robotActive&&ha.get(config.robotActive).state==='on');
+      var phase=config.robotStatus?ha.get(config.robotStatus).state:'';
+      var effective=active&&entry.state==='docked'?{state:'cleaning',attributes:entry.attributes}:entry;
+      var action = kind ? core.robotControl(effective, kind) : core.robot(effective);
       return {
         service: action.service, label: action.label, detail: action.detail,
-        available: core.available(entry), state: entry.state
+        available: core.available(entry), state: entry.state, active:active, phase:phase
       };
     }
 
     function controlRobot(kind) {
       var action = robot(kind);
       if (action.service) { perform(kind ? 'vacuum' : 'robot', 'vacuum', action.service, config.vacuum); }
+    }
+
+    function cleanRobotRoom(id,onSuccess,onFailure) {
+      var allowed=(config.robotRooms||[]).some(function(room){return room.id===id;}),state=ha.get(config.vacuum).state;
+      if(!ha.connected()||!allowed||(config.robotActive&&ha.get(config.robotActive).state==='on')||(state!=='docked'&&state!=='idle')){if(onFailure){onFailure();}return;}
+      perform('vacuum','vacuum','send_command',config.vacuum,{command:'app_segment_clean',params:[{segments:[id],repeat:1}]},onSuccess,null,onFailure);
     }
 
     function countdown(now) {
@@ -192,7 +201,7 @@
       toggleLights: toggleLights, turnLightsOff: turnLightsOff, setBrightness: setBrightness,
       brightnessChanged: brightnessChanged, dimmableLights: dimmableLights,
       groupBrightness: groupBrightness, setGroupBrightness: setGroupBrightness,
-      setColor: setColor, robot: robot, controlRobot: controlRobot,
+      setColor: setColor, robot: robot, controlRobot: controlRobot, cleanRobotRoom: cleanRobotRoom,
       countdown: countdown, toggleCountdown: toggleCountdown
     };
   }

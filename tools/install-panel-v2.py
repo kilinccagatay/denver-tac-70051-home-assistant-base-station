@@ -79,6 +79,8 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     if mapping.get('printer'):
         scripts.extend(['printer.js', 'printer-camera.js'])
     scripts.append('samsung-layout.js' if mapping.get('profile') == 'office' else 'denver-layout.js')
+    if mapping.get('robotMap'):
+        scripts.append('robot-map.js')
     scripts.append('panel.js')
     js = '\n'.join((assets / name).read_text() for name in scripts)
     config = json.dumps(mapping, ensure_ascii=False).replace('<', '\\u003c')
@@ -105,7 +107,7 @@ def build_configuration(original, mapping, assets, dashboard='dash'):
     home = next(s for s in panel['screens'] if s['name'] == 'Ana')
     cards = home.setdefault('sensors', {}).setdefault('cards', [])
     needed = list(mapping['allLights']) + mapping.get('extraLights', []) + [
-        mapping['weather'], mapping['countdown'], mapping['meeting']] + ([mapping['agenda']] if mapping.get('agenda') else []) + ([mapping['indoorTemperature']] if mapping.get('indoorTemperature') else []) + ([mapping['indoorHumidity']] if mapping.get('indoorHumidity') else []) + ([mapping['outdoorFeelsLike']] if mapping.get('outdoorFeelsLike') else []) + ([mapping['vacuum']] if mapping.get('robotEnabled', True) else []) + [c['entity'] for c in mapping.get('otherControls', [])] + printer_entities
+        mapping['weather'], mapping['countdown'], mapping['meeting']] + ([mapping['agenda']] if mapping.get('agenda') else []) + ([mapping['indoorTemperature']] if mapping.get('indoorTemperature') else []) + ([mapping['indoorHumidity']] if mapping.get('indoorHumidity') else []) + ([mapping['outdoorFeelsLike']] if mapping.get('outdoorFeelsLike') else []) + ([mapping['vacuum']] if mapping.get('robotEnabled', True) else []) + [c['entity'] for c in mapping.get('otherControls', [])] + printer_entities + [mapping[k] for k in ('robotActive', 'robotStatus') if mapping.get(k)]
 
     def entity_ids(value):
         found = set()

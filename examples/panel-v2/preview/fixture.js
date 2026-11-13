@@ -29,6 +29,8 @@
   set(cfg.meeting, 'off');
   set(cfg.vacuum, 'docked', {supported_features: 8192 + 4 + 16});
   set(cfg.countdown, 'off');
+  set(cfg.robotMap, now.toISOString());
+  set(cfg.robotProgress, '0', {unit_of_measurement:'%'});
 
   var days = [];
   for (var index = 0; index < 3; index++) {
@@ -111,6 +113,11 @@
     ha.cameraFrame = function () {
       var sample = '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#202b3b"/><path d="M100 270l125-105h190l125 105z" fill="#56647a"/><text x="320" y="125" text-anchor="middle" font-family="Arial" font-size="22" fill="#e0e7f0">Örnek kamera karesi</text></svg>';
       return 'data:image/svg+xml,' + encodeURIComponent(sample);
+    };
+    ha.fetchRobotRooms=function(done){host.previewRoomRequests=(host.previewRoomRequests||0)+1;var rooms={};(cfg.robotRooms||[]).forEach(function(room){rooms[room.id]=room.name;});setTimeout(function(){done(rooms);},host.previewRoomDelay||0);};
+    ha.robotMapFrame = function () {
+      var sample='<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420"><rect width="640" height="420" fill="#000"/><g stroke="#718296" stroke-width="5"><path d="M80 80h220v140H80z" fill="#58b998"/><path d="M310 80h160v140H310z" fill="#9775bd"/><path d="M80 230h220v110H80z" fill="#66b5d8"/><path d="M310 230h220v110H310z" fill="#d5a24b"/></g><circle cx="315" cy="222" r="13" fill="#fff"/></svg>';
+      return 'data:image/svg+xml,'+encodeURIComponent(sample);
     };
     return ha;
   };
