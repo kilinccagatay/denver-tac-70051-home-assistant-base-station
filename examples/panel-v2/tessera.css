@@ -727,3 +727,7 @@ body.panel-v2.pv2-tessera.panel-v2-office .pv2-overview .pv2-settings-trigger { 
 .pv2-tessera .pv2-card.pv2-counting .pv2-card-state {
   color:#493516; font-size:13px; line-height:16px; margin-top:2px; text-shadow:none;
 }
+/* Printer temperatures use recognizable mechanical silhouettes, not generic heat icons. */
+.pv2-tessera .pv2-printer-reading-icon { width:20px; min-width:20px; height:24px; margin-right:4px; }
+.pv2-tessera .pv2-printer-reading-icon svg { width:20px; height:20px; }
+.pv2-tessera .pv2-bed-reading-icon svg { -webkit-transform:none; transform:none; }

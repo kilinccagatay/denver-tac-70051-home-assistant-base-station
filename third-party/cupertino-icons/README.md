@@ -45,3 +45,7 @@ Mappings:
 - unknown: minus
 
 Nozzle uses flame.fill and heated bed uses heater.vertical.fill as semantic equivalents.
+
+Printer telemetry now overrides the generic nozzle/heatbed defaults with the
+MDI printer-3d-nozzle-heat path and an original heated-print-bed SVG via
+printerThermalSymbol(). See ../material-design-icons/README.md.

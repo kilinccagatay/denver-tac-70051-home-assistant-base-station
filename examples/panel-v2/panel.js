@@ -411,10 +411,14 @@
       addLightScreen:addLightScreen,addRobotScreen:addRobotScreen,addAgenda:addAgenda,addForecast:addForecast,
       addPrinterCamera:buildPrinterCamera,addPrinterDetails:buildPrinterDetails
     });
+    function printerThermalSymbol(name){
+      if(name==='nozzle'){return '<svg class="pv2-printer-thermal-symbol" data-symbol="mdi-printer-3d-nozzle-heat" aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M4 2H14V7H16V13H13.5L10 17H8L4.5 13H2V7H4V2M23 14.5L21.6 16.7L23 18.9L21 22L19.2 21.1L20.7 18.9L19.2 16.7L21.2 13.6L23 14.5M18.7 14.5L17.2 16.7L18.7 18.9L16.7 22L14.9 21.1L16.3 18.9L14.9 16.7L16.9 13.6L18.7 14.5"/></svg>';}
+      return '<svg class="pv2-printer-thermal-symbol" data-symbol="heated-print-bed" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c-2 2 2 3 0 5M12 3c-2 2 2 3 0 5M18 3c-2 2 2 3 0 5M6 12h12l3 5H3l3-5ZM3 17v4h18v-4"/></svg>';
+    }
     function buildPrinterDetails(parent){
       parent.classList.add('pv2-printer-detail-layout');var telemetry=node('div','pv2-printer-telemetry');
       var entries=[{entity:cfg.printer.remaining,label:'Kalan süre',icon:'clock',unit:' dk'},{entity:cfg.printer.nozzle,label:'Nozul sıcaklığı',icon:'nozzle',unit:'°'},{entity:cfg.printer.bed,label:'Tabla sıcaklığı',icon:'bed',unit:'°'}];
-      entries.forEach(function(e){var item=node('div','pv2-printer-reading'),symbol=node('span','pv2-printer-reading-icon'+(e.icon==='bed'?' pv2-bed-reading-icon':'')),value=node('span','pv2-printer-reading-value','—');symbol.setAttribute('aria-hidden','true');symbol.innerHTML=icon(e.icon);item.appendChild(symbol);item.appendChild(value);item.title=e.label;telemetry.appendChild(item);e.value=value;e.item=item;});parent.appendChild(telemetry);
+      entries.forEach(function(e){var item=node('div','pv2-printer-reading'),symbol=node('span','pv2-printer-reading-icon'+(e.icon==='bed'?' pv2-bed-reading-icon':'')),value=node('span','pv2-printer-reading-value','—');symbol.setAttribute('aria-hidden','true');symbol.innerHTML=e.icon==='nozzle'||e.icon==='bed'?printerThermalSymbol(e.icon):icon(e.icon);item.appendChild(symbol);item.appendChild(value);item.title=e.label;telemetry.appendChild(item);e.value=value;e.item=item;});parent.appendChild(telemetry);
       var panel=node('section','pv2-printer-filaments'),heading=node('div','pv2-filament-heading'),caption=node('span'),grid=node('div','pv2-filament-grid');var grouped=(cfg.printer.filaments||[]).some(function(slot){return !!slot.group;});if(grouped){panel.classList.add('pv2-filament-grouped');}heading.appendChild(node('span','',grouped?'':'Filamentler'));heading.appendChild(caption);panel.appendChild(heading);panel.appendChild(grid);parent.appendChild(panel);printerDetails={entries:entries,caption:caption,heading:heading,grouped:grouped,grid:grid,signature:''};
     }
     function filamentColor(value){var color=String(value||'');return /^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(color)&&color.slice(7).toLowerCase()!=='00'?color.slice(0,7):'#667487';}

@@ -124,6 +124,21 @@ PENDING: live active-countdown physical appearance and complete hardware regress
 No real countdown was started, no lights switched and no robot command was sent.
 Local previews are under artifacts/robot-map-light-menu, outside this repository.
 
+## Printer temperature icons — 2026-11-13
+
+Samsung printer telemetry replaces the generic SF flame/heater with the MDI
+printer-3d-nozzle-heat glyph and an original heated horizontal print-bed SVG.
+Both render in 20px boxes with 4px value spacing; the old bed-only vertical offset
+is removed. Source/license attribution is in third-party/material-design-icons.
+Only the office icon renderer and scoped telemetry CSS were patched on the host;
+Denver, entity mapping, services and printer logic were preserved.
+
+PASS: office DOM regression; all-tab preview layout review; 147-minute reading
+and temperature bounds/vertical centers; served icon/CSS identity; actual Samsung
+printer-page screenshot with live 219°/55° readings, both new icons visible and
+aligned, and ongoing print unaffected. No printer control commands were sent.
+The existing complete physical-device regression remains separately scoped/PENDING.
+
 
 ## Publication verification — 2026-11-13
 
