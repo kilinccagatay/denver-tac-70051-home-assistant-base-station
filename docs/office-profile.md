@@ -142,10 +142,13 @@ preserved. Denver must not receive this setting or subscribe to meeting titles.
 The sensor comes from Mac Call Indicator's optional macOS Calendar channel:
 [Calendar setup and freshness (companion draft)](https://github.com/kilinccagatay/mac-call-indicator/pull/1).
 It provides `events` (title/start/end), `day_start`, and `valid_until` attributes.
-The compact view shows two remaining meetings, or three when height permits.
-Past events disappear; an empty fresh day says no meetings remain. An expired
-lease, unavailable sensor or disconnected socket says the calendar cannot be
-updated, rather than displaying a misleading empty schedule. Weekends use the
+The meeting list scrolls under the day tabs. Switching days or resetting the
+screen returns the list to the top.
+Past events disappear. Samsung keeps the last successful plan in its local WebView
+storage for the workdays covered by that plan. If the Mac or connection goes
+offline, the panel displays the cached schedule in the same layout. Cached
+events do not receive the live meeting highlight. Without a usable snapshot the
+panel says the calendar cannot be updated. Weekends use the
 next Monday selected by the Mac helper. Calendar titles render as text only.
 
 EventKit change notifications plus a one-minute query fallback detect changes

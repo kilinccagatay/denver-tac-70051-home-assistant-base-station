@@ -143,11 +143,10 @@
 .panel-v2-office .pv2-with-agenda .pv2-card-label { white-space:normal; font-size:16px; line-height:19px; }
 .pv2-agenda { position:absolute; left:4px; bottom:4px; width:calc(66.667% - 8px); height:calc(50% - 8px); padding:8px 10px; border:1px solid #3c485a; border-radius:12px; background:#202b3a; color:#e7eef8; overflow:hidden; }
 .pv2-agenda-heading { margin:0 0 5px; font:12px/16px Arial,sans-serif; color:#b9c7db; }
-.pv2-agenda-event { display:-webkit-flex; display:flex; min-width:0; min-height:34px; padding:6px 4px; border-top:1px solid #354356; border-left:2px solid transparent; -webkit-align-items:center; align-items:center; }
+.pv2-agenda-event { position:relative; display:-webkit-flex; display:flex; min-width:0; min-height:30px; padding:4px 4px 4px 12px; border-top:1px solid #354356; -webkit-align-items:center; align-items:center; }
 .pv2-agenda-time { display:block; width:76px; min-width:76px; margin-right:8px; -webkit-flex:none; flex:none; white-space:nowrap; font:13px/18px Arial,sans-serif; font-variant-numeric:tabular-nums; color:#b9c7db; }
-.pv2-agenda-title { display:block; min-width:0; -webkit-flex:1; flex:1; font:13px/18px Arial,sans-serif; max-height:36px; overflow:hidden; overflow-wrap:break-word; word-wrap:break-word; }
+.pv2-agenda-title { display:block; min-width:0; -webkit-flex:1; flex:1; font:13px/16px Arial,sans-serif; overflow-wrap:break-word; word-wrap:break-word; }
 .pv2-agenda-current .pv2-agenda-time { color:#a6ddc5; }
-.pv2-agenda-current { border-left:2px solid #a6ddc5; padding-left:4px; }
 .pv2-agenda-empty { margin:8px 0 0; color:#b9c7db; font:14px/20px Arial,sans-serif; }
 .pv2-agenda-more { color:#a6cde4; }
 
@@ -182,7 +181,7 @@
 /* Divider strokes must not join the active row's rounded right corners.
    Keep the existing row box/padding; reserve the transparent top border so
    selection never moves times or titles. The next row must not redraw its edge. */
-.pv2-agenda-current { background:#29433d; border-top-color:transparent; border-left-color:#a6ddc5; border-radius:8px; background-clip:padding-box; }
+.pv2-agenda-current { background:#29433d; border-top-color:transparent; border-radius:8px; background-clip:padding-box; }
 .pv2-agenda-current + .pv2-agenda-event { border-top-color:transparent; }
 
 /* Telemetry icons occupy equal boxes; inline SVG baselines cannot shift them. */
@@ -253,3 +252,39 @@
 /* Preserve the large clock font while freeing six pixels for the larger readings. */
 .panel-v2-office .pv2-overview-with-feels .pv2-clock { line-height:90px; }
 .panel-v2-office .pv2-overview-with-feels .pv2-date { line-height:20px; }
+
+/* Keep day tabs above a separate scroll area. */
+.pv2-agenda {
+  display:-webkit-flex;
+  display:flex;
+  -webkit-flex-direction:column;
+  flex-direction:column;
+}
+.pv2-agenda-heading { -webkit-flex:none; flex:none; }
+.pv2-agenda-list {
+  -webkit-flex:1 1 auto;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.pv2-agenda-list:focus { outline:none; }
+.pv2-keyboard .pv2-agenda-list:focus { outline:2px solid #a9d8ee; outline-offset:-2px; }
+
+/* Agenda accents are decorative and keep the same insets for live and cached rows. */
+.pv2-agenda-event:before {
+  content:"";
+  position:absolute;
+  left:4px;
+  top:4px;
+  bottom:4px;
+  width:4px;
+  border-radius:3px;
+  background:#ff8a36;
+}
+.pv2-agenda-event:nth-child(3n+2):before { background:#ff5c66; }
+.pv2-agenda-event:nth-child(3n+3):before { background:#22c9ff; }

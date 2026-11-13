@@ -23,10 +23,15 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    fs.writeFileSync(process.env.AGENDA_PREVIEW,safe);
  }
  assert.equal(d.querySelectorAll('#panel-v2 .pv2-card').length,2);
- assert.equal(d.querySelectorAll('.pv2-agenda-event').length,2);
+ assert.equal(d.querySelectorAll('.pv2-agenda-event').length,3);
  assert.match(d.querySelector('.pv2-agenda').textContent,/Synthetic next/);
  assert.equal(d.querySelector('.pv2-agenda img'),null,'calendar titles are text, never HTML');
- for(const type of ['touchstart','selectstart','contextmenu']){const hold=new w.Event(type,{bubbles:true,cancelable:true});d.querySelector('.pv2-agenda-title').dispatchEvent(hold);assert(hold.defaultPrevented,'read-only agenda must cancel native '+type);}
+ for(const type of ['selectstart','contextmenu']){const hold=new w.Event(type,{bubbles:true,cancelable:true});d.querySelector('.pv2-agenda-title').dispatchEvent(hold);assert(hold.defaultPrevented,'read-only agenda must cancel native '+type);}
+ const list=d.querySelector('.pv2-agenda-list');
+ const touch=new w.Event('touchstart',{bubbles:true,cancelable:true});
+ list.firstChild.dispatchEvent(touch);
+ assert(!touch.defaultPrevented,'native touch can start a scroll');
+ list.scrollTop=50;
  assert.match(d.querySelector('.pv2-agenda-heading').textContent,/Bugün/);
  const firstEvents=states[cfg.agenda].attributes.events.slice();
  const first=day.getTime()/1000,second=new Date(day),third=new Date(day);second.setDate(second.getDate()+1);third.setDate(third.getDate()+2);
@@ -35,9 +40,12 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  assert.equal(d.querySelectorAll('.pv2-agenda-day').length,3);
  d.querySelectorAll('.pv2-agenda-day')[1].click();
  assert.match(d.querySelector('.pv2-agenda-list').textContent,/Second day example/);
+ assert.equal(list.scrollTop,0,'new day starts at top');
  assert.equal(d.querySelectorAll('.pv2-agenda-day')[1].getAttribute('aria-selected'),'true');
  update();await sleep(20);assert.equal(d.querySelectorAll('.pv2-agenda-day')[1].getAttribute('aria-selected'),'true','heartbeat does not reset selected day');
+ list.scrollTop=40;
  w.dispatchEvent(new w.Event('panel-display-dark'));
+ assert.equal(list.scrollTop,0,'screen reset clears scroll');
  assert.equal(d.querySelectorAll('.pv2-agenda-day')[0].getAttribute('aria-selected'),'true','actual backlight dim resets the first day');
  d.querySelectorAll('.pv2-agenda-day')[2].click();assert.match(d.querySelector('.pv2-agenda-empty').textContent,/Bu iş günü için toplantı yok/);
  // Automatic focus skips finished/empty days without removing or reordering tabs.
@@ -63,7 +71,13 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  attrs.days[2].events=[{title:'Third day example',start:third.getTime()/1000+36000,end:third.getTime()/1000+39600}];
  update();await sleep(20);assert.equal(d.querySelectorAll('.pv2-agenda-day')[2].getAttribute('aria-selected'),'true','skips a second empty/invalid day');
  attrs.valid_until=now-1;update();await sleep(20);
- assert.equal(d.querySelectorAll('.pv2-agenda-day')[2].getAttribute('aria-selected'),'true','expired data never invents a new automatic selection');
+ assert.equal(d.querySelectorAll('.pv2-agenda-day')[2].getAttribute('aria-selected'),'true','cached days retain useful automatic focus');
+ assert.equal(d.querySelector('.pv2-agenda-sync'),null,'cached data adds no status row');
+ assert.match(d.querySelector('.pv2-agenda-list').textContent,/Third day example/);
+ assert.equal(d.querySelectorAll('.pv2-agenda-current').length,0);
+ const offlineModel=w.PanelV2Agenda.create({available:()=>false},{connected:()=>false,get:()=>({})},cfg.agenda);
+ assert.equal(offlineModel.read(fakeMs/1000).events[0].title,'Third day example','reload can recover the last valid plan');
+ assert.equal(offlineModel.read(third.getTime()/1000+90000).available,false,'cache expires after the final covered workday');
  attrs.valid_until=now+90;attrs.days.forEach(x=>x.events=[]);update();await sleep(20);
  assert.equal(d.querySelectorAll('.pv2-agenda-day')[0].getAttribute('aria-selected'),'true','all three days empty falls back to first tab');
  // Supplied workday order remains Friday/Monday/Tuesday, even when Monday is selected.
@@ -76,7 +90,14 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  attrs.day_start=first;
  w.dispatchEvent(new w.Event('panel-display-dark'));states[cfg.agenda].attributes.days=[];
  states[cfg.agenda].attributes.events=[];update();await sleep(20);assert.match(d.querySelector('.pv2-agenda-empty').textContent,/Bugün başka toplantı yok/);
- states[cfg.agenda].attributes.valid_until=now-1;update();await sleep(20);assert.match(d.querySelector('.pv2-agenda-empty').textContent,/Takvim güncellenemiyor/);
- states[cfg.agenda].attributes.valid_until=now+90;w.haSocketReady=false;update();await sleep(20);assert.match(d.querySelector('.pv2-agenda-empty').textContent,/Takvim güncellenemiyor/);
+ states[cfg.agenda].attributes.valid_until=now-1;update();await sleep(20);assert.match(d.querySelector('.pv2-agenda-empty').textContent,/Bugün başka toplantı yok/);
+ states[cfg.agenda].attributes.valid_until=now+90;
+ states[cfg.agenda].attributes.events=firstEvents;
+ update();await sleep(20);
+ const liveRows=[...d.querySelectorAll('.pv2-agenda-list > *')].map(row=>row.textContent);
+ assert.equal(liveRows.length,3);
+ w.haSocketReady=false;update();await sleep(20);
+ assert.deepEqual([...d.querySelectorAll('.pv2-agenda-list > *')].map(row=>row.textContent),liveRows,
+   'disconnect keeps the same rows and adds no banner');
  console.log('Agenda: useful-day automatic focus, manual retention, dark/hidden reset, timed expiry, new invitations, workday order, empty/stale data and escaped titles passed.');
 }finally{dom.window.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

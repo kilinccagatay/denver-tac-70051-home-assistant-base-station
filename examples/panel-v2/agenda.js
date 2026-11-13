@@ -4,6 +4,49 @@
     var selected = 0;
     var baseDay = null;
     var manual = false;
+    var cacheKey = 'panel-v2:office-agenda:' + entityId;
+    var cached = null;
+    var savedSignature = '';
+    try {
+      savedSignature = root.localStorage.getItem(cacheKey) || '';
+      cached = JSON.parse(savedSignature || 'null');
+    } catch (error) { /* Storage can be disabled in a WebView. */ }
+
+    function endOfDay(day) {
+      if (Number(day.day_end) > Number(day.day_start)) { return Number(day.day_end); }
+      var date = new Date(Number(day.day_start) * 1000);
+      date.setDate(date.getDate() + 1);
+      return date.getTime() / 1000;
+    }
+
+    function retain(attributes, fresh, now) {
+      var synchronized = Number(attributes.generated_at) || Number(attributes.valid_until) - 90;
+      if (fresh && synchronized > 0 && synchronized <= now + 5) {
+        var days = Array.isArray(attributes.days) && attributes.days.length === 3 ? attributes.days : [attributes];
+        cached = {
+          synchronized: synchronized,
+          days: days.filter(function (day) {
+            return day && Number(day.day_start) > 0 && endOfDay(day) > now;
+          }).map(function (day) {
+            return {day_start: day.day_start, day_end: endOfDay(day), events: upcoming(day, now).slice(0, 16).map(function (event) {
+              return {title: event.title.slice(0, 160), start: event.start, end: event.end};
+            })};
+          })
+        };
+      }
+      if (cached && Array.isArray(cached.days) && cached.synchronized <= now + 5) {
+        cached.days = cached.days.filter(function (day) { return day && endOfDay(day) > now; });
+        if (!cached.days.length) { cached = null; }
+      } else { cached = null; }
+      var signature = cached ? JSON.stringify(cached) : '';
+      if (signature !== savedSignature) {
+        savedSignature = signature;
+        try {
+          if (signature) { root.localStorage.setItem(cacheKey, signature); }
+          else { root.localStorage.removeItem(cacheKey); }
+        } catch (error) { /* Keep the in-memory copy. */ }
+      }
+    }
 
     function reset() {
       selected = 0;
@@ -25,7 +68,10 @@
       var fresh = ha.connected() && core.available(entry) && expiry > now && expiry <= now + 100;
       var days = Array.isArray(attributes.days) && attributes.days.length === 3 ? attributes.days :
         [{day_start: attributes.day_start, events: attributes.events}];
-      var base = Number(attributes.day_start);
+      retain(attributes, fresh, now);
+      var available = fresh || !!cached;
+      if (!fresh && cached) { days = cached.days; }
+      var base = Number(days[0] && days[0].day_start);
       if (baseDay !== base) {
         baseDay = base;
         reset();
@@ -33,7 +79,7 @@
       if (selected >= days.length) { reset(); }
 
       var events = [];
-      if (fresh) {
+      if (available) {
         if (manual) {
           events = upcoming(days[selected], now);
         } else {
@@ -46,17 +92,18 @@
       }
       return {
         fresh: fresh,
+        available: available,
         days: days.map(function (day) { return day && day.day_start; }),
         selected: selected,
         events: events.map(function (event) {
-          return {title: event.title, start: event.start, end: event.end, current: Number(event.start) <= now};
+          return {title: event.title, start: event.start, end: event.end, current: fresh && Number(event.start) <= now};
         })
       };
     }
 
     function select(index, now) {
       var state = read(now);
-      if (!state.fresh || index < 0 || index >= state.days.length) { return; }
+      if (!state.available || index < 0 || index >= state.days.length) { return; }
       selected = index;
       manual = true;
     }
