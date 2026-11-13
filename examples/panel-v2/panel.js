@@ -290,7 +290,7 @@
       body.appendChild(overview);body.appendChild(controls);root.appendChild(body);screen.appendChild(root);
       views.push({name:name,status:status,indoor:indoorValue,humidity:humidityValue,humidityIcon:humidityIcon,feels:feelsValue,feelsIcon:feelsIcon,clock:clock,date:date,weekday:weekday,temperature:temperature,condition:condition,weatherIcon:weatherIcon,previousWeatherIcon:'',meeting:meeting});return controls;
     }
-    var agendaBox=null,agendaHeading=null,agendaList=null,agendaSignature=null;
+    var agendaBox=null,agendaHeading=null,agendaList=null,agendaSignature=null,agendaRenderedDay=null;
     var forecastBox=null,forecastList=null,forecastNote=null,forecastSignature='';
     var weather = window.PanelV2Weather.create(C, cfg, {
       now: function () { return new Date().getTime(); },
@@ -394,8 +394,8 @@
         agendaBox=node('section','pv2-agenda');agendaBox.setAttribute('aria-label','İş takvimi');
         // This is read-only kiosk content. Legacy Crosswalk can crash in its
         // native text-selection menu after a touch hold; do not enter that path.
-        ['touchstart','selectstart','contextmenu'].forEach(function(name){agendaBox.addEventListener(name,function(ev){ev.preventDefault();},false);});
-        agendaHeading=node('div','pv2-agenda-heading');agendaHeading.setAttribute('role','tablist');agendaHeading.setAttribute('aria-label','Takvim günü');agendaList=node('div','pv2-agenda-list');
+        ['selectstart','contextmenu'].forEach(function(name){agendaBox.addEventListener(name,function(ev){ev.preventDefault();},false);});
+        agendaHeading=node('div','pv2-agenda-heading');agendaHeading.setAttribute('role','tablist');agendaHeading.setAttribute('aria-label','Takvim günü');agendaList=node('div','pv2-agenda-list');agendaList.tabIndex=0;
         agendaBox.appendChild(agendaHeading);agendaBox.appendChild(agendaList);controls.appendChild(agendaBox);
     }
     function addForecast(controls){
@@ -737,23 +737,25 @@
     var conditions={'clear-night':'Açık gece','cloudy':'Bulutlu','exceptional':'Olağan dışı','fog':'Sisli','hail':'Dolu','lightning':'Şimşekli','lightning-rainy':'Gök gürültülü','partlycloudy':'Parçalı bulutlu','pouring':'Sağanak','rainy':'Yağmurlu','snowy':'Karlı','snowy-rainy':'Karla karışık','sunny':'Güneşli','windy':'Rüzgârlı','windy-variant':'Rüzgârlı'};
     function renderAgenda(){
       if(!agendaBox){return;}
-      var state=agendaModel.read(new Date().getTime()/1000),fresh=state.fresh,days=state.days,items=state.events;
+      var state=agendaModel.read(new Date().getTime()/1000),available=state.available,days=state.days,items=state.events;
       var d=new Date(Number(days[state.selected])*1000),weekdays=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'],today=new Date(),sameDay=d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate();
       var signature=JSON.stringify(state);if(signature===agendaSignature){return;}agendaSignature=signature;
       while(agendaHeading.firstChild){agendaHeading.removeChild(agendaHeading.firstChild);}
       for(var di=0;di<days.length;di++){
-        (function(index){var date=new Date(Number(days[index])*1000),isToday=date.getFullYear()===today.getFullYear()&&date.getMonth()===today.getMonth()&&date.getDate()===today.getDate(),label=isToday?'Bugün':weekdays[date.getDay()]||'Takvim',tab=node('button','pv2-agenda-day',label);tab.type='button';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',index===state.selected?'true':'false');tab.setAttribute('aria-controls','pv2-agenda-events');tab.disabled=!fresh;C.bindPress(tab,function(){agendaModel.select(index,new Date().getTime()/1000);agendaSignature=null;renderAgenda();},null);agendaHeading.appendChild(tab);})(di);
+        (function(index){var date=new Date(Number(days[index])*1000),isToday=date.getFullYear()===today.getFullYear()&&date.getMonth()===today.getMonth()&&date.getDate()===today.getDate(),label=isToday?'Bugün':weekdays[date.getDay()]||'Takvim',tab=node('button','pv2-agenda-day',label);tab.type='button';tab.setAttribute('role','tab');tab.setAttribute('aria-selected',index===state.selected?'true':'false');tab.setAttribute('aria-controls','pv2-agenda-events');tab.disabled=!available;C.bindPress(tab,function(){agendaModel.select(index,new Date().getTime()/1000);agendaSignature=null;renderAgenda();},null);agendaHeading.appendChild(tab);})(di);
       }
-      agendaList.id='pv2-agenda-events';agendaList.setAttribute('role','tabpanel');agendaList.setAttribute('aria-label',fresh?(sameDay?'Bugün':weekdays[d.getDay()]):'Takvim');
+      agendaList.id='pv2-agenda-events';agendaList.setAttribute('role','tabpanel');agendaList.setAttribute('aria-label',available?(sameDay?'Bugün':weekdays[d.getDay()]):'Takvim');
+      var renderedDay=days[state.selected];
+      var scrollTop=renderedDay===agendaRenderedDay?agendaList.scrollTop:0;
+      agendaRenderedDay=renderedDay;
       while(agendaList.firstChild){agendaList.removeChild(agendaList.firstChild);}
-      if(!fresh||!items.length){agendaList.appendChild(node('p','pv2-agenda-empty',!fresh?'Takvim güncellenemiyor':sameDay?'Bugün başka toplantı yok':'Bu iş günü için toplantı yok'));return;}
-      var limit=agendaBox.clientHeight>=160?3:2;
-      for(var aj=0;aj<Math.min(items.length,limit);aj++){
+      if(!available||!items.length){agendaList.scrollTop=0;agendaList.appendChild(node('p','pv2-agenda-empty',!available?'Takvim güncellenemiyor':sameDay?'Bugün başka toplantı yok':'Bu iş günü için toplantı yok'));return;}
+      for(var aj=0;aj<items.length;aj++){
         var event=items[aj],row=node('div','pv2-agenda-event'),times=node('span','pv2-agenda-time'),title=node('span','pv2-agenda-title',event.title.slice(0,160));
         function timeText(epoch){var t=new Date(Number(epoch)*1000);return ('0'+t.getHours()).slice(-2)+':'+('0'+t.getMinutes()).slice(-2);}
         setText(times,timeText(event.start)+'–'+timeText(event.end));row.classList.toggle('pv2-agenda-current',event.current);row.appendChild(times);row.appendChild(title);agendaList.appendChild(row);
       }
-      if(items.length>limit){agendaList.setAttribute('aria-label',agendaList.getAttribute('aria-label')+' · '+(items.length-limit)+' toplantı daha');}
+      agendaList.scrollTop=scrollTop;
     }
     function forecastIcon(condition){
       if(cfg.themeStyle==='tessera'){return sfSymbols[condition]||sfSymbols.unknown;}
@@ -818,10 +820,10 @@
     ha.start();
     var days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
     function clockTick(){syncRobotMap();weather.tick(!document.hidden&&activeView()==='Ana');if(officeProfile&&printerModel){printerModel.tick();}renderAgenda();renderForecast();var now=new Date(),active=activeView();function pad(n){return ('0'+n).slice(-2);}for(var vi=0;vi<views.length;vi++){var v=views[vi];if(v.name!==active){continue;}setText(v.clock,pad(now.getHours())+':'+pad(now.getMinutes()));setText(v.date,pad(now.getDate())+'.'+pad(now.getMonth()+1)+'.'+now.getFullYear());setText(v.weekday,days[now.getDay()]);updateMeeting(v);}if(controlsModel.countdown(now.getTime()).active){for(var ci=0;ci<cards.length;ci++){if(cards[ci].view===active&&cards[ci].options.kind==='alloff'){drawCard(cards[ci]);}}}if(lastConnection!==connection()){lastConnection=connection();scheduleRender();}}
-    function navigated(){if(robotRoomSelection){robotRoomSelection.reset();}closeQuickDim();for(var pi=0;pi<cards.length;pi++){if(cards[pi].tapTimer!==null){clearTimeout(cards[pi].tapTimer);cards[pi].tapTimer=null;}}closeDialog();clockTick();render();}
+    function navigated(){if(agendaList){agendaList.scrollTop=0;}if(robotRoomSelection){robotRoomSelection.reset();}closeQuickDim();for(var pi=0;pi<cards.length;pi++){if(cards[pi].tapTimer!==null){clearTimeout(cards[pi].tapTimer);cards[pi].tapTimer=null;}}closeDialog();clockTick();render();}
     window.addEventListener('hashchange',navigated,false);
     window.addEventListener('screen-navigate',navigated,false);
-    function resetAgendaDay(){if(agendaModel){agendaModel.reset();agendaSignature=null;renderAgenda();}}
+    function resetAgendaDay(){if(agendaModel){agendaList.scrollTop=0;agendaModel.reset();agendaSignature=null;renderAgenda();}}
     window.addEventListener('panel-display-dark',function(){
       if(robotRoomSelection){robotRoomSelection.reset();}closeQuickDim();resetAgendaDay();if(dialog.classList.contains('pv2-robot-room-dialog')){closeDialog();}
       if(officeProfile){closeDialog();if(activeView()!=='Ana'){navigateScreen('Ana');}syncPrinterCamera();}
