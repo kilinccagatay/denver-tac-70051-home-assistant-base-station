@@ -172,7 +172,7 @@ needed for this integration.
 
 ![Active meeting indicator on the updated physical Denver tablet](photos/panel-v2/home-meeting-tablet.png)
 
-This is a direct capture from the tablet running Build 8 during an active meeting,
+This is a direct capture from the tablet running Build 9 during a temporary meeting,
 including its native battery badge. Only the orientation was rotated 180° to match
 the mounted tablet; no meeting name, participant, or company content is shown.
 
