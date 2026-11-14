@@ -25,7 +25,7 @@ layout.
 
 ### Meeting indicator on the actual tablet
 
-This earlier tablet capture shows an active meeting on Evim and the native
+This Build 9 tablet capture shows a temporary meeting on Evim and the native
 battery badge. The image was rotated 180° to match the mounted display.
 
 ![Active meeting on the physical Denver tablet](../photos/panel-v2/home-meeting-tablet.png)
