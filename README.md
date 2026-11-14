@@ -11,6 +11,11 @@ to that tablet. This repository contains dashboards, configuration examples and
 guides. The separate [WallPanel Legacy Lite fork](https://github.com/kilinccagatay/wallpanel-android-legacy/tree/lite-motion-core)
 contains APK and Android/root-helper sources.
 
+![Current Denver dashboard on the physical tablet](photos/panel-v2/home-meeting-tablet.png)
+
+Denver Build 9 on the mounted tablet, with the current panel layout and a
+temporary meeting indicator.
+
 ## Device profiles
 
 | | Denver home panel | Samsung office panel |
@@ -22,9 +27,7 @@ contains APK and Android/root-helper sources.
 | Meeting data | Fresh boolean badge only; no meeting titles | Optional selected-calendar titles and start/end times |
 | Hardware tuning | Allwinner-specific backlight gate and motion profile | Separate flavor/configuration; navigation lock is reversible |
 
-**Status:** the expanded office implementation is on
-[`codex/office-workday-panel`](https://github.com/kilinccagatay/home-assistant-legacy-panels/tree/codex/office-workday-panel)
-and [draft PR #1](https://github.com/kilinccagatay/home-assistant-legacy-panels/pull/1).
+**Status:** the Denver and Samsung profiles are available on the main branch.
 Individual controls and layouts have installed-device evidence; the full general
 regression gate has not passed. The Samsung display/wake baseline remains an
 open issue. This is experimental software, not a fully accepted hardware release.
@@ -40,8 +43,8 @@ open issue. This is experimental software, not a fully accepted hardware release
   default tones. Corridor and kitchen groups have explicit lighting targets.
 - **Home actions:** robot start/return-to-dock and a cancellable 60-second
   household-lights-off countdown. Printer/server power is excluded.
-- **Office agenda:** two upcoming work events (three when space permits),
-  weekend-to-Monday selection, and explicit stale/disconnected states.
+- **Office agenda:** three selectable workdays with scrollable events and a local
+  cache for offline viewing.
 - **Office forecast:** five days beginning **today**, colored SVG symbols and
   daily high/low temperatures. Uses the existing HA weather source; missing days
   show an em dash. Refreshes every 30 minutes while the home view is visible.
@@ -59,7 +62,7 @@ open issue. This is experimental software, not a fully accepted hardware release
 ## Start here
 
 - [Panel V2 setup and entity mapping](docs/panel-v2.md)
-- [Office profile and printer/calendar/forecast guide](https://github.com/kilinccagatay/home-assistant-legacy-panels/blob/codex/office-workday-panel/docs/office-profile.md)
+- [Office profile and printer/calendar/forecast guide](docs/office-profile.md)
 - [Older-hardware Android setup and tuning](https://github.com/kilinccagatay/wallpanel-android-legacy/blob/lite-motion-core/docs/legacy-hardware-guide.md)
 - [Mac Call Indicator companion](https://github.com/kilinccagatay/mac-call-indicator)
 - [Denver enclosure on MakerWorld](https://makerworld.com/en/models/3487173-denver-tac-70051-tablet-homeassistant-base-station#profileId-3982293)
@@ -89,7 +92,12 @@ left shimmer on this unit. The reference settings are 3 FPS / 333 ms, a 30-secon
 idle timeout, 75% wake brightness and a locally tuned threshold of 5. These are
 Denver observations, not universal Samsung settings or battery-life guarantees.
 
-![Finished Denver tablet base station](photos/dashboard.webp)
+<details>
+<summary>Original enclosure build photo</summary>
+
+![Denver tablet enclosure with the original dashboard](photos/dashboard.webp)
+
+</details>
 
 The original [build story](https://cagataykilinc.com.tr/2026/10/25/denver-tac-70051-home-assistant-base-station/)
 and enclosure remain useful historical references.
@@ -170,11 +178,8 @@ the state after 40 seconds, and the browser also hides stale/disconnected data.
 The Mac menu provides **Start at Login**; no tablet APK or firmware change is
 needed for this integration.
 
-![Active meeting indicator on the updated physical Denver tablet](photos/panel-v2/home-meeting-tablet.png)
-
-This is a direct capture from the tablet running Build 9 during a temporary meeting,
-including its native battery badge. Only the orientation was rotated 180° to match
-the mounted tablet; no meeting name, participant, or company content is shown.
+The Denver photo at the top shows the temporary meeting indicator and the native
+battery badge. The capture was rotated 180° to match the mounted tablet.
 
 Follow the [integration guide](docs/mac-call-indicator.md). The full dashboard
 example includes the optional badge; without the companion entity it stays
