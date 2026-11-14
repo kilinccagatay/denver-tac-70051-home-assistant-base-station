@@ -53,9 +53,9 @@ acceptance is recorded separately; full panel blanking is not yet accepted.
 
 ## Printer camera view
 
-![Actual Samsung printer view during an H2D print](images/samsung-printer-live.png)
+![Samsung printer view with sample camera and telemetry](images/samsung-printer-preview.png)
 
-This device capture shows the camera, live print telemetry and AMS groups, with
+This preview shows the camera layout, sample print telemetry and AMS groups, with
 AMS-HT on the left and the active filament highlighted in a rounded, padded tile.
 The camera fills its rounded viewport using aspect-preserving cropping, with
 12px card padding and an 8px gap below the header.
@@ -201,9 +201,9 @@ A provider may supply fewer than seven days: those days retain their columns
 with em dashes and an explicit missing-data note, rather than invented readings.
 No native selection menu or service command is triggered by holding the card.
 
-Actual Samsung forecast card (cropped to exclude calendar titles and private configuration):
+Samsung forecast preview with sample weather data.
 
-![Five-day forecast starting today](images/office-five-day-forecast.png)
+![Five-day forecast starting today](images/samsung-forecast-preview.png)
 
 ## Power-off and retained printer readings
 
