@@ -6,13 +6,12 @@ backlight profile, watchdog, and power-key behavior. No APK/firmware update is n
 
 ## Screenshots
 
-These are 800 × 480 browser captures of the deployed dashboard with live HA data,
-not screenshots taken from the tablet. The battery badge is a native WallPanel
-overlay and is therefore absent in a desktop browser.
+These 800 × 480 browser previews use synthetic data and show the current Denver
+layout.
 
 ![Home controls](../photos/panel-v2/home-browser.png)
 
-![Long-press brightness and color dialog](../photos/panel-v2/light-dialog-browser.png)
+![Brightness and color dialog](../photos/panel-v2/light-dialog-browser.png)
 
 | Kitchen | Entrance |
 | --- | --- |
@@ -26,9 +25,8 @@ overlay and is therefore absent in a desktop browser.
 
 ### Meeting indicator on the actual tablet
 
-Unlike the browser captures above, this is a direct tablet capture with the native
-battery badge visible. It shows an active meeting on Evim; only its orientation
-was rotated 180° to match the mounted display.
+This earlier tablet capture shows an active meeting on Evim and the native
+battery badge. The image was rotated 180° to match the mounted display.
 
 ![Active meeting on the physical Denver tablet](../photos/panel-v2/home-meeting-tablet.png)
 

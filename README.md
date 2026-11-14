@@ -69,12 +69,13 @@ own. Never copy one device's root/display commands onto another model.
 
 ## Office preview
 
-![Samsung office home screen, meeting title hidden](docs/images/samsung-office-home.png)
+![Samsung home screen with forecast, colored agenda rows, and print progress](docs/images/samsung-home-preview.png)
 
-This is a direct 1280 × 720 capture from the Samsung SM-J510FN. Only the meeting-title area was covered for privacy and marked “Toplantı adı gizlendi”; other displayed values and controls are unchanged. The original unredacted image is not published.
-The forecast below is cropped from the same device and contains no calendar data:
+These 1280 × 720 previews show the current Samsung layout with synthetic data.
 
-![Five-day forecast starting today](docs/images/office-five-day-forecast.png)
+| Lights | Five-day forecast |
+| --- | --- |
+| ![Samsung lighting controls](docs/images/samsung-lights-preview.png) | ![Five-day weather preview](docs/images/samsung-forecast-preview.png) |
 
 ## Denver reference build
 
@@ -110,9 +111,8 @@ battery long press and display helpers remain unchanged.
 
 ## Dashboard screenshots
 
-The Denver Panel V2 interface is shown below. These are **800 × 480 browser
-captures of the deployed dashboard with live Home Assistant data**. WallPanel’s
-native battery badge is drawn by Android and is therefore absent from these images.
+The Denver Panel V2 screenshots use an 800 × 480 browser preview with synthetic
+weather, lighting and robot map data.
 
 ![Evim dashboard with clock, weather, and quick controls](photos/panel-v2/home-browser.png)
 
@@ -126,16 +126,11 @@ native battery badge is drawn by Android and is therefore absent from these imag
 
 | Brightness and color presets | Panel settings |
 | --- | --- |
-| ![Long-press light settings with brightness and color presets](photos/panel-v2/light-dialog-browser.png) | ![Sound, long-press timing, cleaning mode, and reload settings](photos/panel-v2/settings-browser.png) |
+| ![Light settings with brightness and color presets](photos/panel-v2/light-dialog-browser.png) | ![Sound, long-press timing, cleaning mode, and reload settings](photos/panel-v2/settings-browser.png) |
 
-### Samsung office panel — live printer view
+### Samsung printer preview
 
-Actual **1280 × 720 Samsung device capture** during an H2D print: camera image,
-print progress, remaining time, nozzle/bed temperatures, and grouped AMS slots.
-AMS-HT is on the left; the active filament uses a rounded highlight with space
-around its color swatch and labels.
-
-![Samsung H2D printer view during a print, with camera image and rounded active filament highlight](docs/images/samsung-printer-live.png)
+![Samsung printer screen with sample camera image, print progress, temperatures, and AMS slots](docs/images/samsung-printer-preview.png)
 
 See the [office profile guide](docs/office-profile.md#printer-camera-view) for
 camera prerequisites and printer controls.
